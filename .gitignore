@@ -65,6 +65,9 @@ yarn-error.log
 # testing
 /coverage
 
+# Local LLM weights (see README — not committed)
+llm-models/*.gguf
+
 # Yarn
 .yarn/*
 !.yarn/patches

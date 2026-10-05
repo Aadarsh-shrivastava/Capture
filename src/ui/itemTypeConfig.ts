@@ -1,57 +1,85 @@
 import { Ionicons } from '@expo/vector-icons';
 
-import { getTypeBehaviorHint } from '@/domain/behaviorTypeConfig';
 import { designTokens } from '@/ui/designTokens';
 
 export type ItemTypeName = 'Task' | 'Note' | 'Journal' | 'Idea';
 
 type ItemTypeConfig = {
   label: string;
-  hint: string;
+  /** Library chip / card heading, e.g. "Tasks". */
+  plural: string;
+  /** One-line card description shown in the Library. */
+  description: string;
   icon: keyof typeof Ionicons.glyphMap;
   accent: string;
   accentMuted: string;
 };
 
+const monoAccent = designTokens.textPrimary;
+const monoMuted = designTokens.chip;
+
 export const ITEM_TYPE_CONFIG: Record<ItemTypeName, ItemTypeConfig> = {
   Task: {
     label: 'Task',
-    hint: getTypeBehaviorHint('Task'),
+    plural: 'Tasks',
+    description: 'Plan, track and complete.',
     icon: 'checkmark-circle-outline',
-    accent: designTokens.accent,
-    accentMuted: designTokens.accentMuted,
+    accent: monoAccent,
+    accentMuted: monoMuted,
   },
   Note: {
     label: 'Note',
-    hint: getTypeBehaviorHint('Note'),
+    plural: 'Notes',
+    description: 'Quick thoughts and details.',
     icon: 'document-text-outline',
-    accent: '#7a8a99',
-    accentMuted: 'rgba(122, 138, 153, 0.16)',
+    accent: monoAccent,
+    accentMuted: monoMuted,
   },
   Journal: {
     label: 'Journal',
-    hint: getTypeBehaviorHint('Journal'),
+    plural: 'Journal',
+    description: 'Reflect and stay consistent.',
     icon: 'book-outline',
-    accent: '#8b7f72',
-    accentMuted: 'rgba(139, 127, 114, 0.16)',
+    accent: monoAccent,
+    accentMuted: monoMuted,
   },
   Idea: {
     label: 'Idea',
-    hint: getTypeBehaviorHint('Idea'),
+    plural: 'Ideas',
+    description: 'Capture and explore.',
     icon: 'bulb-outline',
-    accent: '#9a8f3e',
-    accentMuted: 'rgba(154, 143, 62, 0.16)',
+    accent: monoAccent,
+    accentMuted: monoMuted,
   },
 };
 
 export function getItemTypeConfig(typeName: string): ItemTypeConfig {
   return ITEM_TYPE_CONFIG[typeName as ItemTypeName] ?? {
     label: typeName,
-    hint: '',
+    plural: typeName,
+    description: '',
     icon: 'ellipse-outline',
-    accent: designTokens.textTertiary,
-    accentMuted: designTokens.surfaceRaised,
+    accent: designTokens.textSecondary,
+    accentMuted: designTokens.chip,
   };
 }
 
 export const ITEM_TYPE_ORDER: ItemTypeName[] = ['Task', 'Note', 'Journal', 'Idea'];
+
+/** Types where the main user text lives in `content`, not `title`. */
+export function isTextPrimaryType(typeName: string): boolean {
+  return typeName === 'Note' || typeName === 'Journal' || typeName === 'Idea';
+}
+
+export function getBodyFieldLabel(typeName: string): string {
+  switch (typeName) {
+    case 'Journal':
+      return 'Entry';
+    case 'Idea':
+      return 'Idea';
+    case 'Note':
+      return 'Note';
+    default:
+      return 'Notes';
+  }
+}

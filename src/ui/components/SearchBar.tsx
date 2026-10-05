@@ -1,6 +1,7 @@
+import { Ionicons } from '@expo/vector-icons';
 import { TextInput, View } from 'react-native';
 
-import { designTokens } from '@/ui/designTokens';
+import { designTokens, radius } from '@/ui/designTokens';
 
 type SearchBarProps = {
   value: string;
@@ -16,22 +17,23 @@ export function SearchBar({
   return (
     <View
       style={{
-        borderBottomWidth: 1,
-        borderBottomColor: designTokens.surfaceBorder,
-        marginTop: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        backgroundColor: designTokens.field,
+        borderRadius: radius.md,
+        paddingHorizontal: 14,
+        height: 46,
         marginBottom: 16,
       }}
     >
+      <Ionicons name="search" size={16} color={designTokens.textTertiary} />
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={designTokens.textTertiary}
-        style={{
-          color: designTokens.textPrimary,
-          fontSize: 16,
-          paddingVertical: 12,
-        }}
+        style={{ flex: 1, color: designTokens.textPrimary, fontSize: 15 }}
       />
     </View>
   );

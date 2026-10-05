@@ -94,3 +94,31 @@ export function parseDateTimeInput(input: string): string {
 
   return trimmed;
 }
+
+/** Clock label for task rows — empty when the value carries no time. */
+export function formatTimeOnly(value: string | null | undefined): string {
+  const trimmed = value?.trim();
+  if (!trimmed || !hasTimeComponent(trimmed)) return '';
+
+  const parsed = toMoment(trimmed);
+  return parsed ? parsed.format(DISPLAY_TIME) : '';
+}
+
+/** "Today • 2:30 PM" style summary used on the item detail screen. */
+export function formatDayTimeSummary(value: string | null | undefined): string {
+  const trimmed = value?.trim();
+  if (!trimmed) return '';
+
+  const parsed = toMoment(trimmed);
+  if (!parsed) return trimmed;
+
+  const today = moment().startOf('day');
+  const target = parsed.clone().startOf('day');
+  const diff = target.diff(today, 'days');
+
+  const day =
+    diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : diff === -1 ? 'Yesterday' : parsed.format('ddd, MMM D');
+
+  const time = formatTimeOnly(trimmed);
+  return time ? `${day} • ${time}` : day;
+}

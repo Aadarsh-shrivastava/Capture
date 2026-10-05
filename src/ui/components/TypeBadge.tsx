@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Text, View } from 'react-native';
 
+import { designTokens, radius } from '@/ui/designTokens';
 import { getItemTypeConfig } from '@/ui/itemTypeConfig';
 
 type TypeBadgeProps = {
@@ -18,18 +19,18 @@ export function TypeBadge({ typeName, size = 'sm' }: TypeBadgeProps) {
         flexDirection: 'row',
         alignItems: 'center',
         alignSelf: 'flex-start',
-        gap: 4,
-        backgroundColor: config.accentMuted,
-        borderRadius: 6,
-        paddingHorizontal: isSmall ? 8 : 10,
-        paddingVertical: isSmall ? 4 : 6,
+        gap: 6,
+        backgroundColor: designTokens.chip,
+        borderRadius: radius.pill,
+        paddingHorizontal: isSmall ? 10 : 12,
+        paddingVertical: isSmall ? 5 : 7,
       }}
     >
-      <Ionicons name={config.icon} size={isSmall ? 12 : 14} color={config.accent} />
+      <Ionicons name={config.icon} size={isSmall ? 13 : 15} color={designTokens.textPrimary} />
       <Text
         style={{
-          color: config.accent,
-          fontSize: isSmall ? 11 : 12,
+          color: designTokens.textPrimary,
+          fontSize: isSmall ? 12 : 13,
           fontWeight: '600',
           letterSpacing: 0.3,
         }}

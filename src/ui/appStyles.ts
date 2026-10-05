@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import { useThemeStore } from '@/store/themeStore';
 
 export const appUi = {
-  accent: '#b84b3e',
+  accent: '#e5e5e5',
 };
 
 export function useAppStyles() {
@@ -103,7 +103,7 @@ export function useAppStyles() {
     },
     chipActive: {
       borderColor: appUi.accent,
-      backgroundColor: 'rgba(184, 75, 62, 0.12)',
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
     chipText: {
       color: colors.onSurfaceVariant,
@@ -119,7 +119,7 @@ export function useAppStyles() {
       marginTop: spacing.stackMd,
     },
     errorText: {
-      color: '#ff8a80',
+      color: '#b0b0b0',
       fontSize: typography.labelSm.fontSize,
       marginTop: spacing.stackSm,
     },

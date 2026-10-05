@@ -14,17 +14,15 @@ export function SectionHeader({ label, trailing }: SectionHeaderProps) {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'baseline',
-        marginTop: 28,
-        marginBottom: 12,
+        marginTop: 26,
+        marginBottom: 10,
       }}
     >
       <Text
         style={{
           color: designTokens.textSecondary,
-          fontSize: 12,
+          fontSize: 14,
           fontWeight: '600',
-          letterSpacing: 1.1,
-          textTransform: 'uppercase',
         }}
       >
         {label}

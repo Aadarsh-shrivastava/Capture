@@ -1,5 +1,7 @@
 import type { ComponentProps, ReactNode } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+
+import { Pressable } from '@/ui/HapticPressable';
 
 type ButtonProps = ComponentProps<typeof Pressable> & {
   children?: ReactNode;

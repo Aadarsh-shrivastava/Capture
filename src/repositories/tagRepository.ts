@@ -12,6 +12,12 @@ function normalizeTagName(name: string) {
 }
 
 export const tagRepository = {
+  async findAll(): Promise<Tag[]> {
+    const db = await getDatabase();
+    const rows = await db.getAllAsync<TagRow>('SELECT * FROM tags ORDER BY name ASC');
+    return rows.map(mapTag);
+  },
+
   async findOrCreate(name: string): Promise<Tag> {
     const db = await getDatabase();
     const normalized = normalizeTagName(name);

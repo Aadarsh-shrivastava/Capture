@@ -1,12 +1,15 @@
 import {behaviorApi, itemApi, typeApi} from '@/api/itemApi';
 import {groupApi} from '@/api/groupApi';
 import {parseCaptureJson, type CaptureItemDraft} from '@/capture/captureItemDraft';
+import {extractShortSubject} from '@/capture/captureTitle';
+import {isTextPrimaryType, type ItemTypeName} from '@/ui/itemTypeConfig';
 import {
   filterValidOptionalBehaviors,
   getDefaultBehaviorsForType,
 } from '@/domain/behaviorTypeConfig';
 import {getDefaultFieldValues} from '@/domain/behaviorDefinitions';
-import type {SaveItemPayload} from '@/models/behaviorData';
+import type {ItemFull, SaveItemPayload} from '@/models/behaviorData';
+import type {Group} from '@/models/group';
 
 export async function resolveCaptureDraft(draft: CaptureItemDraft): Promise<SaveItemPayload> {
   const [types, behaviors, groups] = await Promise.all([
@@ -55,10 +58,22 @@ export async function resolveCaptureDraft(draft: CaptureItemDraft): Promise<Save
     .map(name => groups.find(g => g.name.toLowerCase() === name.toLowerCase())?.id)
     .filter((id): id is number => id != null);
 
+  let title = draft.title.trim();
+  let content = draft.content?.trim() ?? null;
+
+  if (isTextPrimaryType(draft.typeName)) {
+    if (content && !title) {
+      title = extractShortSubject(content, draft.typeName);
+    } else if (!content && title) {
+      content = title;
+      title = extractShortSubject(title, draft.typeName);
+    }
+  }
+
   return {
     typeId: itemType.id,
-    title: draft.title,
-    content: draft.content ?? null,
+    title: title || 'Untitled',
+    content,
     importance: draft.importance ?? null,
     urgency: draft.urgency ?? null,
     optionalBehaviorIds,
@@ -77,4 +92,29 @@ export async function createItemFromCaptureJson(rawJson: string) {
 export async function createItemFromCaptureDraft(draft: CaptureItemDraft) {
   const payload = await resolveCaptureDraft(draft);
   return itemApi.saveItem(payload);
+}
+
+/** Build a form draft from a saved item so manual edit uses the same form. */
+export function draftFromItemFull(full: ItemFull, groups: Group[]): CaptureItemDraft {
+  const optionalNames = full.effectiveBehaviors
+    .filter((behavior) => full.optionalBehaviorIds.includes(behavior.id))
+    .map((behavior) => behavior.name);
+
+  return {
+    typeName: full.typeName as ItemTypeName,
+    title: full.title,
+    content: full.content,
+    importance: full.importance,
+    urgency: full.urgency,
+    tagNames: full.tagNames,
+    groupNames: groups.filter((group) => full.groupIds.includes(group.id)).map((g) => g.name),
+    optionalBehaviorNames: optionalNames,
+    behaviorData: full.behaviorData,
+  };
+}
+
+/** Save a draft, creating a new item or updating `itemId`. */
+export async function saveItemDraft(draft: CaptureItemDraft, itemId?: number) {
+  const payload = await resolveCaptureDraft(draft);
+  return itemApi.saveItem(payload, itemId);
 }

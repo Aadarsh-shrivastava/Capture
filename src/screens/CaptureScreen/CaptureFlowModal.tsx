@@ -5,7 +5,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,14 +13,16 @@ import {
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
+import { Pressable } from '@/ui/HapticPressable';
 import {type CaptureFlowStep} from '@/capture/captureFlow';
 import {type CaptureItemDraft} from '@/capture/captureItemDraft';
 import {useCaptureAnalysis} from '@/hooks/useCaptureAnalysis';
+import {groupApi} from '@/api/groupApi';
+import type {Group} from '@/models/group';
 import {createItemFromCaptureDraft} from '@/services/captureItemService';
+import {ItemForm} from '@/ui/components/ItemForm';
 import {designTokens} from '@/ui/designTokens';
 import {useThemeStore} from '@/store/themeStore';
-
-import {CaptureItemForm} from './CaptureItemForm';
 
 type Props = {
   visible: boolean;
@@ -55,10 +56,12 @@ export function CaptureFlowModal({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState<CaptureFlowStep>(step);
+  const [groups, setGroups] = useState<Group[]>([]);
 
   useEffect(() => {
     if (visible) {
       preloadModel();
+      void groupApi.getGroups().then(setGroups).catch(() => setGroups([]));
     }
   }, [visible, preloadModel]);
 
@@ -223,7 +226,7 @@ export function CaptureFlowModal({
 
           {currentStep === 'review' && draft ? (
             <>
-              <CaptureItemForm draft={draft} onChange={setDraft} />
+              <ItemForm draft={draft} onChange={setDraft} groups={groups} />
               <Pressable
                 style={[
                   styles.btn,

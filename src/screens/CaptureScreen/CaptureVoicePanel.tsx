@@ -1,6 +1,7 @@
 import {Ionicons} from '@expo/vector-icons';
-import {ActivityIndicator, Pressable, StyleSheet, Text, View} from 'react-native';
+import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
 
+import {Pressable} from '@/ui/HapticPressable';
 import {designTokens} from '@/ui/designTokens';
 import {useThemeStore} from '@/store/themeStore';
 

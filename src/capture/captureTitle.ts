@@ -92,6 +92,34 @@ function polishTaskTitle(text: string): string {
     .join(' ');
 }
 
+const SUBJECT_MAX_LEN = 56;
+
+/**
+ * Short label for Note / Journal / Idea — first line or sentence, not the full body.
+ */
+export function extractShortSubject(text: string, typeName: ItemTypeName): string {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return typeName === 'Journal' ? 'Journal entry' : 'Untitled';
+  }
+
+  const firstLine = trimmed.split(/\n/)[0]?.trim() ?? trimmed;
+  const withoutUrl = firstLine.replace(URL_RE, '').trim();
+  if (!withoutUrl) {
+    return typeName === 'Journal' ? 'Journal entry' : 'Untitled';
+  }
+
+  if (withoutUrl.length <= SUBJECT_MAX_LEN) {
+    return sentenceCase(withoutUrl.replace(/\s{2,}/g, ' ').trim());
+  }
+
+  const cut = withoutUrl.slice(0, SUBJECT_MAX_LEN);
+  const lastSpace = cut.lastIndexOf(' ');
+  const subject =
+    lastSpace > 24 ? cut.slice(0, lastSpace) : cut.replace(/\s+\S*$/, '');
+  return sentenceCase(`${subject.trim()}…`);
+}
+
 /**
  * Extract a short action-oriented title from free-form capture text.
  * Used only for heuristic fallback when the model returns a literal title.
@@ -105,7 +133,7 @@ export function extractCaptureTitle(
   if (!withoutUrl) return 'Untitled';
 
   if (typeName !== 'Task') {
-    return sentenceCase(withoutUrl.replace(/\s{2,}/g, ' ').trim());
+    return extractShortSubject(text, typeName);
   }
 
   let core = stripTaskPrefixes(withoutUrl);
@@ -146,13 +174,39 @@ export function normalizeCaptureDraftTitle(
   draft: { title: string; content?: string | null; typeName: ItemTypeName },
   rawText: string,
 ): { title: string; content: string | null } {
+  const trimmed = rawText.trim();
+  const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+
+  if (draft.typeName !== 'Task') {
+    let content = draft.content?.trim() ?? '';
+    let title = draft.title.trim();
+
+    const titleIsFullText =
+      !content ||
+      norm(content) === norm(title) ||
+      norm(title) === norm(trimmed) ||
+      titleLooksLiteral(title, rawText);
+
+    if (titleIsFullText) {
+      content = trimmed;
+      title = extractShortSubject(trimmed, draft.typeName);
+    } else if (!content) {
+      content = trimmed;
+    }
+
+    if (!title) {
+      title = extractShortSubject(content || trimmed, draft.typeName);
+    }
+
+    return { title: title || 'Untitled', content: content || null };
+  }
+
   const title = titleNeedsRewrite(draft.title, rawText, draft.typeName)
     ? extractCaptureTitle(rawText, draft.typeName)
     : draft.title.trim();
 
-  const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
-  let content = draft.content ?? null;
-  if (content && norm(content) === norm(rawText)) {
+  let content = draft.content?.trim() ?? null;
+  if (content && norm(content) === norm(trimmed)) {
     content = null;
   }
 

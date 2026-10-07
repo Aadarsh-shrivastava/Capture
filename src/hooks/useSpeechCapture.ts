@@ -85,11 +85,24 @@ export function useSpeechCapture() {
     setError(null);
 
     try {
+      const available = await Voice.isAvailable();
+      if (!available) {
+        setError('Speech recognition is not available on this device');
+        return false;
+      }
+
       await Voice.start('en-US');
       setState('listening');
       return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not start listening');
+      const message = e instanceof Error ? e.message : 'Could not start listening';
+      if (message.includes("doesn't seem to be linked")) {
+        setError(
+          'Voice native module is missing. Rebuild the app after installing dependencies (not Expo Go).',
+        );
+      } else {
+        setError(message);
+      }
       setState('idle');
       return false;
     }

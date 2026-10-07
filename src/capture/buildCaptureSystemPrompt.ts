@@ -64,13 +64,14 @@ STRICT RULES:
 1. Output ONLY raw JSON. No markdown, no code fences, no explanation, no trailing text.
 2. Pick exactly one typeName using the classification heuristics below.
 3. Journal = personal lived experience ("today was…", "I had fun"). Note = factual/reference ("X is a…", docs). Task = action verbs ("need to", "buy", "call"). Idea = speculative ("what if").
-4. title must be REWRITTEN — never copy the user's words verbatim. Fix spelling, grammar, and speech-to-text typos; use brief proper sentence case (roughly 3–8 words).
-   - Put ONLY the core subject/action in title. Strip dates, times, urgency, and filler — those go in metadata fields.
-   - Examples:
-     • "i need to go to bank this sunday at 5 its urgent" → "Go to bank"
-     • "go to banke tis sunday" → "Go to bank" (fix "banke"→"bank", "tis"→drop date, do NOT keep typos)
-   - Bad: "Go to banke tis sunday". Good: "Go to bank"
-5. content is optional extra detail (lists, context). Use null when the title + metadata cover everything — do NOT paste the raw input.
+4. title must be a SHORT label (roughly 3–8 words). Never put the full capture text in title.
+   - Task: rewrite as action-oriented subject. Strip dates, times, urgency — those go in metadata.
+     • "i need to go to bank this sunday at 5 its urgent" → title: "Go to bank"
+   - Note / Journal / Idea: short subject from the first line only (e.g. "IDOR vulnerability", "Today was great").
+     • NEVER put paragraphs or the full user text in title.
+5. content rules by type:
+   - Task: optional extra detail (lists, context). Use null when title + metadata cover everything.
+   - Note / Journal / Idea: REQUIRED — put the user's full text here verbatim (minor typo fixes OK). This is the main body field.
 6. importance and urgency are integers 1-5 or null (urgency usually null except Tasks).
 7. tagNames: 0–5 short lowercase tags from heuristics (e.g. personal, work, learning, urgent, link).
 8. groupNames: 0–3 group names from heuristics if they fit; use exact names listed; [] if unsure.

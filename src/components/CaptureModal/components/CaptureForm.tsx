@@ -1,17 +1,12 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { KeyboardHint } from '@/components/KeyboardHint/KeyboardHint';
 import { ModalHeader } from '@/components/ScreenHeader/ModalHeader';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
-import { ArrowRightIcon, CalendarDaysIcon } from '@/components/ui/icon';
+import { Button, ButtonText } from '@/components/ui/button';
 import { useCaptureStore } from '@/store/captureStore';
 import { useThemeStore } from '@/store/themeStore';
-import { ChipButton } from './ChipButton';
-
 
 export function CaptureForm() {
   const { theme } = useThemeStore();
@@ -34,7 +29,7 @@ export function CaptureForm() {
         style={{
           flex: 1,
           maxHeight: '85%',
-          borderRadius: rounded.xl,
+          borderRadius: rounded.lg,
           borderWidth: 1,
           borderColor: colors.border,
           backgroundColor: colors.surfaceContainer,
@@ -42,80 +37,38 @@ export function CaptureForm() {
           overflow: 'hidden',
         }}
       >
-        <ModalHeader
-          title="Capture"
-          subtitle="Get it out of your head."
-          onClose={close}
-        />
+        <ModalHeader title="Capture" onClose={close} />
 
         <TextInput
           multiline
-          placeholder="What's on your mind?..."
+          placeholder="What's on your mind?"
           placeholderTextColor={colors.placeholder}
           value={thought}
           onChangeText={setThought}
           style={{
             flex: 1,
             color: colors.onSurface,
-            fontSize: typography.headlineMd.fontSize,
-            fontWeight: typography.headlineMd.fontWeight,
-            lineHeight: typography.headlineMd.lineHeight,
+            fontSize: typography.bodyLg.fontSize,
+            fontWeight: '400',
+            lineHeight: typography.bodyLg.lineHeight,
             textAlignVertical: 'top',
             padding: 0,
+            marginTop: spacing.stackMd,
           }}
         />
 
-        <View
-          style={{
-            height: 1,
-            backgroundColor: colors.border,
-            marginVertical: spacing.stackMd,
-          }}
-        />
-
-        <Box
-          style={{
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            gap: spacing.stackSm,
-          }}
-        >
-          <ChipButton
-            label="Priority"
-            icon={
-              <Ionicons name="flag-outline" size={16} color={colors.onSurfaceVariant} />
-            }
-          />
-          <ChipButton
-            label="Due Date"
-            icon={<CalendarDaysIcon width={16} height={16} color={colors.onSurfaceVariant} />}
-          />
-          <ChipButton
-            label="Category"
-            icon={
-              <Ionicons name="folder-outline" size={16} color={colors.onSurfaceVariant} />
-            }
-          />
+        <View style={{ marginTop: spacing.stackMd }}>
           <Button
             onPress={close}
             style={{
-              flex: 1,
-              minWidth: '45%',
               backgroundColor: colors.primaryContainer,
               borderRadius: rounded.lg,
-              shadowColor: colors.primaryContainer,
-              shadowOpacity: 0.4,
-              shadowRadius: 8,
-              shadowOffset: { width: 0, height: 0 },
             }}
           >
-            <ButtonText style={{ color: colors.onPrimary }}>Capture</ButtonText>
-            <ButtonIcon as={ArrowRightIcon} color={colors.onPrimary} />
+            <ButtonText style={{ color: colors.onPrimaryContainer }}>Close</ButtonText>
           </Button>
-        </Box>
+        </View>
       </Box>
-
-      <KeyboardHint keyLabel="Enter" action="to capture instantly" />
     </Box>
   );
 }

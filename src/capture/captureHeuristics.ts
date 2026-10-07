@@ -1,6 +1,6 @@
 import { inferDueAtFromText } from '@/capture/captureDateContext';
 import type { CaptureItemDraft } from '@/capture/captureItemDraft';
-import { extractCaptureTitle } from '@/capture/captureTitle';
+import { extractCaptureTitle, extractShortSubject } from '@/capture/captureTitle';
 import {
   inferGroupsFromGuide,
   inferImportanceFromGuide,
@@ -26,7 +26,14 @@ function extractUrl(text: string): string | null {
 }
 
 function inferTitle(text: string, typeName: ItemTypeName): string {
-  return extractCaptureTitle(text, typeName);
+  if (typeName === 'Task') return extractCaptureTitle(text, typeName);
+  return extractShortSubject(text, typeName);
+}
+
+function inferContent(text: string, typeName: ItemTypeName): string | null {
+  if (typeName === 'Task') return null;
+  const trimmed = text.trim();
+  return trimmed || null;
 }
 
 function inferOptionalBehaviors(text: string, typeName: ItemTypeName): string[] {
@@ -103,7 +110,7 @@ export function analyzeCaptureText(
   return {
     typeName,
     title,
-    content: overrides?.content ?? null,
+    content: overrides?.content ?? inferContent(text, typeName),
     importance: overrides?.importance ?? inferImportanceFromGuide(text, typeName),
     urgency: overrides?.urgency ?? inferUrgencyFromGuide(text, typeName),
     tagNames: overrides?.tagNames ?? inferTagsFromGuide(text, typeName),

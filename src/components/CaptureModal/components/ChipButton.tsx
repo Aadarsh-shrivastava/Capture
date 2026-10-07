@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
-import { Pressable } from 'react-native';
 
+
+import { Pressable } from '@/ui/HapticPressable';
 import { Text } from '@/components/ui/text';
 import { useThemeStore } from '@/store/themeStore';
 

@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Pressable } from '@/ui/HapticPressable';
 import { useCaptureStore } from '@/store/captureStore';
 
 import { CaptureForm } from './components/CaptureForm';

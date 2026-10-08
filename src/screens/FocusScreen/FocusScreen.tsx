@@ -1,28 +1,59 @@
-import {useCallback} from 'react';
-import {Alert, ScrollView, Text, View} from 'react-native';
+import moment from 'moment';
+import {useCallback, useMemo, useState} from 'react';
+import {Alert, RefreshControl, ScrollView, Text, View} from 'react-native';
 import {useFocusEffect, useRouter} from 'expo-router';
 
+import {DateSheet} from '@/components/sheets/DateSheet';
 import {TabScreenShell} from '@/components/TabScreenShell/TabScreenShell';
+import {isTaskOverdue, scoreFocusTask} from '@/domain/focusPriority';
 import {useFocusData} from '@/hooks/useFocusData';
 import type {FocusTask} from '@/models/focusTask';
 import {focusTaskService} from '@/services/focusTaskService';
 import {
-  DoNowCard,
   FocusEmptyState,
   FocusLoadingState,
   LaterSection,
-  NextTaskRow,
-  OverdueTaskCard,
+  NowTaskCard,
+  TaskListRow,
 } from '@/ui/components/FocusComponents';
 import {SectionHeader} from '@/ui/components/SectionHeader';
-import {designTokens, formatLongDate} from '@/ui/designTokens';
-import {useThemeStore} from '@/store/themeStore';
+import {WeekStrip} from '@/ui/components/WeekStrip';
+import {designTokens} from '@/ui/designTokens';
+
+function dueMoment(task: FocusTask) {
+  if (!task.dueAt?.trim()) return null;
+  const parsed = moment(task.dueAt, moment.ISO_8601, false);
+  return parsed.isValid() ? parsed : null;
+}
+
+/** Tasks shown for a day: everything due that day, plus undated and overdue work on today. */
+function tasksForDay(tasks: FocusTask[], day: moment.Moment) {
+  const isToday = day.isSame(moment(), 'day');
+
+  return tasks
+    .filter((task) => task.status !== 'deferred')
+    .filter((task) => {
+      const due = dueMoment(task);
+      if (!due) return isToday;
+      if (due.isSame(day, 'day')) return true;
+      return isToday && isTaskOverdue(task);
+    })
+    .sort((a, b) => {
+      const aDue = dueMoment(a);
+      const bDue = dueMoment(b);
+      if (aDue && bDue) return aDue.valueOf() - bDue.valueOf();
+      if (aDue) return -1;
+      if (bDue) return 1;
+      return scoreFocusTask(b) - scoreFocusTask(a);
+    });
+}
 
 export function FocusScreen() {
-  const {theme} = useThemeStore();
-  const {spacing} = theme;
   const router = useRouter();
-  const {queue, loading, error, refresh} = useFocusData();
+  const {tasks, queue, loading, error, refresh} = useFocusData();
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const [dateSheetOpen, setDateSheetOpen] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -30,8 +61,27 @@ export function FocusScreen() {
     }, [refresh]),
   );
 
-  const hasFocusWork =
-    queue.overdue.length > 0 || queue.doNow != null || queue.next.length > 0;
+  const onPullRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refresh]);
+
+  const selected = useMemo(() => moment(selectedDate), [selectedDate]);
+  const dayTasks = useMemo(() => tasksForDay(tasks, selected), [tasks, selected]);
+  const now = dayTasks[0] ?? null;
+  const next = dayTasks.slice(1);
+
+  const markedDays = useMemo(
+    () =>
+      tasks
+        .map((task) => dueMoment(task)?.format('YYYY-MM-DD'))
+        .filter((value): value is string => Boolean(value)),
+    [tasks],
+  );
 
   function openTask(task: FocusTask) {
     router.push(`/item/${task.id}`);
@@ -46,73 +96,68 @@ export function FocusScreen() {
     }
   }
 
-  function confirmReschedule(task: FocusTask) {
-    const options = focusTaskService.rescheduleOptions();
-    Alert.alert('Reschedule', task.title, [
-      ...options.map((option) => ({
-        text: option.label,
-        onPress: () => runAction(() => focusTaskService.rescheduleTask(task, option.value)),
-      })),
-      {text: 'Cancel', style: 'cancel' as const},
-    ]);
+  function toggleRunning(task: FocusTask) {
+    const action =
+      task.doableStatus === 'in_progress'
+        ? () => focusTaskService.pauseTask(task)
+        : () => focusTaskService.startTask(task);
+    runAction(action);
   }
 
   return (
-    <TabScreenShell title="Focus">
+    <TabScreenShell
+      title="Focus"
+      action={{icon: 'calendar-outline', label: 'Pick a day', onPress: () => setDateSheetOpen(true)}}>
       <ScrollView
-        contentContainerStyle={{
-          paddingHorizontal: spacing.marginMobile,
-          paddingTop: spacing.stackSm,
-          paddingBottom: spacing.stackLg,
-        }}
+        contentContainerStyle={{paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40}}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onPullRefresh}
+            tintColor={designTokens.textSecondary}
+          />
+        }
         showsVerticalScrollIndicator={false}>
-        <Text style={{color: designTokens.textSecondary, fontSize: 15, marginBottom: 28}}>
-          {formatLongDate(new Date())}
-        </Text>
+        <WeekStrip value={selectedDate} onChange={setSelectedDate} markedDays={markedDays} />
 
         {error ? (
-          <Text style={{color: '#ff8a80', fontSize: 13, marginBottom: 12}}>{error}</Text>
+          <Text style={{color: designTokens.textSecondary, fontSize: 13, marginTop: 16}}>{error}</Text>
         ) : null}
 
         {loading ? <FocusLoadingState /> : null}
 
-        {!loading && !hasFocusWork && queue.later.length === 0 ? <FocusEmptyState /> : null}
-
-        {!loading && queue.overdue.length > 0 ? (
-          <>
-            <SectionHeader label="Overdue" />
-            {queue.overdue.map((task) => (
-              <OverdueTaskCard
-                key={task.id}
-                task={task}
-                onPress={() => openTask(task)}
-                onComplete={() => runAction(() => focusTaskService.completeTask(task))}
-                onReschedule={() => confirmReschedule(task)}
-                onDefer={() => runAction(() => focusTaskService.deferTask(task))}
-              />
-            ))}
-          </>
+        {!loading && dayTasks.length === 0 ? (
+          <FocusEmptyState
+            label={selected.isSame(moment(), 'day') ? 'All clear for today' : 'Nothing scheduled'}
+          />
         ) : null}
 
-        {!loading && queue.doNow ? (
+        {!loading && now ? (
           <>
-            <SectionHeader label="Do now" />
-            <DoNowCard
-              task={queue.doNow}
-              onPress={() => openTask(queue.doNow!)}
-              onComplete={() => runAction(() => focusTaskService.completeTask(queue.doNow!))}
-              onReschedule={() => confirmReschedule(queue.doNow!)}
-              onDefer={() => runAction(() => focusTaskService.deferTask(queue.doNow!))}
+            <SectionHeader label="Now" />
+            <NowTaskCard
+              task={now}
+              overdue={isTaskOverdue(now)}
+              onPress={() => openTask(now)}
+              onComplete={() => runAction(() => focusTaskService.completeTask(now))}
+              onStart={() => toggleRunning(now)}
             />
           </>
         ) : null}
 
-        {!loading && queue.next.length > 0 ? (
+        {!loading && next.length > 0 ? (
           <>
             <SectionHeader label="Next" />
-            {queue.next.map((task) => (
-              <NextTaskRow key={task.id} task={task} onPress={() => openTask(task)} />
-            ))}
+            <View style={{gap: 10}}>
+              {next.map((task) => (
+                <TaskListRow
+                  key={task.id}
+                  task={task}
+                  onPress={() => openTask(task)}
+                  onComplete={() => runAction(() => focusTaskService.completeTask(task))}
+                />
+              ))}
+            </View>
           </>
         ) : null}
 
@@ -122,15 +167,13 @@ export function FocusScreen() {
             <LaterSection tasks={queue.later} onPressTask={openTask} />
           </>
         ) : null}
-
-        {!loading && !hasFocusWork && queue.later.length > 0 ? (
-          <View style={{marginTop: 16}}>
-            <Text style={{color: designTokens.textTertiary, fontSize: 13, textAlign: 'center'}}>
-              Active tasks are deferred. Expand Later to review them.
-            </Text>
-          </View>
-        ) : null}
       </ScrollView>
+
+      <DateSheet
+        visible={dateSheetOpen}
+        onClose={() => setDateSheetOpen(false)}
+        onSelect={(date) => setSelectedDate(moment(date, 'YYYY-MM-DD').toDate())}
+      />
     </TabScreenShell>
   );
 }

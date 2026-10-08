@@ -44,6 +44,20 @@ export const focusTaskService = {
     });
   },
 
+  async startTask(task: FocusTask) {
+    await saveTaskUpdate(task, {
+      status: 'active',
+      doable: {status: 'in_progress'},
+    });
+  },
+
+  async pauseTask(task: FocusTask) {
+    await saveTaskUpdate(task, {
+      status: 'active',
+      doable: {status: 'pending'},
+    });
+  },
+
   async deferTask(task: FocusTask) {
     await saveTaskUpdate(task, {status: 'deferred'});
   },

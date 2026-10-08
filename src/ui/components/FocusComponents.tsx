@@ -1,7 +1,8 @@
 import {Ionicons} from '@expo/vector-icons';
 import {useState} from 'react';
-import {ActivityIndicator, Pressable, Text, View} from 'react-native';
+import {ActivityIndicator, Text, View} from 'react-native';
 
+import {Pressable} from '@/ui/HapticPressable';
 import {formatDueLabel} from '@/domain/focusPriority';
 import type {FocusTask} from '@/models/focusTask';
 import {designTokens} from '@/ui/designTokens';

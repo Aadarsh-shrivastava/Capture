@@ -79,6 +79,11 @@ export function partitionFocusTasks(tasks: FocusTask[], now = Date.now()): Focus
   return {overdue, doNow, next, later: laterSorted};
 }
 
+/** Highest-priority active focus task (overdue first, then do-now). */
+export function getPrimaryFocusTask(queue: FocusQueue): FocusTask | null {
+  return queue.overdue[0] ?? queue.doNow;
+}
+
 export function formatDueLabel(dueAt: string | null): string | null {
   return formatDueDateLabel(dueAt);
 }

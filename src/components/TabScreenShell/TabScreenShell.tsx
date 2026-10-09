@@ -1,17 +1,30 @@
-import type { ReactNode } from 'react';
+import {Ionicons} from '@expo/vector-icons';
+import type {ReactNode} from 'react';
+import {View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
-import { ScreenShell } from '@/components/ScreenShell/ScreenShell';
+import {LargeHeader} from '@/components/LargeHeader/LargeHeader';
+import {useThemeStore} from '@/store/themeStore';
 
 type TabScreenShellProps = {
   title: string;
   children: ReactNode;
-  right?: ReactNode;
+  action?: {
+    icon: keyof typeof Ionicons.glyphMap;
+    label: string;
+    onPress: () => void;
+  };
 };
 
-export function TabScreenShell({ title, children, right }: TabScreenShellProps) {
+export function TabScreenShell({title, children, action}: TabScreenShellProps) {
+  const {theme} = useThemeStore();
+
   return (
-    <ScreenShell title={title} leading="drawer" right={right}>
-      {children}
-    </ScreenShell>
+    <SafeAreaView
+      style={{flex: 1, backgroundColor: theme.colors.background}}
+      edges={['top']}>
+      <LargeHeader title={title} action={action} />
+      <View style={{flex: 1}}>{children}</View>
+    </SafeAreaView>
   );
 }

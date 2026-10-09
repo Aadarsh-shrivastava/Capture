@@ -1,17 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable } from 'react-native';
 
+
+import { Pressable } from '@/ui/HapticPressable';
 import { useCaptureStore } from '@/store/captureStore';
 import { useThemeStore } from '@/store/themeStore';
 
 export function FloatingCaptureButton() {
   const { theme } = useThemeStore();
   const { colors } = theme;
-  const openVoiceCapture = useCaptureStore((state) => state.openVoiceCapture);
+  const openQuickAdd = useCaptureStore((state) => state.openQuickAdd);
 
   return (
     <Pressable
-      onPress={openVoiceCapture}
+      onPress={openQuickAdd}
       accessibilityRole="button"
       accessibilityLabel="Capture"
       style={{

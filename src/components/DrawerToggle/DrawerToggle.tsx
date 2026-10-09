@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable } from 'react-native';
 
+
+import { Pressable } from '@/ui/HapticPressable';
 import { useDrawerStore } from '@/store/drawerStore';
 import { useThemeStore } from '@/store/themeStore';
 

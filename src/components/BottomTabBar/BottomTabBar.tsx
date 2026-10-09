@@ -1,12 +1,12 @@
-import { Ionicons } from '@expo/vector-icons';
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Pressable, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {Ionicons} from '@expo/vector-icons';
+import type {BottomTabBarProps} from '@react-navigation/bottom-tabs';
+import {Text, View} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
-import { Text } from '@/components/ui/text';
-import { designTokens } from '@/ui/designTokens';
-import { useCaptureStore } from '@/store/captureStore';
-import { useThemeStore } from '@/store/themeStore';
+import {Pressable} from '@/ui/HapticPressable';
+import {useCaptureStore} from '@/store/captureStore';
+import {designTokens} from '@/ui/designTokens';
+import {useThemeStore} from '@/store/themeStore';
 
 type TabConfig = {
   name: string;
@@ -16,13 +16,13 @@ type TabConfig = {
 };
 
 const LEFT_TABS: TabConfig[] = [
-  { name: 'index', label: 'Focus', icon: 'radio-button-on-outline', emphasized: true },
-  { name: 'groups', label: 'Groups', icon: 'folder-outline' },
+  {name: 'index', label: 'Focus', icon: 'radio-button-on-outline', emphasized: true},
+  {name: 'groups', label: 'Groups', icon: 'folder-outline'},
 ];
 
 const RIGHT_TABS: TabConfig[] = [
-  { name: 'library', label: 'Library', icon: 'layers-outline' },
-  { name: 'timeline', label: 'Timeline', icon: 'time-outline' },
+  {name: 'library', label: 'Library', icon: 'layers-outline'},
+  {name: 'timeline', label: 'Timeline', icon: 'time-outline'},
 ];
 
 function TabItem({
@@ -42,16 +42,15 @@ function TabItem({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityState={{ selected: isFocused }}
+      accessibilityState={{selected: isFocused}}
       style={{
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 8,
         gap: 4,
-      }}
-    >
-      <View style={{ alignItems: 'center' }}>
+      }}>
+      <View style={{alignItems: 'center'}}>
         <Ionicons name={config.icon} size={config.emphasized ? 24 : 22} color={iconColor} />
         {accent ? (
           <View
@@ -70,22 +69,22 @@ function TabItem({
           color: accent ? designTokens.accent : color,
           fontSize: 11,
           fontWeight: isFocused ? '600' : '400',
-        }}
-      >
+        }}>
         {config.label}
       </Text>
     </Pressable>
   );
 }
 
-function FloatingCaptureButton() {
-  const openVoiceCapture = useCaptureStore((state) => state.openVoiceCapture);
+function CaptureButton() {
+  const openQuickAdd = useCaptureStore((state) => state.openQuickAdd);
 
   return (
     <Pressable
-      onPress={openVoiceCapture}
+      onPress={openQuickAdd}
       accessibilityRole="button"
       accessibilityLabel="Capture"
+      accessibilityHint="Voice, type, or create manually"
       style={{
         width: 56,
         height: 56,
@@ -94,21 +93,18 @@ function FloatingCaptureButton() {
         justifyContent: 'center',
         marginTop: -28,
         backgroundColor: designTokens.accent,
-      }}
-    >
+      }}>
       <Ionicons name="add" size={30} color={designTokens.white} />
     </Pressable>
   );
 }
 
-export function BottomTabBar({ state, navigation }: BottomTabBarProps) {
-  const { theme } = useThemeStore();
+export function BottomTabBar({state, navigation}: BottomTabBarProps) {
+  const {theme} = useThemeStore();
   const insets = useSafeAreaInsets();
 
   function renderTab(config: TabConfig) {
-    const routeIndex = state.routes.findIndex(
-      (route: { name: string }) => route.name === config.name
-    );
+    const routeIndex = state.routes.findIndex((route: {name: string}) => route.name === config.name);
     const isFocused = state.index === routeIndex;
 
     return (
@@ -132,21 +128,19 @@ export function BottomTabBar({ state, navigation }: BottomTabBarProps) {
         borderTopWidth: 1,
         borderTopColor: designTokens.surfaceBorder,
         paddingBottom: insets.bottom,
-      }}
-    >
+      }}>
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'flex-end',
           minHeight: 64,
           paddingHorizontal: 8,
-        }}
-      >
-        <View style={{ flex: 1, flexDirection: 'row' }}>{LEFT_TABS.map(renderTab)}</View>
+        }}>
+        <View style={{flex: 1, flexDirection: 'row'}}>{LEFT_TABS.map(renderTab)}</View>
 
-        <FloatingCaptureButton />
+        <CaptureButton />
 
-        <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'flex-end' }}>
+        <View style={{flex: 1, flexDirection: 'row', justifyContent: 'flex-end'}}>
           {RIGHT_TABS.map(renderTab)}
         </View>
       </View>

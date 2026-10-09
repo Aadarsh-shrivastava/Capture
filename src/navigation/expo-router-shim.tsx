@@ -37,10 +37,14 @@ function parsePath(href: string): NavTarget {
     if (tab === 'items') tab = 'library';
     if (tab === 'home' || tab === 'today' || tab === 'focus') tab = 'index';
     if (tab === 'history') tab = 'timeline';
+    if (tab === 'groups') return { screen: 'Groups', params };
+    if (tab === 'timeline') return { screen: 'Timeline', params };
     return { screen: 'MainTabs', params: { screen: tab, params } };
   }
   if (path === '/library') return { screen: 'MainTabs', params: { screen: 'library', params } };
-  if (path === '/timeline') return { screen: 'MainTabs', params: { screen: 'timeline', params } };
+  if (path === '/library/list' || path === '/list') return { screen: 'LibraryList', params };
+  if (path === '/groups') return { screen: 'Groups', params };
+  if (path === '/timeline') return { screen: 'Timeline', params };
   if (path === '/create-item') return { screen: 'CreateItem', params };
   if (path === '/settings') return { screen: 'Settings', params };
   if (path === '/history') return { screen: 'History', params };

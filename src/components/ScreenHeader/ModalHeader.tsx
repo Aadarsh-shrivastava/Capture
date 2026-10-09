@@ -1,5 +1,4 @@
-import { Pressable } from 'react-native';
-
+import { Pressable } from '@/ui/HapticPressable';
 import { Box } from '@/components/ui/box';
 import { CloseIcon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';

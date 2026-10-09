@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
   Alert,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -9,8 +8,8 @@ import {
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 
+import { Pressable } from '@/ui/HapticPressable';
 import { groupApi } from '@/api/groupApi';
-import { HeaderButton } from '@/components/ScreenHeader/ScreenHeader';
 import { TabScreenShell } from '@/components/TabScreenShell/TabScreenShell';
 import type { GroupWithCount } from '@/models/group';
 import { EmptyState } from '@/ui/components/EmptyState';
@@ -77,13 +76,11 @@ export function GroupsScreen() {
   return (
     <TabScreenShell
       title="Groups"
-      right={
-        <HeaderButton
-          label={creating ? 'Cancel' : 'New'}
-          onPress={() => setCreating((value) => !value)}
-        />
-      }
-    >
+      action={{
+        icon: creating ? 'close' : 'add',
+        label: creating ? 'Cancel new group' : 'New group',
+        onPress: () => setCreating((value) => !value),
+      }}>
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: spacing.marginMobile,

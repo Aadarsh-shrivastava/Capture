@@ -10,6 +10,7 @@ import { HabitsScreen } from '@/screens/HabitsScreen/HabitsScreen';
 import { HistoryScreen } from '@/screens/HistoryScreen/HistoryScreen';
 import { ItemDetailScreen } from '@/screens/ItemDetailScreen/ItemDetailScreen';
 import { ItemsScreen } from '@/screens/ItemsScreen/ItemsScreen';
+import { ListScreen } from '@/screens/ListScreen/ListScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen/ProfileScreen';
 import { RoutinesScreen } from '@/screens/RoutinesScreen/RoutinesScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen/SettingsScreen';
@@ -38,6 +39,9 @@ export function RootNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MainTabs" component={MainTabs} />
       <Stack.Screen name="CreateItem" component={CreateItemScreen} options={{ presentation: 'modal' }} />
+      <Stack.Screen name="LibraryList" component={ListScreen} />
+      <Stack.Screen name="Groups" component={GroupsScreen} />
+      <Stack.Screen name="Timeline" component={TimelineScreen} />
       <Stack.Screen name="ItemDetail" component={ItemDetailScreen} />
       <Stack.Screen name="GroupDetail" component={GroupDetailScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />

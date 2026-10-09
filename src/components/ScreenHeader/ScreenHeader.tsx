@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
+import { Pressable } from '@/ui/HapticPressable';
 import { DrawerToggle } from '@/components/DrawerToggle/DrawerToggle';
 import { designTokens } from '@/ui/designTokens';
 import { useThemeStore } from '@/store/themeStore';
@@ -51,10 +52,8 @@ export function ScreenHeader({ title, right, leading = 'back', onBack }: ScreenH
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="Go back"
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
         >
-          <Ionicons name="chevron-back" size={22} color={designTokens.accent} />
-          <Text style={{ color: designTokens.accent, fontSize: 16 }}>Back</Text>
+          <Ionicons name="chevron-back" size={24} color={designTokens.textPrimary} />
         </Pressable>
       );
     }
@@ -67,15 +66,13 @@ export function ScreenHeader({ title, right, leading = 'back', onBack }: ScreenH
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: spacing.marginMobile,
+        paddingHorizontal: 20,
         paddingTop: spacing.stackSm,
         paddingBottom: spacing.stackMd,
         backgroundColor: theme.colors.background,
-        borderBottomWidth: 1,
-        borderBottomColor: designTokens.surfaceBorder,
       }}
     >
-      <View style={{ minWidth: 64, alignItems: 'flex-start' }}>{renderLeading()}</View>
+      <View style={{ minWidth: 48, alignItems: 'flex-start' }}>{renderLeading()}</View>
 
       <Text
         numberOfLines={1}
@@ -91,7 +88,7 @@ export function ScreenHeader({ title, right, leading = 'back', onBack }: ScreenH
         {title}
       </Text>
 
-      <View style={{ minWidth: 64, alignItems: 'flex-end' }}>{right ?? null}</View>
+      <View style={{ minWidth: 48, alignItems: 'flex-end' }}>{right ?? null}</View>
     </View>
   );
 }

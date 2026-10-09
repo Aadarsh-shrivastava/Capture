@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable } from 'react-native';
+
 import { useRouter } from 'expo-router';
 
+import { Pressable } from '@/ui/HapticPressable';
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
 import { useDrawerStore } from '@/store/drawerStore';

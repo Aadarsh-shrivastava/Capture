@@ -1,5 +1,6 @@
-import {Dimensions, Pressable, StyleSheet, View} from 'react-native';
+import {Dimensions, StyleSheet, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {Pressable} from '@/ui/HapticPressable';
 import {OverlayContainer} from '@/lib/OverlayContainer';
 
 import {Box} from '@/components/ui/box';
@@ -13,11 +14,10 @@ import {DrawerProfile} from './components/DrawerProfile';
 const DRAWER_WIDTH = Math.min(Dimensions.get('window').width * 0.52, 320);
 
 const MENU_ITEMS = [
+  {label: 'Groups', icon: 'folder-outline' as const, href: '/(tabs)/groups'},
+  {label: 'Library', icon: 'layers-outline' as const, href: '/(tabs)/library'},
+  {label: 'Timeline', icon: 'time-outline' as const, href: '/(tabs)/timeline'},
   {label: 'Settings', icon: 'settings-outline' as const, href: '/settings'},
-  {label: 'About', icon: 'information-circle-outline' as const, href: '/about'},
-  // { label: 'Habits', icon: 'repeat-outline' as const, href: '/habits' },
-  // { label: 'Routines', icon: 'calendar-outline' as const, href: '/routines' },
-  // { label: 'History', icon: 'time-outline' as const, href: '/history' },
 ];
 
 export function AppDrawer() {

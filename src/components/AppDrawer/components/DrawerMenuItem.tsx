@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable } from 'react-native';
+
 import { useRouter } from 'expo-router';
 
+import { Pressable } from '@/ui/HapticPressable';
 import { Text } from '@/components/ui/text';
 import { useDrawerStore } from '@/store/drawerStore';
 import { useThemeStore } from '@/store/themeStore';
@@ -30,7 +31,7 @@ export function DrawerMenuItem({ label, icon, href }: DrawerMenuItemProps) {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.stackMd,
-        paddingVertical: spacing.stackMd,
+        paddingVertical: 12,
       }}
     >
       <Ionicons name={icon} size={20} color={colors.onSurfaceVariant} />

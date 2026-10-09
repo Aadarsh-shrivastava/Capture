@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Capture</string>
+    <string name="widget_title">Capture</string>
+    <string name="widget_subtitle">Tap to add</string>
+    <string name="widget_focus_label">Now</string>
+    <string name="widget_empty_focus">Nothing in focus</string>
+    <string name="widget_add_task">Press to add task</string>
+    <string name="widget_description">Quick capture from your home screen</string>
+    <string name="widget_input_hint">What do you want to remember?</string>
+    <string name="widget_submit">Save</string>
 </resources>

@@ -1,6 +1,7 @@
 import {Ionicons} from '@expo/vector-icons';
-import {ActivityIndicator, Pressable, Text, View} from 'react-native';
+import {ActivityIndicator, Text, View} from 'react-native';
 
+import {Pressable} from '@/ui/HapticPressable';
 import type {FocusActivityEvent} from '@/models/focusTask';
 import {designTokens, formatRelativeDay} from '@/ui/designTokens';
 import {getItemTypeConfig} from '@/ui/itemTypeConfig';

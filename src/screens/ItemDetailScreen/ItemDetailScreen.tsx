@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Linking, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
+import { Pressable } from '@/ui/HapticPressable';
 import { itemApi } from '@/api/itemApi';
 import { HeaderButton } from '@/components/ScreenHeader/ScreenHeader';
 import { ScreenShell } from '@/components/ScreenShell/ScreenShell';

@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 
+import { Pressable } from '@/ui/HapticPressable';
 import { Text } from '@/components/ui/text';
 import { useThemeStore } from '@/store/themeStore';
 import { designTokens } from '@/ui/designTokens';
@@ -22,10 +23,11 @@ function ActionTile({ label, count, typeName, filterType }: ActionTileProps) {
   return (
     <Pressable
       onPress={() =>
-        router.push({
-          pathname: '/(tabs)/library',
-          params: filterType ? { type: filterType } : undefined,
-        })
+        router.push(
+          filterType
+            ? { pathname: '/library/list', params: { type: filterType } }
+            : '/(tabs)/library',
+        )
       }
       style={{
         flex: 1,

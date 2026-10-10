@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
+import { Pressable } from '@/ui/HapticPressable';
 import { ScreenShell } from '@/components/ScreenShell/ScreenShell';
 import { DB_VERSION } from '@/db/database';
 import { useThemeStore } from '@/store/themeStore';

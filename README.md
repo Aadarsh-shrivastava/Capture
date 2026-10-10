@@ -122,6 +122,22 @@ Capture/
 
 ---
 
+## Home screen widget (Android)
+
+1. Rebuild the app (`npm run android`).
+2. Long-press the home screen → **Widgets** → add **Capture**.
+3. Tap the widget → type your prompt → **Save**.
+
+The app analyzes the text (same heuristics as in-app capture) and saves an item locally. No review step — built for speed.
+
+You can also **share text** into Capture from other apps, or open a deep link:
+
+`capture://capture?text=Buy%20milk%20tomorrow`
+
+(iOS: deep links and Shortcuts; add a WidgetKit extension later for a true home widget.)
+
+---
+
 ## How capture works
 
 ### Entry points
@@ -187,6 +203,7 @@ TypeScript and Babel resolve `@/` to `src/` and `@/components/ui/` to `component
 
 ### Voice capture not working
 
+- **`Cannot read property 'startSpeech' of null`**: the stock `3.x` voice package does not register under React Native **New Architecture**. This repo pins the New Arch–compatible npm alias (`yet-another-react-native-voice@4.0.0`). After `npm install`, **rebuild** the native app (`npm run android` / `npm run ios` and `pod install` on iOS).
 - Test on a **physical device**; simulators often lack reliable mic/speech APIs.
 - Grant microphone (and speech on iOS) when prompted.
 - On Android, deny/re-allow mic in system Settings if stuck.
@@ -221,7 +238,7 @@ npm install --legacy-peer-deps
 - **React Navigation** (tabs + stack)
 - **expo-sqlite** — local database
 - **llama.rn** — on-device LLM inference
-- **@react-native-voice/voice** — speech-to-text
+- **@react-native-voice/voice** (New Arch build via `yet-another-react-native-voice@4.0.0`) — speech-to-text
 - **zustand** — lightweight state
 
 ---

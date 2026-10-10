@@ -71,7 +71,7 @@ export function GroupDetailScreen() {
         </Text>
 
         {error ? (
-          <Text style={{ color: '#ff8a80', fontSize: 13, marginBottom: 12 }}>{error}</Text>
+          <Text style={{ color: designTokens.textSecondary, fontSize: 13, marginBottom: 12 }}>{error}</Text>
         ) : null}
 
         {items.length === 0 ? (

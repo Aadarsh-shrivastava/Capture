@@ -1,5 +1,6 @@
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
+import { Pressable } from '@/ui/HapticPressable';
 import { designTokens } from '@/ui/designTokens';
 
 type NowTaskCardProps = {

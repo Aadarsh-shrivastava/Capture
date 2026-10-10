@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
+import { Pressable } from '@/ui/HapticPressable';
 import { designTokens } from '@/ui/designTokens';
 
 type QuickAccessTileProps = {

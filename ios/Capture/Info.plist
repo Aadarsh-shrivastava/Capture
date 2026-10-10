@@ -52,5 +52,16 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.capture</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>capture</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -13,6 +13,8 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		894DD8CA17B91ED6B1C7C6D6 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1241BC7168778C7C82EC3E44 /* ExpoModulesProvider.swift */; };
 		90F57C5B9045B201A642D20E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		B2C3D4E51A68108700A75B9B /* HomeWidgetCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E41A68108700A75B9B /* HomeWidgetCapture.swift */; };
+		B2C3D4E71A68108700A75B9B /* HomeWidgetCapture.m in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E61A68108700A75B9B /* HomeWidgetCapture.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +29,8 @@
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Capture/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Capture/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A1B2C3D41A68108700A75B9A /* Capture.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; name = Capture.entitlements; path = Capture/Capture.entitlements; sourceTree = "<group>"; };
+		B2C3D4E41A68108700A75B9B /* HomeWidgetCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HomeWidgetCapture.swift; path = Capture/HomeWidgetCapture.swift; sourceTree = "<group>"; };
+		B2C3D4E61A68108700A75B9B /* HomeWidgetCapture.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = HomeWidgetCapture.m; path = Capture/HomeWidgetCapture.m; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -55,6 +59,8 @@
 			children = (
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
+				B2C3D4E41A68108700A75B9B /* HomeWidgetCapture.swift */,
+				B2C3D4E61A68108700A75B9B /* HomeWidgetCapture.m */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				A1B2C3D41A68108700A75B9A /* Capture.entitlements */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
@@ -288,6 +294,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
+				B2C3D4E51A68108700A75B9B /* HomeWidgetCapture.swift in Sources */,
+				B2C3D4E71A68108700A75B9B /* HomeWidgetCapture.m in Sources */,
 				894DD8CA17B91ED6B1C7C6D6 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

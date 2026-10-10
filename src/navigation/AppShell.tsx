@@ -4,6 +4,7 @@ import { AppDrawer } from '@/components/AppDrawer/AppDrawer';
 import { CaptureFlowHost } from '@/components/CaptureFlowHost/CaptureFlowHost';
 import { CaptureModal } from '@/components/CaptureModal/CaptureModal';
 import { CaptureVoiceHost } from '@/components/CaptureVoiceHost/CaptureVoiceHost';
+import { HomeWidgetHandler } from '@/widget/HomeWidgetHandler';
 
 import { RootNavigator } from './RootNavigator';
 
@@ -15,6 +16,7 @@ export function AppShell() {
       <CaptureModal />
       <CaptureFlowHost />
       <CaptureVoiceHost />
+      <HomeWidgetHandler />
     </View>
   );
 }

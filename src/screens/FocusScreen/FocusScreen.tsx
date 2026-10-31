@@ -10,6 +10,7 @@ import {useFocusData} from '@/hooks/useFocusData';
 import {useCaptureStore} from '@/store/captureStore';
 import {useLingeringDone} from '@/hooks/useLingeringDone';
 import {Appear, SlideOut} from '@/motion';
+import {useRepeatPreview} from '@/recurrence';
 import {DayProgress} from '@/progress';
 import type {FocusTask} from '@/models/focusTask';
 import {
@@ -65,18 +66,27 @@ export function FocusScreen() {
   const selected = useMemo(() => moment(selectedDate), [selectedDate]);
   const openTextCapture = useCaptureStore((state) => state.openTextCapture);
   const {linger, withLingering, isLingering} = useLingeringDone();
-  const dayTasks = useMemo(() => tasksForDay(withLingering(tasks), selected), [tasks, selected, withLingering]);
   const isToday = selected.isSame(moment(), 'day');
+  // Repeating tasks also appear (dimmed, read-only) on the future days they'll land on.
+  const repeatPreview = useRepeatPreview(tasks, moment(selectedDate).add(14, 'days').toDate());
+  const previewTasks = useMemo(
+    () => (isToday ? [] : repeatPreview.get(selected.format('YYYY-MM-DD')) ?? []),
+    [isToday, repeatPreview, selected],
+  );
+  const dayTasks = useMemo(
+    () => [...tasksForDay(withLingering(tasks), selected), ...previewTasks],
+    [tasks, selected, withLingering, previewTasks],
+  );
   const {now, next, later} = useMemo(() => splitFocusDay(dayTasks), [dayTasks]);
   /** Other days: same order (timed first), no sections. */
   const dayList = useMemo(() => (now ? [now, ...next, ...later] : []), [now, next, later]);
 
   const markedDays = useMemo(
-    () =>
-      tasks
-        .map((task) => dueMoment(task)?.format('YYYY-MM-DD'))
-        .filter((value): value is string => Boolean(value)),
-    [tasks],
+    () => [
+      ...tasks.map((task) => dueMoment(task)?.format('YYYY-MM-DD')).filter((value): value is string => Boolean(value)),
+      ...repeatPreview.keys(),
+    ],
+    [tasks, repeatPreview],
   );
 
   function openTask(task: FocusTask) {
@@ -111,6 +121,14 @@ export function FocusScreen() {
   }
 
   function renderRow(task: FocusTask) {
+    if (previewTasks.includes(task)) {
+      // A future repeat: open the real task, but no swipe/select/complete on the preview.
+      return (
+        <View key={`repeat-${task.id}`} style={{opacity: 0.45}}>
+          <NextTaskRow task={{...task, title: `${task.title} · repeats`}} onPress={() => openTask(task)} />
+        </View>
+      );
+    }
     if (isLingering(task.id)) {
       return (
         <SlideOut key={task.id} out>

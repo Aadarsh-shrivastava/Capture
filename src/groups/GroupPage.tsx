@@ -8,6 +8,7 @@ import {groupApi} from '@/api/groupApi';
 import {ScreenShell} from '@/components/ScreenShell/ScreenShell';
 import {typeHasBehavior} from '@/domain/behaviorTypeConfig';
 import {Selectable} from '@/selection';
+import {MascotMessage} from '@/mascot';
 import {useCaptureStore} from '@/store/captureStore';
 import {OptionsSheet} from '@/components/sheets/OptionsSheet';
 import type {ItemWithType} from '@/models/item';
@@ -87,22 +88,11 @@ export function GroupPage() {
         </Pressable>
       }>
       <ScrollView contentContainerStyle={{paddingHorizontal: 20, paddingTop: 4, paddingBottom: 24}}>
-        <Pressable onPress={() => setSheet('edit')}>
-          <Text style={{color: group.description ? designTokens.textSecondary : designTokens.textTertiary, fontSize: 15, lineHeight: 22}}>
-            {group.description || 'Add a description so capture can sort items here automatically.'}
-          </Text>
-        </Pressable>
-        <Text style={{color: designTokens.textTertiary, fontSize: 13, marginTop: 8, marginBottom: 8}}>
-          {items.length} {items.length === 1 ? 'item' : 'items'}
-          {openTasks ? ` · ${openTasks} ${openTasks === 1 ? 'task' : 'tasks'}` : ''}
-        </Text>
 
         {error ? <Text style={{color: designTokens.textSecondary, fontSize: 13}}>{error}</Text> : null}
 
         {items.length === 0 ? (
-          <Text style={{color: designTokens.textTertiary, fontSize: 14, paddingVertical: 32, textAlign: 'center'}}>
-            Nothing here yet. Add items below, or capture something that fits.
-          </Text>
+          <MascotMessage pose="chibiAway" message="Nothing here yet. Add items below, or capture something that fits." />
         ) : (
           sectionsByType(items).map(section => (
             <View key={section.typeName}>
@@ -115,6 +105,13 @@ export function GroupPage() {
             </View>
           ))
         )}
+
+        {/* Secondary info: small, dim, at the bottom. Description is edited from the ⋯ menu. */}
+        <Text style={{color: designTokens.textTertiary, fontSize: 12, textAlign: 'center', marginTop: 28, lineHeight: 18, opacity: 0.8}}>
+          {[group.description, `${items.length} ${items.length === 1 ? 'item' : 'items'}`, openTasks ? `${openTasks} ${openTasks === 1 ? 'task' : 'tasks'}` : '']
+            .filter(Boolean)
+            .join(' · ')}
+        </Text>
       </ScrollView>
 
       <View

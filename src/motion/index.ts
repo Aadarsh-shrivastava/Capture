@@ -3,6 +3,7 @@
 // so it is deliberately not used anywhere.
 export {Appear} from './Appear';
 export {SlideOut} from './SlideOut';
+export {ThoughtTicker} from './ThoughtTicker';
 
 /** Gap between rows when several slide out one after another. */
 export const STAGGER_MS = 90;

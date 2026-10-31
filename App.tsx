@@ -8,13 +8,14 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { AppShell } from '@/navigation/AppShell';
-import { OnboardingFlow } from '@/onboarding';
+import { OnboardingFlow, useOnboardingPreview } from '@/onboarding';
 import { DatabaseProvider } from '@/providers/DatabaseProvider';
 import { getVaultConfig } from '@/vault';
 
 export default function App() {
   // No vault yet = first run: onboarding creates it before the database (which lives inside it) opens.
   const [hasVault, setHasVault] = useState(() => getVaultConfig() !== null);
+  const preview = useOnboardingPreview();
   const [fontsLoaded] = useFonts({
     ...Ionicons.font,
   });
@@ -31,14 +32,20 @@ export default function App() {
     <GestureHandlerRootView style={{flex: 1}}>
       <SafeAreaProvider>
         <GluestackUIProvider mode="dark">
-          {hasVault ? (
+          {hasVault && !preview.preview ? (
             <DatabaseProvider>
               <NavigationContainer>
                 <AppShell />
               </NavigationContainer>
             </DatabaseProvider>
           ) : (
-            <OnboardingFlow onDone={() => setHasVault(true)} />
+            <OnboardingFlow
+              preview={preview.preview}
+              onDone={() => {
+                preview.setPreview(false);
+                setHasVault(true);
+              }}
+            />
           )}
         </GluestackUIProvider>
       </SafeAreaProvider>

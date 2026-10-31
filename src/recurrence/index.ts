@@ -1,2 +1,3 @@
 export {RepeatField} from './RepeatField';
-export {inferRepeatUnit, isRepeatUnit, nextDueAt, repeatLabel, WEEKDAY_LABELS, type RepeatUnit} from './utils';
+export {useRepeatPreview} from './useRepeatPreview';
+export {inferRepeatUnit, isRepeatUnit, nextDueAt, repeatLabel, upcomingOccurrences, WEEKDAY_LABELS, type RepeatUnit} from './utils';

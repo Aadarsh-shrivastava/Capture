@@ -4,6 +4,7 @@ import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
 import {Pressable} from '@/ui/HapticPressable';
 import {designTokens} from '@/ui/designTokens';
 import {useThemeStore} from '@/store/themeStore';
+import {Mascot} from '@/mascot';
 
 type Props = {
   isListening: boolean;
@@ -33,24 +34,36 @@ export function CaptureVoicePanel({
   const statusLabel = isAnalyzing
     ? 'Analyzing…'
     : isProcessing
-      ? 'Processing speech…'
-      : isListening
-        ? 'Listening… tap to stop'
-        : 'Tap to speak';
+    ? 'Processing speech…'
+    : isListening
+    ? 'Listening… tap to stop'
+    : 'Tap to speak';
 
   return (
-    <View style={[styles.container, {borderColor: colors.border, borderRadius: rounded.xl}]}>
-      <Text style={[styles.status, {color: colors.onSurfaceVariant}]}>{statusLabel}</Text>
+    <View
+      style={[
+        styles.container,
+        {borderColor: colors.border, borderRadius: rounded.xl},
+      ]}>
+      {/* Always there; same-size poses so nothing jumps when listening starts. */}
+      <Mascot pose={isListening ? 'surprised' : 'neutral'} width={90} />
+      <Text style={[styles.status, {color: colors.onSurfaceVariant}]}>
+        {statusLabel}
+      </Text>
 
       <Pressable
         onPress={isListening ? onStop : onStart}
         disabled={busy}
         accessibilityRole="button"
-        accessibilityLabel={isListening ? 'Stop recording' : 'Start voice capture'}
+        accessibilityLabel={
+          isListening ? 'Stop recording' : 'Start voice capture'
+        }
         style={[
           styles.micButton,
           {
-            backgroundColor: isListening ? designTokens.accent : colors.surfaceContainer,
+            backgroundColor: isListening
+              ? designTokens.accent
+              : colors.surfaceContainer,
             borderColor: isListening ? designTokens.accent : colors.border,
             opacity: busy ? 0.5 : 1,
           },
@@ -66,29 +79,54 @@ export function CaptureVoicePanel({
         )}
       </Pressable>
 
-      {isListening ? (
-        <View style={styles.listeningRow}>
-          <View style={[styles.pulseDot, {backgroundColor: designTokens.accent}]} />
-          <Pressable onPress={onCancel} hitSlop={8}>
-            <Text style={[styles.cancelText, {color: colors.onSurfaceVariant}]}>Cancel</Text>
-          </Pressable>
-        </View>
-      ) : null}
-
-      {displayText ? (
-        <View style={[styles.transcriptBox, {backgroundColor: colors.surfaceContainer, borderRadius: rounded.md}]}>
-          <Text style={[styles.transcriptLabel, {color: colors.onSurfaceVariant}]}>Heard</Text>
-          <Text style={[styles.transcript, {color: colors.onSurface}]} numberOfLines={4}>
-            {displayText}
+      {/* Reserved slots below keep the card the same size in every state. */}
+      <View
+        style={[styles.listeningRow, {opacity: isListening ? 1 : 0}]}
+        pointerEvents={isListening ? 'auto' : 'none'}>
+        <View
+          style={[styles.pulseDot, {backgroundColor: designTokens.accent}]}
+        />
+        <Pressable onPress={onCancel} hitSlop={8}>
+          <Text style={[styles.cancelText, {color: colors.onSurfaceVariant}]}>
+            Cancel
           </Text>
-        </View>
-      ) : (
-        <Text style={[styles.hint, {color: colors.onSurfaceVariant}]}>
-          Say a task, note, idea, or journal entry — local AI will structure it for you.
-        </Text>
-      )}
+        </Pressable>
+      </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <View style={styles.textSlot}>
+        {displayText ? (
+          <View
+            style={[
+              styles.transcriptBox,
+              {
+                backgroundColor: colors.surfaceContainer,
+                borderRadius: rounded.md,
+              },
+            ]}>
+            <Text
+              style={[
+                styles.transcriptLabel,
+                {color: colors.onSurfaceVariant},
+              ]}>
+              Heard
+            </Text>
+            <Text
+              style={[styles.transcript, {color: colors.onSurface}]}
+              numberOfLines={4}>
+              {displayText}
+            </Text>
+          </View>
+        ) : (
+          <Text style={[styles.hint, {color: colors.onSurfaceVariant}]}>
+            Say a task, note, idea, or journal entry — local AI will structure
+            it for you.
+          </Text>
+        )}
+      </View>
+
+      <Text style={styles.error} numberOfLines={2}>
+        {error ?? ' '}
+      </Text>
     </View>
   );
 }
@@ -127,6 +165,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
+  textSlot: {
+    width: '100%',
+    height: 124,
+    justifyContent: 'center',
+  },
   transcriptBox: {
     width: '100%',
     padding: 12,
@@ -152,5 +195,6 @@ const styles = StyleSheet.create({
     color: '#e85',
     fontSize: 13,
     textAlign: 'center',
+    minHeight: 36,
   },
 });

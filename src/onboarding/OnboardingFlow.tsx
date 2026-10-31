@@ -4,6 +4,7 @@ import {Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {Appear} from '@/motion';
+import {Mascot} from '@/mascot';
 import {Avatar, pickProfilePhoto, useProfileStore} from '@/profile';
 import {PrimaryButton} from '@/ui/components/Primitives';
 import {designTokens, radius} from '@/ui/designTokens';
@@ -32,7 +33,8 @@ function Title({title, body}: {title: string; body: string}) {
 }
 
 /** First run: create the vault (where all data lives), then a basic profile. */
-export function OnboardingFlow({onDone}: {onDone: () => void}) {
+/** `preview`: replay for dev — the vault step just moves on instead of creating a vault. */
+export function OnboardingFlow({onDone, preview = false}: {onDone: () => void; preview?: boolean}) {
   const insets = useSafeAreaInsets();
   const profile = useProfileStore();
   const [step, setStep] = useState<Step>('welcome');
@@ -44,7 +46,7 @@ export function OnboardingFlow({onDone}: {onDone: () => void}) {
   async function makeVault() {
     setBusy(true);
     try {
-      await createVault(vaultName, location);
+      if (!preview) await createVault(vaultName, location);
       setStep('profile');
     } catch (err) {
       Alert.alert('Could not create the vault', err instanceof Error ? err.message : String(err));
@@ -82,6 +84,11 @@ export function OnboardingFlow({onDone}: {onDone: () => void}) {
 
       <ScrollView contentContainerStyle={{flexGrow: 1, padding: 24, paddingTop: 48}} keyboardShouldPersistTaps="handled">
         <Appear key={step} from="up">
+          <Mascot
+            pose={step === 'welcome' ? 'neutral' : step === 'vault' ? 'chibiReading' : 'chibiHappy'}
+            width={step === 'welcome' ? 220 : 120}
+            style={{alignSelf: 'center', marginBottom: 16}}
+          />
           {step === 'welcome' ? (
             <Title
               title="Capture"

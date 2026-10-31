@@ -78,3 +78,24 @@ export function withRepeat(draft: CaptureItemDraft, unit: RepeatUnit | null, day
     days: unit === 'week' ? encode([...days].sort()) : '[]',
   });
 }
+
+/**
+ * Future dates (YYYY-MM-DD) a repeating item will land on after its current due, up to `until`.
+ * Display only — nothing is stored; the real item still moves forward when completed.
+ */
+export function upcomingOccurrences(
+  dueAt: string,
+  intervalValue: string | number,
+  unit: RepeatUnit,
+  days: number[],
+  until: Date,
+): string[] {
+  const out: string[] = [];
+  let cursor: string | null = dueAt;
+  for (let i = 0; i < 400 && cursor; i += 1) {
+    cursor = nextDueAt(cursor, intervalValue, unit, moment(cursor).toDate(), days);
+    if (!cursor || moment(cursor).isAfter(until, 'day')) break;
+    out.push(moment(cursor).format('YYYY-MM-DD'));
+  }
+  return out;
+}

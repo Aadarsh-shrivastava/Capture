@@ -72,14 +72,12 @@ export function CaptureVoiceHost() {
       fullHeight
       footer={
         <View style={{paddingHorizontal: 20, paddingTop: 8, gap: 12}}>
-          {speech.displayText.trim() && !speech.isListening ? (
-            <PrimaryButton
-              label="Continue"
-              onPress={handleContinue}
-              loading={analyzing || isAnalyzingVoice}
-              disabled={speech.isProcessing}
-            />
-          ) : null}
+          <PrimaryButton
+            label="Continue"
+            onPress={handleContinue}
+            loading={analyzing || isAnalyzingVoice}
+            disabled={speech.isProcessing || speech.isListening || !speech.displayText.trim()}
+          />
           <PillButton icon="create-outline" label="Type instead" onPress={handleOpenText} />
         </View>
       }>

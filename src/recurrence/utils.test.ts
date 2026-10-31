@@ -1,4 +1,4 @@
-import {inferRepeatUnit, nextDueAt, repeatUnitOf, withRepeat} from './utils';
+import {inferRepeatUnit, nextDueAt, repeatUnitOf, upcomingOccurrences, withRepeat} from './utils';
 
 const now = new Date(2026, 9, 31, 10, 0); // Sat 31 Oct 2026, 10:00 local
 
@@ -27,4 +27,11 @@ test('weekly on chosen weekdays', () => {
   const next = nextDueAt(new Date(2026, 9, 31, 18).toISOString(), 1, 'week', now, [1, 3, 5]);
   expect(new Date(next ?? '').getTime()).toBe(new Date(2026, 10, 2, 18).getTime());
   expect(nextDueAt('2026-11-02', 1, 'week', new Date(2026, 10, 2, 9), [1, 3, 5])).toBe('2026-11-04');
+});
+
+test('upcoming occurrences for display', () => {
+  const due = new Date(2026, 9, 31, 18).toISOString(); // Sat
+  expect(upcomingOccurrences(due, 1, 'day', [], new Date(2026, 10, 3))).toEqual(['2026-11-01', '2026-11-02', '2026-11-03']);
+  expect(upcomingOccurrences(due, 1, 'week', [1, 3], new Date(2026, 10, 8))).toEqual(['2026-11-02', '2026-11-04']);
+  expect(upcomingOccurrences('2026-10-31', 1, 'week', [], new Date(2026, 10, 6))).toEqual([]);
 });

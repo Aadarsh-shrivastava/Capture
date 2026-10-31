@@ -23,6 +23,8 @@ import {showUndo} from '@/undo';
 import type {Group} from '@/models/group';
 import {createItemFromCaptureDraft} from '@/services/captureItemService';
 import {ItemForm} from '@/ui/components/ItemForm';
+import {Mascot} from '@/mascot';
+import {ThoughtTicker} from '@/motion';
 import {PrimaryButton} from '@/ui/components/Primitives';
 import {designTokens} from '@/ui/designTokens';
 import {useThemeStore} from '@/store/themeStore';
@@ -184,6 +186,7 @@ export function CaptureFlowModal({
           keyboardShouldPersistTaps="handled">
           {currentStep === 'text' ? (
             <>
+              <Mascot pose="chibiIdea" width={96} style={{alignSelf: 'center', marginBottom: 12}} />
               <TextInput
                 value={input}
                 onChangeText={setInput}
@@ -232,15 +235,15 @@ export function CaptureFlowModal({
 
           {currentStep === 'analyzing' ? (
             <View style={styles.analyzingBox}>
-              <ActivityIndicator size="large" color={designTokens.accent} />
+              <Mascot pose="chibiThinking" width={120} />
               <Text style={[styles.analyzingText, {color: colors.onSurfaceVariant}]}>
                 Turning your words into a structured item…
               </Text>
-              {steps.map((line) => (
-                <Text key={line} style={{color: colors.onSurface, fontSize: 13, marginTop: 6}}>
-                  ✓ {line}
-                </Text>
-              ))}
+              {/* Latest agent step only, crossfading as the next one arrives. Fixed height so nothing shifts. */}
+              <ThoughtTicker
+                text={steps.length ? steps[steps.length - 1] : 'Reading your words…'}
+                style={{color: colors.onSurface, fontSize: 14, marginTop: 10, minHeight: 40, textAlign: 'center'}}
+              />
             </View>
           ) : null}
 
@@ -250,7 +253,12 @@ export function CaptureFlowModal({
             </>
           ) : null}
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? (
+            <View style={{alignItems: 'center', gap: 6}}>
+              <Mascot pose="sheepish" width={90} />
+              <Text style={styles.error}>{error}</Text>
+            </View>
+          ) : null}
         </ScrollView>
 
         {currentStep === 'review' && draft ? (

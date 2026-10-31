@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Alert, Switch, Text, View } from 'react-native';
 
 import { openDailyReview } from '@/dailyReview';
+import { useOnboardingPreview } from '@/onboarding';
 import { openWeeklyReview } from '@/weeklyReview';
 import { runReminderJobNow } from '@/notifications';
 import { useSelectiveKnowledgeStore } from '@/selectiveKnowledge/store';
@@ -50,6 +51,13 @@ export function DevPanel({ onClose }: { onClose: () => void }) {
         <PrimaryButton compact label="Show weekly review" icon="calendar-outline" onPress={() => {
           onClose();
           setTimeout(openWeeklyReview, 350);
+        }} />
+
+        <Text style={styles.sectionLabel}>Onboarding</Text>
+        <PrimaryButton compact label="Replay onboarding" icon="play-outline" onPress={() => {
+          onClose();
+          // Preview mode: your vault and data are untouched; only the profile step saves.
+          setTimeout(() => useOnboardingPreview.getState().setPreview(true), 350);
         }} />
 
         <Text style={styles.sectionLabel}>Capture</Text>

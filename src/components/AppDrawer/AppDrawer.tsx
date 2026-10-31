@@ -1,4 +1,5 @@
-import {Dimensions, StyleSheet, View} from 'react-native';
+import {useEffect, useRef, useState} from 'react';
+import {Animated, Dimensions, StyleSheet, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Pressable} from '@/ui/HapticPressable';
 import {OverlayContainer} from '@/lib/OverlayContainer';
@@ -25,22 +26,31 @@ export function AppDrawer() {
   const {theme} = useThemeStore();
   const {colors, spacing} = theme;
   const insets = useSafeAreaInsets();
+  // Stay mounted while sliding out; slide + backdrop fade run on the native thread.
+  const [mounted, setMounted] = useState(isOpen);
+  const progress = useRef(new Animated.Value(0)).current;
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) setMounted(true);
+    const anim = Animated.timing(progress, {toValue: isOpen ? 1 : 0, duration: 240, useNativeDriver: true});
+    anim.start(({finished}) => {
+      if (finished && !isOpen) setMounted(false);
+    });
+    return () => anim.stop();
+  }, [isOpen, progress]);
+
+  if (!mounted) return null;
 
   return (
     <OverlayContainer>
-      <View style={StyleSheet.absoluteFill}>
-        <Pressable
-          onPress={close}
-          style={[
-            StyleSheet.absoluteFill,
-            {backgroundColor: 'rgba(0, 0, 0, 0.55)'},
-          ]}
-        />
+      <View style={StyleSheet.absoluteFill} pointerEvents={isOpen ? 'auto' : 'none'}>
+        <Animated.View style={[StyleSheet.absoluteFill, {opacity: progress}]}>
+          <Pressable onPress={close} style={[StyleSheet.absoluteFill, {backgroundColor: 'rgba(0, 0, 0, 0.55)'}]} />
+        </Animated.View>
 
-        <View
+        <Animated.View
           style={{
+            transform: [{translateX: progress.interpolate({inputRange: [0, 1], outputRange: [-DRAWER_WIDTH, 0]})}],
             position: 'absolute',
             top: 0,
             left: 0,
@@ -71,7 +81,7 @@ export function AppDrawer() {
               <DrawerMenuItem key={item.href} {...item} />
             ))}
           </Box>
-        </View>
+        </Animated.View>
       </View>
     </OverlayContainer>
   );

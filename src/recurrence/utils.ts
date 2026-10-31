@@ -1,5 +1,6 @@
 import moment from 'moment';
 
+import {encode, parseNumbers, withBehavior} from '@/behaviors/data';
 import type {CaptureItemDraft} from '@/capture/captureItemDraft';
 import {hasTimeComponent} from '@/ui/formatDateTime';
 
@@ -26,19 +27,39 @@ export function inferRepeatUnit(text: string): RepeatUnit {
   return 'week';
 }
 
-/** Next due after `now`, stepping from the current due by the interval. Keeps date-only vs timed format. */
-export function nextDueAt(dueAt: string, intervalValue: string | number, unit: RepeatUnit, now = new Date()): string | null {
+export const WEEKDAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+/**
+ * Next due after `now`, stepping from the current due. Keeps date-only vs timed format.
+ * Weekly with `days` (0=Sun…6=Sat) means "on these weekdays": walk day by day to the next match.
+ */
+export function nextDueAt(
+  dueAt: string,
+  intervalValue: string | number,
+  unit: RepeatUnit,
+  now = new Date(),
+  days: number[] = [],
+): string | null {
   const due = moment(dueAt);
-  const step = Math.max(1, Number(intervalValue) || 1);
   if (!due.isValid()) return null;
   const timed = hasTimeComponent(dueAt);
+  const byWeekday = unit === 'week' && days.length > 0;
+  const step = Math.max(1, Number(intervalValue) || 1);
+  const pending = () => (timed ? due.isSameOrBefore(now) : due.isBefore(now, 'day'));
   do {
-    due.add(step, unit);
-  } while (timed ? due.isSameOrBefore(now) : due.isBefore(now, 'day'));
+    if (byWeekday) due.add(1, 'day');
+    else due.add(step, unit);
+  } while (pending() || (byWeekday && !days.includes(due.day())));
   return timed ? due.format() : due.format('YYYY-MM-DD');
 }
 
-export function repeatUnitOf(draft: Pick<CaptureItemDraft, 'optionalBehaviorNames' | 'behaviorData'>): RepeatUnit | null {
+type Draftish = Pick<CaptureItemDraft, 'optionalBehaviorNames' | 'behaviorData'>;
+
+export function repeatDaysOf(draft: Draftish): number[] {
+  return parseNumbers(draft.behaviorData?.Repeatable?.days);
+}
+
+export function repeatUnitOf(draft: Draftish): RepeatUnit | null {
   if (!draft.optionalBehaviorNames?.includes('Repeatable')) return null;
   const unit = draft.behaviorData?.Repeatable?.interval_unit;
   return isRepeatUnit(unit) ? unit : null;
@@ -48,14 +69,12 @@ export function repeatLabel(unit: RepeatUnit | null): string {
   return unit ? REPEAT_LABEL[unit] : 'Never';
 }
 
-/** Draft with Repeatable turned on (every 1 unit) or off. */
-export function withRepeat(draft: CaptureItemDraft, unit: RepeatUnit | null): CaptureItemDraft {
-  const names = (draft.optionalBehaviorNames ?? []).filter(name => name !== 'Repeatable');
-  const {Repeatable: _old, ...rest} = draft.behaviorData ?? {};
-  if (!unit) return {...draft, optionalBehaviorNames: names, behaviorData: rest};
-  return {
-    ...draft,
-    optionalBehaviorNames: [...names, 'Repeatable'],
-    behaviorData: {...rest, Repeatable: {...(_old ?? {}), interval_value: '1', interval_unit: unit}},
-  };
+/** Draft with Repeatable turned on (every 1 unit, optional weekdays for weekly) or off. */
+export function withRepeat(draft: CaptureItemDraft, unit: RepeatUnit | null, days: number[] = []): CaptureItemDraft {
+  if (!unit) return withBehavior(draft, 'Repeatable', null);
+  return withBehavior(draft, 'Repeatable', {
+    interval_value: '1',
+    interval_unit: unit,
+    days: unit === 'week' ? encode([...days].sort()) : '[]',
+  });
 }

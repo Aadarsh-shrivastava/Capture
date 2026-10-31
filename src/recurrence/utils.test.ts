@@ -21,3 +21,10 @@ test('infers unit from text and toggles on a draft', () => {
   expect(repeatUnitOf(on)).toBe('day');
   expect(repeatUnitOf(withRepeat(on, null))).toBeNull();
 });
+
+test('weekly on chosen weekdays', () => {
+  // Due Sat 31 Oct 18:00, repeats Mon/Wed/Fri → next is Mon 2 Nov 18:00.
+  const next = nextDueAt(new Date(2026, 9, 31, 18).toISOString(), 1, 'week', now, [1, 3, 5]);
+  expect(new Date(next ?? '').getTime()).toBe(new Date(2026, 10, 2, 18).getTime());
+  expect(nextDueAt('2026-11-02', 1, 'week', new Date(2026, 10, 2, 9), [1, 3, 5])).toBe('2026-11-04');
+});

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Linking, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +7,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable } from '@/ui/HapticPressable';
 import { itemApi } from '@/api/itemApi';
 import { OptionsSheet } from '@/components/sheets/OptionsSheet';
+import { ChecklistView, parseNumbers } from '@/behaviors';
 import { isRepeatUnit, repeatLabel } from '@/recurrence';
 import { completeTask, deleteItem } from '@/taskActions';
 import { ScreenShell } from '@/components/ScreenShell/ScreenShell';
@@ -17,7 +18,10 @@ import { TypeBadge } from '@/ui/components/TypeBadge';
 import { designTokens, formatRelativeDay } from '@/ui/designTokens';
 import { formatDateTimeForDisplay } from '@/ui/formatDateTime';
 import { getItemTypeConfig } from '@/ui/itemTypeConfig';
+import { useDataVersionStore } from '@/store/dataVersionStore';
 import { useThemeStore } from '@/store/themeStore';
+
+const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export function ItemDetailScreen() {
   const { theme } = useThemeStore();
@@ -53,6 +57,12 @@ export function ItemDetailScreen() {
     }, [loadItem])
   );
 
+  // Reload after in-place edits (ticking a step, completing).
+  const version = useDataVersionStore((state) => state.version);
+  useEffect(() => {
+    if (version > 0) loadItem();
+  }, [version, loadItem]);
+
   async function remove() {
     if (!item) return;
     try {
@@ -78,6 +88,7 @@ export function ItemDetailScreen() {
   const doable = item.behaviorData.Doable;
   const dueAt = doable?.due_at?.trim();
   const repeatUnit = item.behaviorData.Repeatable?.interval_unit;
+  const repeatDays = parseNumbers(item.behaviorData.Repeatable?.days);
 
   async function complete() {
     if (!item) return;
@@ -140,7 +151,7 @@ export function ItemDetailScreen() {
             <Ionicons name="calendar-outline" size={16} color={designTokens.textSecondary} />
             <Text style={{ color: designTokens.textSecondary, fontSize: 15 }}>
               {formatDateTimeForDisplay(dueAt)}
-              {isRepeatUnit(repeatUnit) ? ` · Repeats ${repeatLabel(repeatUnit).toLowerCase()}` : ''}
+              {isRepeatUnit(repeatUnit) ? ` · Repeats ${repeatDays.length ? repeatDays.map((d) => WEEKDAY_NAMES[d]).join(', ') : repeatLabel(repeatUnit).toLowerCase()}` : ''}
             </Text>
           </View>
         ) : null}
@@ -156,6 +167,8 @@ export function ItemDetailScreen() {
             </Text>
           </Pressable>
         ) : null}
+
+        <ChecklistView itemId={item.id} data={item.behaviorData.Divisible} />
 
         {meta.length > 0 ? (
           <Text style={{ color: designTokens.textTertiary, fontSize: 13, marginBottom: 16 }}>

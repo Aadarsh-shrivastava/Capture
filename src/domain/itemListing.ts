@@ -29,11 +29,11 @@ const isDone = (s?: TaskState) => s?.status === 'completed';
 const newestFirst = (a: ItemWithType, b: ItemWithType) => moment(b.createdAt).valueOf() - moment(a.createdAt).valueOf();
 
 /**
- * Tasks: open first (by due date soonest, undated after, or newest when sorting by created), completed last.
+ * Doable items (tasks, custom doable types): open first (by due date soonest, undated after, or newest when sorting by created), completed last.
  * Everything else: newest first.
  */
-export function sortForList(items: ItemWithType[], typeName: string, sort: TaskSort, tasks: Map<number, TaskState>): ItemWithType[] {
-  if (typeName !== 'Task') return [...items].sort(newestFirst);
+export function sortForList(items: ItemWithType[], doable: boolean, sort: TaskSort, tasks: Map<number, TaskState>): ItemWithType[] {
+  if (!doable) return [...items].sort(newestFirst);
   const due = (i: ItemWithType) => {
     const d = tasks.get(i.id)?.dueAt;
     return d ? moment(d).valueOf() : Infinity;

@@ -1,3 +1,4 @@
+import { findType } from '@/itemTypes/store';
 import type { ItemTypeName } from '@/ui/itemTypeConfig';
 
 /** Internal behavior keys — never shown directly in UI. */
@@ -8,7 +9,9 @@ export type BehaviorName =
   | 'Visitable'
   | 'Repeatable'
   | 'Trackable'
-  | 'Schedulable';
+  | 'Schedulable'
+  | 'Divisible'
+  | 'Remindable';
 
 export const ALL_BEHAVIOR_NAMES = [
   'Doable',
@@ -18,6 +21,8 @@ export const ALL_BEHAVIOR_NAMES = [
   'Repeatable',
   'Trackable',
   'Schedulable',
+  'Divisible',
+  'Remindable',
 ] as const satisfies readonly BehaviorName[];
 
 type BehaviorUiCopy = {
@@ -74,6 +79,18 @@ export const BEHAVIOR_UI: Record<BehaviorName, BehaviorUiCopy> = {
     formSectionTitle: 'Schedule',
     addPrompt: 'Add a schedule',
   },
+  Divisible: {
+    label: 'Break into steps',
+    includedHint: 'always on',
+    formSectionTitle: 'Steps',
+    addPrompt: 'Add steps',
+  },
+  Remindable: {
+    label: 'Custom reminders',
+    includedHint: 'always on',
+    formSectionTitle: 'Reminders',
+    addPrompt: 'Set reminders',
+  },
 };
 
 type TypeBehaviorRules = {
@@ -92,7 +109,7 @@ type TypeBehaviorRules = {
 export const TYPE_BEHAVIOR_RULES: Record<ItemTypeName, TypeBehaviorRules> = {
   Task: {
     defaults: ['Doable'],
-    optionalAllowed: ['Schedulable', 'Repeatable', 'Trackable', 'Visitable'],
+    optionalAllowed: ['Schedulable', 'Repeatable', 'Trackable', 'Visitable', 'Divisible', 'Remindable'],
     typeHint: 'Actionable',
   },
   Note: {
@@ -140,19 +157,29 @@ export function getTypeBehaviorHint(typeName: string): string {
   return TYPE_BEHAVIOR_RULES[typeName as ItemTypeName]?.typeHint ?? '';
 }
 
+// Types come from the DB registry (user-manageable); built-in rules are the fallback before it loads.
+
 export function getDefaultBehaviorsForType(typeName: string): string[] {
-  return TYPE_BEHAVIOR_RULES[typeName as ItemTypeName]?.defaults ?? [];
+  return findType(typeName)?.defaults ?? TYPE_BEHAVIOR_RULES[typeName as keyof typeof TYPE_BEHAVIOR_RULES]?.defaults ?? [];
 }
 
 export function getAllowedOptionalBehaviorsForType(typeName: string): string[] {
-  return TYPE_BEHAVIOR_RULES[typeName as ItemTypeName]?.optionalAllowed ?? [];
+  return findType(typeName)?.optional ?? TYPE_BEHAVIOR_RULES[typeName as keyof typeof TYPE_BEHAVIOR_RULES]?.optionalAllowed ?? [];
 }
 
 /** All behaviors relevant to UI for a type: defaults + allowed optional toggles. */
 export function getBehaviorsForTypeUI(typeName: string): string[] {
-  const rules = TYPE_BEHAVIOR_RULES[typeName as ItemTypeName];
-  if (!rules) return [];
-  return [...rules.defaults, ...rules.optionalAllowed];
+  return [...getDefaultBehaviorsForType(typeName), ...getAllowedOptionalBehaviorsForType(typeName)];
+}
+
+/** Type always has this behavior (e.g. Doable → shows on Focus, gets reminders). */
+export function typeHasBehavior(typeName: string, behavior: string): boolean {
+  return getDefaultBehaviorsForType(typeName).includes(behavior);
+}
+
+/** Type has or may add this behavior (shows its field in the form). */
+export function typeAllowsBehavior(typeName: string, behavior: string): boolean {
+  return getBehaviorsForTypeUI(typeName).includes(behavior);
 }
 
 export function isOptionalBehaviorAllowed(typeName: string, behaviorName: string): boolean {

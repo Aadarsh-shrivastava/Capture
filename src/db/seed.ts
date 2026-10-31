@@ -19,6 +19,8 @@ const BEHAVIORS: SeedBehavior[] = [
   { name: 'Repeatable', description: 'Can repeat on a schedule' },
   { name: 'Trackable', description: 'Has measurable progress' },
   { name: 'Schedulable', description: 'Associated with a time period' },
+  { name: 'Divisible', description: 'Broken into steps' },
+  { name: 'Remindable', description: 'Sends reminders before it is due' },
 ];
 
 const TYPE_BEHAVIOR_MAPPINGS: SeedMapping[] = [

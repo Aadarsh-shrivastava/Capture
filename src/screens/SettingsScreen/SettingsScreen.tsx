@@ -2,11 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { ScrollView, Switch, Text, View } from 'react-native';
 import { Pressable } from '@/ui/HapticPressable';
 import { ScreenShell } from '@/components/ScreenShell/ScreenShell';
-import { DB_VERSION } from '@/db/database';
 import { useReminderSettings } from '@/notifications';
 import { POSTPONE_OPTIONS, usePostponeSettings } from '@/taskActions';
 import { SelectChip } from '@/ui/components/Primitives';
 import { useThemeStore } from '@/store/themeStore';
+import { getVaultConfig } from '@/vault';
+import { useRouter } from 'expo-router';
 import { useAppStyles } from '@/ui/appStyles';
 
 type SettingsRowProps = {
@@ -50,41 +51,27 @@ function SettingsRow({ icon, title, subtitle, onPress, trailing }: SettingsRowPr
 
 export function SettingsScreen() {
   const styles = useAppStyles();
-  const { themeName, theme } = useThemeStore();
+  const router = useRouter();
   const reminders = useReminderSettings();
   const postpone = usePostponeSettings();
+  const vault = getVaultConfig();
 
   return (
     <ScreenShell title="Settings" leading="back">
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.subtitle}>LockedIn V1 · Focus-first</Text>
-
-        <Text style={styles.sectionLabel}>General</Text>
+        <Text style={styles.sectionLabel}>Items</Text>
         <SettingsRow
-          icon="color-palette-outline"
-          title="Appearance"
-          subtitle="Theme switching is not available yet — app uses a single dark theme."
-          trailing={theme.name}
-        />
-
-        <Text style={styles.sectionLabel}>Data</Text>
-        <SettingsRow
-          icon="server-outline"
-          title="Storage"
-          subtitle="All items stored locally on device"
-          trailing="SQLite"
-        />
-        <SettingsRow
-          icon="git-branch-outline"
-          title="Database schema"
-          trailing={`v${DB_VERSION}`}
+          icon="shapes-outline"
+          title="Item types"
+          subtitle="Create types and choose their behaviors"
+          onPress={() => router.push('/settings/types')}
         />
 
         <Text style={styles.sectionLabel}>Notifications</Text>
         <View style={[styles.row, { flexDirection: 'row', alignItems: 'center', gap: 14 }]}>
           <View style={{ flex: 1 }}>
             <Text style={styles.rowTitle}>Task reminders</Text>
-            <Text style={styles.rowMeta}>Nudges 30 and 5 min before timed tasks, plus an 8 AM summary.</Text>
+            <Text style={styles.rowMeta}>Nudges before timed tasks, plus an 8 AM summary.</Text>
           </View>
           <Switch value={reminders.enabled} onValueChange={reminders.setEnabled} />
         </View>
@@ -99,25 +86,16 @@ export function SettingsScreen() {
           </View>
         </View>
 
-        <Text style={styles.sectionLabel}>Capture</Text>
-        <SettingsRow
-          icon="mic-outline"
-          title="Voice capture"
-          subtitle="Uses on-device speech recognition. Works best on a physical device."
-        />
-        <SettingsRow
-          icon="sparkles-outline"
-          title="AI analysis"
-          subtitle="Optional on-device Qwen model for smarter capture parsing"
-        />
-
         <Text style={styles.sectionLabel}>About</Text>
+        {vault ? (
+          <SettingsRow
+            icon="folder-outline"
+            title="Vault"
+            subtitle={vault.location === 'files' ? 'In the Files app' : 'Private to the app'}
+            trailing={vault.name}
+          />
+        ) : null}
         <SettingsRow icon="information-circle-outline" title="Version" trailing="0.0.1" />
-        <SettingsRow
-          icon="code-slash-outline"
-          title="Active theme key"
-          trailing={themeName}
-        />
       </ScrollView>
     </ScreenShell>
   );

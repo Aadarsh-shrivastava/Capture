@@ -17,11 +17,11 @@ export function isNotDone(task: FocusTask): boolean {
   return !['completed', 'cancelled'].includes(task.doableStatus) && task.status !== 'deferred';
 }
 
-/** Future reminders for one task; none for date-only tasks. */
-export function reminderTimes(task: FocusTask, now: Date): Reminder[] {
+/** Future reminders for one task; none for date-only tasks. `leads` overrides the defaults (Remindable). */
+export function reminderTimes(task: FocusTask, now: Date, leads: number[] = LEAD_MINUTES): Reminder[] {
   const due = task.dueAt?.trim();
   if (!due || !hasTimeComponent(due)) return [];
-  return LEAD_MINUTES.map(minutesBefore => ({
+  return leads.map(minutesBefore => ({
     task,
     minutesBefore,
     at: moment(due).subtract(minutesBefore, 'minutes').toDate(),
@@ -64,9 +64,9 @@ export function summariesFor(tasks: FocusTask[], now: Date): Summary[] {
 }
 
 /** Cheapest check first: due today → not done → has a future reminder time. */
-export function remindersFor(tasks: FocusTask[], now: Date): Reminder[] {
+export function remindersFor(tasks: FocusTask[], now: Date, leadsFor: (taskId: number) => number[] | undefined = () => undefined): Reminder[] {
   return tasks
     .filter(task => isDueToday(task, now))
     .filter(isNotDone)
-    .flatMap(task => reminderTimes(task, now));
+    .flatMap(task => reminderTimes(task, now, leadsFor(task.id)));
 }

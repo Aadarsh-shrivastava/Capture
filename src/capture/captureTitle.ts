@@ -1,3 +1,4 @@
+import {typeHasBehavior} from '@/domain/behaviorTypeConfig';
 import type { ItemTypeName } from '@/ui/itemTypeConfig';
 
 const URL_RE = /https?:\/\/[^\s<>"{}|\\^`[\]]+/i;
@@ -132,7 +133,7 @@ export function extractCaptureTitle(
   const withoutUrl = firstLine.replace(URL_RE, '').trim();
   if (!withoutUrl) return 'Untitled';
 
-  if (typeName !== 'Task') {
+  if (!typeHasBehavior(typeName, 'Doable')) {
     return extractShortSubject(text, typeName);
   }
 
@@ -159,7 +160,7 @@ export function extractCaptureTitle(
 
 function titleNeedsRewrite(title: string, rawText: string, typeName: ItemTypeName): boolean {
   if (titleLooksLiteral(title, rawText)) return true;
-  if (typeName !== 'Task') return false;
+  if (!typeHasBehavior(typeName, 'Doable')) return false;
 
   for (const pattern of TASK_METADATA_PATTERNS) {
     pattern.lastIndex = 0;
@@ -177,7 +178,7 @@ export function normalizeCaptureDraftTitle(
   const trimmed = rawText.trim();
   const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
 
-  if (draft.typeName !== 'Task') {
+  if (!typeHasBehavior(draft.typeName, 'Doable')) {
     let content = draft.content?.trim() ?? '';
     let title = draft.title.trim();
 

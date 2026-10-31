@@ -3,6 +3,8 @@ import {useRouter} from 'expo-router';
 import {useEffect} from 'react';
 import {AppState} from 'react-native';
 
+import {parseNumbers} from '@/behaviors';
+import {behaviorDataRepository} from '@/repositories/behaviorDataRepository';
 import {focusRepository} from '@/repositories/focusRepository';
 import {useDataVersionStore} from '@/store/dataVersionStore';
 
@@ -37,9 +39,16 @@ export async function syncTaskReminders(enabled: boolean): Promise<Reminder[]> {
     return [];
   }
   if (!(await ensurePermission())) throw new Error('Notification permission denied');
-  const tasks = await focusRepository.findActiveTasks();
+  const [tasks, remindable] = await Promise.all([
+    focusRepository.findActiveTasks(),
+    behaviorDataRepository.allForBehavior('Remindable'),
+  ]);
   const now = new Date();
-  const reminders = remindersFor(tasks, now);
+  const leadsFor = (id: number) => {
+    const offsets = parseNumbers(remindable.get(id)?.offsets);
+    return offsets.length ? offsets : undefined;
+  };
+  const reminders = remindersFor(tasks, now, leadsFor);
   await replaceAll([
     ...plan(reminders, summariesFor(tasks, now)),
     {at: nextReviewAt(now), title: 'Your week in review', body: 'Two minutes: what got done, what slipped, what is next.', review: 'weekly'},

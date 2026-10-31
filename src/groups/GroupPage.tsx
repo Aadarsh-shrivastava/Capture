@@ -6,6 +6,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {groupApi} from '@/api/groupApi';
 import {ScreenShell} from '@/components/ScreenShell/ScreenShell';
+import {typeHasBehavior} from '@/domain/behaviorTypeConfig';
 import {Selectable} from '@/selection';
 import {useCaptureStore} from '@/store/captureStore';
 import {OptionsSheet} from '@/components/sheets/OptionsSheet';
@@ -62,7 +63,7 @@ export function GroupPage() {
     );
   }
 
-  const openTasks = items.filter(i => i.typeName === 'Task').length;
+  const openTasks = items.filter(i => typeHasBehavior(i.typeName, 'Doable')).length;
   const confirmDelete = () =>
     Alert.alert('Delete group', `Delete "${group.name}"? Items stay in your library.`, [
       {text: 'Cancel', style: 'cancel'},

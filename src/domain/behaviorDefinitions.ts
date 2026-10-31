@@ -1,4 +1,5 @@
-export type FieldInput = 'text' | 'url' | 'number' | 'datetime' | 'select';
+/** `list`/`numbers`: comma-free JSON arrays stored as a string field (see src/behaviors/data.ts). */
+export type FieldInput = 'text' | 'url' | 'number' | 'datetime' | 'select' | 'list' | 'numbers';
 
 export type BehaviorFieldDef = {
   name: string;
@@ -11,6 +12,7 @@ export type BehaviorFieldDef = {
 
 export type BehaviorDefinition = {
   name: string;
+  /** Dedicated table for hot, queried behaviors. null + fields = stored as JSON in item_behavior_data. */
   tableName: string | null;
   fields: BehaviorFieldDef[];
 };
@@ -67,7 +69,7 @@ export const BEHAVIOR_DEFINITIONS: Record<string, BehaviorDefinition> = {
   },
   Repeatable: {
     name: 'Repeatable',
-    tableName: 'repeatable_items',
+    tableName: null,
     fields: [
       { name: 'interval_value', label: 'Repeat every', input: 'number', required: true, placeholder: '1' },
       {
@@ -77,10 +79,18 @@ export const BEHAVIOR_DEFINITIONS: Record<string, BehaviorDefinition> = {
         required: true,
         options: INTERVAL_UNIT_OPTIONS,
       },
-      { name: 'next_occurrence_at', label: 'Next occurrence', input: 'datetime', placeholder: 'e.g. Mon, Sep 29' },
-      { name: 'start_at', label: 'Starts', input: 'datetime', placeholder: 'e.g. Mon, Sep 29' },
-      { name: 'end_at', label: 'Ends', input: 'datetime', placeholder: 'e.g. Mon, Sep 29' },
+      { name: 'days', label: 'On days (0=Sun … 6=Sat)', input: 'numbers' },
     ],
+  },
+  Divisible: {
+    name: 'Divisible',
+    tableName: null,
+    fields: [{ name: 'steps', label: 'Steps', input: 'list' }],
+  },
+  Remindable: {
+    name: 'Remindable',
+    tableName: null,
+    fields: [{ name: 'offsets', label: 'Minutes before due', input: 'numbers' }],
   },
   Trackable: {
     name: 'Trackable',

@@ -48,6 +48,8 @@ function parsePath(href: string): NavTarget {
   if (path === '/create-item') return { screen: 'CreateItem', params };
   if (path === '/settings') return { screen: 'Settings', params };
   if (path === '/search') return { screen: 'Search', params };
+  if (path === '/settings/types') return { screen: 'ItemTypes', params };
+  if (path === '/settings/types/edit') return { screen: 'EditItemType', params };
   if (path === '/profile') return { screen: 'Profile', params };
   if (path === '/home' || path === '/focus') return { screen: 'MainTabs', params: { screen: 'index', params } };
 

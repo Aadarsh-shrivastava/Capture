@@ -3,6 +3,7 @@ import {Alert, Text, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {Appear, BULK_SLIDE_MS, STAGGER_MS} from '@/motion';
+import {typeHasBehavior} from '@/domain/behaviorTypeConfig';
 import {completeTasks, deleteItems} from '@/taskActions';
 import {designTokens} from '@/ui/designTokens';
 import {Pressable} from '@/ui/HapticPressable';
@@ -26,7 +27,7 @@ export function SelectionBar() {
   const list = selectedList(items);
   if (list.length === 0) return null;
 
-  const tasks = list.filter(item => item.typeName === 'Task');
+  const tasks = list.filter(item => typeHasBehavior(item.typeName, 'Doable'));
   /** Slide the affected rows out one by one, then run the action. */
   const run = (affected: {id: number}[], action: () => Promise<void>) => {
     clear();

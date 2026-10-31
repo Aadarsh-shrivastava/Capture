@@ -1,4 +1,5 @@
 import {itemApi} from '@/api/itemApi';
+import {encode, parseNumbers, parseSteps} from '@/behaviors/data';
 import type {SaveItemPayload} from '@/models/behaviorData';
 import {isRepeatUnit, nextDueAt} from '@/recurrence';
 
@@ -13,11 +14,24 @@ export async function completeTask(itemId: number): Promise<CompleteResult> {
   const repeat = full.behaviorData.Repeatable;
   const nextDue =
     repeat && isRepeatUnit(repeat.interval_unit) && before.due_at
-      ? nextDueAt(before.due_at, repeat.interval_value, repeat.interval_unit)
+      ? nextDueAt(before.due_at, repeat.interval_value, repeat.interval_unit, new Date(), parseNumbers(repeat.days))
       : null;
   const after = nextDue ? {...before, status: 'pending', due_at: nextDue} : {...before, status: 'completed'};
-  await itemApi.saveItem(toSavePayload(full, after), itemId);
+  const payload = toSavePayload(full, after);
+  // A repeating checklist starts fresh for the next occurrence.
+  const steps = full.behaviorData.Divisible?.steps;
+  if (nextDue && steps) {
+    payload.behaviorData = {...payload.behaviorData, Divisible: {steps: encode(parseSteps(steps).map(s => ({...s, done: false})))}};
+  }
+  await itemApi.saveItem(payload, itemId);
   return {before, nextDue};
+}
+
+/** Replace one attached behavior's data (e.g. ticking a step). */
+export async function updateBehaviorData(itemId: number, behavior: string, data: Record<string, string>): Promise<void> {
+  const full = await itemApi.getItemFull(itemId);
+  const payload = toSavePayload(full);
+  await itemApi.saveItem({...payload, behaviorData: {...payload.behaviorData, [behavior]: data}}, itemId);
 }
 
 /** Set a new due date/time and make the task active again. */

@@ -9,8 +9,9 @@ import {DateSheet} from '@/components/sheets/DateSheet';
 import {OptionsSheet} from '@/components/sheets/OptionsSheet';
 import {TagsSheet} from '@/components/sheets/TagsSheet';
 import {getDefaultFieldValues} from '@/domain/behaviorDefinitions';
-import {filterValidOptionalBehaviors} from '@/domain/behaviorTypeConfig';
+import {filterValidOptionalBehaviors, typeAllowsBehavior} from '@/domain/behaviorTypeConfig';
 import type {Group} from '@/models/group';
+import {ChecklistField, RemindField} from '@/behaviors';
 import {RepeatField} from '@/recurrence';
 import {
   priorityFromImportance,
@@ -25,7 +26,7 @@ import {
   getBodyFieldLabel,
   getItemTypeConfig,
   isTextPrimaryType,
-  ITEM_TYPE_ORDER,
+  allTypeNames,
   type ItemTypeName,
 } from '@/ui/itemTypeConfig';
 
@@ -114,7 +115,7 @@ function TypeDropdown({
             borderRadius: radius.md,
             overflow: 'hidden',
           }}>
-          {ITEM_TYPE_ORDER.map((typeName) => {
+          {allTypeNames().map((typeName) => {
             const option = getItemTypeConfig(typeName);
             const selected = typeName === value;
 
@@ -150,7 +151,8 @@ function TypeDropdown({
 
 /** The single item form — used by manual create/edit and by capture review. */
 export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
-  const isTask = draft.typeName === 'Task';
+  const allows = (behavior: string) => typeAllowsBehavior(draft.typeName, behavior);
+  const isTask = allows('Doable');
   const textPrimary = isTextPrimaryType(draft.typeName);
   const bodyLabel = getBodyFieldLabel(draft.typeName);
 
@@ -275,10 +277,21 @@ export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
             </Pressable>
           </View>
 
-          <View>
-            <Label>Repeat</Label>
-            <RepeatField draft={draft} onChange={onChange} />
-          </View>
+          {allows('Repeatable') ? (
+            <View>
+              <Label>Repeat</Label>
+              <RepeatField draft={draft} onChange={onChange} />
+            </View>
+          ) : null}
+
+
+          {allows('Remindable') ? (
+            <View>
+              <Label>Reminders</Label>
+              <RemindField draft={draft} onChange={onChange} />
+            </View>
+          ) : null}
+
 
           <View>
             <Label>Priority</Label>
@@ -294,6 +307,13 @@ export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
             </View>
           </View>
         </>
+      ) : null}
+
+      {allows('Divisible') ? (
+        <View>
+          <Label>Steps</Label>
+          <ChecklistField draft={draft} onChange={onChange} />
+        </View>
       ) : null}
 
       <View>

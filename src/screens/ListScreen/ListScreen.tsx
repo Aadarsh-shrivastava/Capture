@@ -24,6 +24,7 @@ import { EmptyState } from '@/ui/components/EmptyState';
 import { Selectable } from '@/selection';
 import { ItemCard } from '@/ui/components/ItemCard';
 import { SearchBar } from '@/ui/components/SearchBar';
+import { typeHasBehavior } from '@/domain/behaviorTypeConfig';
 import { getItemTypeConfig } from '@/ui/itemTypeConfig';
 import { designTokens } from '@/ui/designTokens';
 
@@ -37,7 +38,7 @@ export function ListScreen() {
   const [sortOpen, setSortOpen] = useState(false);
   const [taskStates, setTaskStates] = useState<Map<number, TaskState>>(new Map());
   const version = useDataVersionStore((state) => state.version);
-  const isTaskList = params.type === 'Task';
+  const isTaskList = Boolean(params.type) && typeHasBehavior(params.type!, 'Doable');
 
   useEffect(() => {
     if (!isTaskList) return;
@@ -81,18 +82,13 @@ export function ListScreen() {
       );
     }
 
-    if (activeType.name === 'Task') result = filterTasks(result, filter, taskStates);
-    return sortForList(result, activeType.name, sort, taskStates);
-  }, [items, activeType, search, sort, filter, taskStates]);
+    if (isTaskList) result = filterTasks(result, filter, taskStates);
+    return sortForList(result, isTaskList, sort, taskStates);
+  }, [items, activeType, search, sort, filter, taskStates, isTaskList]);
 
-  const emptyMessage = useMemo(() => {
-    if (search.trim()) return 'No matching items.';
-    if (activeType?.name === 'Journal') return 'Start writing.';
-    if (activeType?.name === 'Note') return 'No notes yet.';
-    if (activeType?.name === 'Idea') return 'No ideas yet.';
-    if (activeType?.name === 'Task') return 'No tasks yet.';
-    return 'Nothing here yet.';
-  }, [activeType?.name, search]);
+  const emptyMessage = search.trim()
+    ? 'No matching items.'
+    : `No ${(typeConfig?.plural ?? activeType?.name ?? 'items').toLowerCase()} yet.`;
 
   if (!activeType) {
     return null;

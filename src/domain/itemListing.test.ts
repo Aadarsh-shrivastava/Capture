@@ -12,13 +12,13 @@ test('tasks: open by due date, undated next, completed last', () => {
     [3, {dueAt: '2026-11-01', status: 'pending'}],
     [4, {dueAt: '2026-10-30', status: 'completed'}],
   ]);
-  expect(sortForList(items, 'Task', 'due', tasks).map(i => i.id)).toEqual([3, 1, 2, 4]);
-  expect(sortForList(items, 'Task', 'created', tasks).map(i => i.id)).toEqual([3, 2, 1, 4]);
+  expect(sortForList(items, true, 'due', tasks).map(i => i.id)).toEqual([3, 1, 2, 4]);
+  expect(sortForList(items, true, 'created', tasks).map(i => i.id)).toEqual([3, 2, 1, 4]);
 });
 
 test('journals: newest first', () => {
   const items = [item(1, 'Journal', '2026-10-01'), item(2, 'Journal', '2026-10-05')];
-  expect(sortForList(items, 'Journal', 'due', new Map()).map(i => i.id)).toEqual([2, 1]);
+  expect(sortForList(items, false, 'due', new Map()).map(i => i.id)).toEqual([2, 1]);
 });
 
 test('status filter', () => {

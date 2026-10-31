@@ -1,3 +1,4 @@
+import {typeHasBehavior} from '@/domain/behaviorTypeConfig';
 import { inferDueAtFromText } from '@/capture/captureDateContext';
 import type { CaptureItemDraft } from '@/capture/captureItemDraft';
 import { extractCaptureTitle, extractShortSubject } from '@/capture/captureTitle';
@@ -28,12 +29,12 @@ function extractUrl(text: string): string | null {
 }
 
 function inferTitle(text: string, typeName: ItemTypeName): string {
-  if (typeName === 'Task') return extractCaptureTitle(text, typeName);
+  if (typeHasBehavior(typeName, 'Doable')) return extractCaptureTitle(text, typeName);
   return extractShortSubject(text, typeName);
 }
 
 function inferContent(text: string, typeName: ItemTypeName): string | null {
-  if (typeName === 'Task') return null;
+  if (typeHasBehavior(typeName, 'Doable')) return null;
   const trimmed = text.trim();
   return trimmed || null;
 }
@@ -43,7 +44,7 @@ function inferOptionalBehaviors(text: string, typeName: ItemTypeName): string[] 
   const lower = text.toLowerCase();
 
   if (extractUrl(text)) optional.push('Visitable');
-  if (typeName === 'Task') {
+  if (typeHasBehavior(typeName, 'Doable')) {
     if (REPEAT_RE.test(lower)) optional.push('Repeatable');
     if (SCHEDULE_RE.test(lower) || URGENT_RE.test(lower)) optional.push('Schedulable');
     if (/\b(\d+\s*(kg|lbs|pages|steps|reps|units|percent|%)|track|progress|goal)\b/i.test(lower)) {

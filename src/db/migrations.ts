@@ -137,6 +137,33 @@ const MIGRATIONS: Record<number, string[]> = {
     `CREATE INDEX IF NOT EXISTS idx_item_tags_item_id ON item_tags(item_id);`,
     `CREATE INDEX IF NOT EXISTS idx_item_tags_tag_id ON item_tags(tag_id);`,
   ],
+  // Generic per-item behavior data as JSON. New behaviors need no migration; only hot,
+  // heavily queried behaviors (Doable) keep a dedicated table.
+  4: [
+    `CREATE TABLE IF NOT EXISTS item_behavior_data (
+      item_id INTEGER NOT NULL,
+      behavior TEXT NOT NULL,
+      data TEXT NOT NULL DEFAULT '{}',
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (item_id, behavior),
+      FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
+    );`,
+    `INSERT OR IGNORE INTO item_behavior_data (item_id, behavior, data, updated_at)
+     SELECT item_id, 'Repeatable',
+            json_object('interval_value', CAST(interval_value AS TEXT), 'interval_unit', interval_unit),
+            datetime('now')
+     FROM repeatable_items;`,
+  ],
+  // Types become user-manageable: an icon per type, and type_behaviors rows can be optional (is_default = 0).
+  5: [
+    `ALTER TABLE item_types ADD COLUMN icon TEXT;`,
+    `ALTER TABLE type_behaviors ADD COLUMN is_default INTEGER NOT NULL DEFAULT 1;`,
+    `INSERT OR IGNORE INTO type_behaviors (type_id, behavior_id, is_default)
+     SELECT t.id, b.id, 0 FROM item_types t, behaviors b
+     WHERE (t.name = 'Task' AND b.name IN ('Schedulable','Repeatable','Trackable','Visitable','Divisible','Remindable'))
+        OR (t.name = 'Note' AND b.name IN ('Visitable','Memorable'))
+        OR (t.name IN ('Journal','Idea') AND b.name = 'Visitable');`,
+  ],
 };
 
 async function getCurrentVersion(db: SQLiteDatabase): Promise<number> {

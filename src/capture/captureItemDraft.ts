@@ -30,7 +30,7 @@ export function parseCaptureJson(raw: string): CaptureItemDraft {
 
   const parsed = JSON.parse(candidate.slice(start, end + 1)) as Partial<CaptureItemDraft>;
 
-  if (!parsed.typeName || !CAPTURE_TYPE_NAMES.includes(parsed.typeName as ItemTypeName)) {
+  if (!parsed.typeName || !(CAPTURE_TYPE_NAMES as readonly string[]).includes(parsed.typeName)) {
     throw new Error(`typeName must be one of: ${CAPTURE_TYPE_NAMES.join(', ')}`);
   }
 

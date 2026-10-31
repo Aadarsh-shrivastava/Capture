@@ -1,18 +1,19 @@
 import moment from 'moment';
 
+import {leadLabel} from '@/behaviors';
+
 const MESSAGES = [
-  'Still planning to {title}? {minutes} minutes to go.',
-  '{title} in {minutes}. You got this.',
-  'Heads up: {title} is coming up in {minutes} minutes.',
-  'Future you will thank you for {title}. {minutes} min left.',
-  'Psst. {title}. {minutes} minutes. No pressure (some pressure).',
+  'Still planning to {title}? {when} to go.',
+  '{title} in {when}. You got this.',
+  'Heads up: {title} is coming up in {when}.',
+  'Future you will thank you for {title}. {when} left.',
+  'Psst. {title}. {when}. No pressure (some pressure).',
 ];
 
 /** Stable pick per task + lead time so a resync doesn't change the wording. */
 export function reminderMessage(taskId: number, title: string, minutes: number): string {
-  return MESSAGES[(taskId + minutes) % MESSAGES.length]
-    .replace('{title}', title)
-    .replace('{minutes}', String(minutes));
+  if (minutes <= 0) return `It's time: ${title}`;
+  return MESSAGES[(taskId + minutes) % MESSAGES.length].replace('{title}', title).replace('{when}', leadLabel(minutes));
 }
 
 /** "3 tasks today · first at 6:00 PM: Go to gym" */

@@ -1,3 +1,4 @@
+import {typeHasBehavior} from '@/domain/behaviorTypeConfig';
 import {inferDueAtFromText} from '@/capture/captureDateContext';
 import {analyzeCaptureText} from '@/capture/captureHeuristics';
 import {CAPTURE_TYPE_NAMES, type CaptureItemDraft} from '@/capture/captureItemDraft';
@@ -97,7 +98,7 @@ export async function runSelectiveAgent(
 
   // 3. Description — only tasks get a model-written one; other types keep the full text.
   let content = base.content ?? null;
-  if (typeName === 'Task') {
+  if (typeHasBehavior(typeName, 'Doable')) {
     const answer = await ask('description', typeName, 48);
     content = answer && !isEmpty(answer) ? answer : null;
   }

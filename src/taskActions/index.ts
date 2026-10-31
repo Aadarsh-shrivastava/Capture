@@ -7,7 +7,7 @@ import {usePostponeSettings} from './settings';
 
 export {POSTPONE_OPTIONS, usePostponeSettings} from './settings';
 /** Raw delete/restore (no Undo bar) for callers that build their own Undo. */
-export {deleteItem as deleteItemForUndo, rescheduleTask, restoreItem} from './service';
+export {deleteItem as deleteItemForUndo, rescheduleTask, restoreItem, updateBehaviorData} from './service';
 
 /** Complete (or roll a repeating task forward) and offer Undo. */
 export async function completeTask(itemId: number, title: string, opts: {undo?: boolean} = {}): Promise<void> {

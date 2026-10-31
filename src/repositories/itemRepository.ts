@@ -208,7 +208,7 @@ export const itemRepository = {
       `SELECT b.*
        FROM behaviors b
        INNER JOIN type_behaviors tb ON tb.behavior_id = b.id
-       WHERE tb.type_id = ?
+       WHERE tb.type_id = ? AND tb.is_default = 1
        ORDER BY b.name ASC`,
       typeId
     );
@@ -237,7 +237,7 @@ export const itemRepository = {
        FROM behaviors b
        LEFT JOIN item_behaviors ib ON ib.behavior_id = b.id AND ib.item_id = ?
        LEFT JOIN items i ON i.id = ?
-       LEFT JOIN type_behaviors tb ON tb.behavior_id = b.id AND tb.type_id = i.type_id
+       LEFT JOIN type_behaviors tb ON tb.behavior_id = b.id AND tb.type_id = i.type_id AND tb.is_default = 1
        WHERE ib.item_id IS NOT NULL OR tb.type_id IS NOT NULL
        ORDER BY b.name ASC`,
       itemId,

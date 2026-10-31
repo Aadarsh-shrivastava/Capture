@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { BottomTabBar } from '@/components/BottomTabBar/BottomTabBar';
 import { GroupPage, GroupsListScreen } from '@/groups';
+import { EditItemTypeScreen, ItemTypesScreen } from '@/itemTypes';
 import { SearchScreen } from '@/search';
 import { CreateItemScreen } from '@/screens/CreateItemScreen/CreateItemScreen';
 import { FocusScreen } from '@/screens/FocusScreen/FocusScreen';
@@ -40,6 +41,8 @@ export function RootNavigator() {
       <Stack.Screen name="GroupDetail" component={GroupPage} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
+      <Stack.Screen name="ItemTypes" component={ItemTypesScreen} />
+      <Stack.Screen name="EditItemType" component={EditItemTypeScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
   );

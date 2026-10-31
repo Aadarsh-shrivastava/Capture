@@ -33,3 +33,9 @@ test('8 AM summary for tomorrow, timed tasks first; skips empty and past days', 
   expect(summaries[0].at.getTime()).toBe(new Date(2026, 10, 1, 8).getTime());
   expect(summaries[0].tasks.map(t => t.id)).toEqual([2, 1]);
 });
+
+test('custom reminder offsets per task (Remindable)', () => {
+  const t = task(9, new Date(2026, 9, 31, 18).toISOString());
+  const reminders = remindersFor([t], now, id => (id === 9 ? [60, 0] : undefined));
+  expect(reminders.map(r => r.minutesBefore)).toEqual([60, 0]);
+});

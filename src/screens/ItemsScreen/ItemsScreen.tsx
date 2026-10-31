@@ -7,7 +7,7 @@ import {LibraryGroups} from '@/groups';
 import {useItemsData} from '@/hooks/useItemsData';
 import {TypeGridCard} from '@/ui/components/ItemCard';
 import {designTokens} from '@/ui/designTokens';
-import {ITEM_TYPE_ORDER} from '@/ui/itemTypeConfig';
+import {allTypeNames} from '@/ui/itemTypeConfig';
 
 const COLUMNS = 3;
 const GRID_GAP = 12;
@@ -26,9 +26,7 @@ export function ItemsScreen() {
 
   const availableTypes = useMemo(() => {
     const known = types.map((type) => type.name);
-    const ordered = ITEM_TYPE_ORDER.filter((name) => known.includes(name));
-    const extra = known.filter((name) => !ordered.includes(name as never));
-    return [...ordered, ...extra];
+    return allTypeNames().filter((name) => known.includes(name));
   }, [types]);
 
   const cellWidth = (width - SCREEN_PADDING * 2 - GRID_GAP * (COLUMNS - 1)) / COLUMNS;

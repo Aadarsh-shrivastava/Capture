@@ -1,3 +1,4 @@
+import {typeHasBehavior} from '@/domain/behaviorTypeConfig';
 import type { ItemTypeName } from '@/ui/itemTypeConfig';
 
 /** One classification example shown to the model and used in docs. */
@@ -511,7 +512,7 @@ function scoreFromBands(text: string, bands: ScoreBand[]): number | null {
 }
 
 export function inferUrgencyFromGuide(text: string, typeName: ItemTypeName): number | null {
-  if (typeName !== 'Task') return null;
+  if (!typeHasBehavior(typeName, 'Doable')) return null;
   return scoreFromBands(text, URGENCY_HEURISTICS);
 }
 
@@ -519,14 +520,14 @@ export function inferImportanceFromGuide(text: string, typeName: ItemTypeName): 
   const scored = scoreFromBands(text, IMPORTANCE_HEURISTICS);
   if (scored != null) return scored;
   if (typeName === 'Journal') return 2;
-  if (typeName === 'Task') return 3;
+  if (typeHasBehavior(typeName, 'Doable')) return 3;
   return null;
 }
 
 export function inferTagsFromGuide(text: string, typeName: ItemTypeName): string[] {
   const tags = new Set<string>();
   for (const rule of TAG_HEURISTICS) {
-    if (rule.tag === 'urgent' && typeName !== 'Task') continue;
+    if (rule.tag === 'urgent' && !typeHasBehavior(typeName, 'Doable')) continue;
     if (matchScore(text, rule.signalPatterns, rule.signalPhrases) > 0) {
       tags.add(rule.tag);
     }

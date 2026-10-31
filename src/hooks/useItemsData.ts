@@ -30,11 +30,3 @@ export function useItemsData() {
   return { items, types, loading, error, refresh };
 }
 
-export function getTasks(items: ItemWithType[]) {
-  return items.filter((item) => item.typeName === 'Task');
-}
-
-export function getNonTasks(items: ItemWithType[]) {
-  return items.filter((item) => item.typeName !== 'Task');
-}
-

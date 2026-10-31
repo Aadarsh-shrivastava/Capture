@@ -32,4 +32,4 @@ export async function initializeDatabase(): Promise<void> {
   return initPromise;
 }
 
-export const DB_VERSION = 3;
+export const DB_VERSION = 5;

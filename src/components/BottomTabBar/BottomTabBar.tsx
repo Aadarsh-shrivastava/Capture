@@ -17,12 +17,10 @@ type TabConfig = {
 
 const LEFT_TABS: TabConfig[] = [
   {name: 'index', label: 'Focus', icon: 'radio-button-on-outline', emphasized: true},
-  {name: 'groups', label: 'Groups', icon: 'folder-outline'},
 ];
 
 const RIGHT_TABS: TabConfig[] = [
   {name: 'library', label: 'Library', icon: 'layers-outline'},
-  {name: 'timeline', label: 'Timeline', icon: 'time-outline'},
 ];
 
 function TabItem({
@@ -50,20 +48,7 @@ function TabItem({
         paddingVertical: 8,
         gap: 4,
       }}>
-      <View style={{alignItems: 'center'}}>
-        <Ionicons name={config.icon} size={config.emphasized ? 24 : 22} color={iconColor} />
-        {accent ? (
-          <View
-            style={{
-              width: 4,
-              height: 4,
-              borderRadius: 2,
-              backgroundColor: designTokens.accent,
-              marginTop: 4,
-            }}
-          />
-        ) : null}
-      </View>
+      <Ionicons name={config.icon} size={config.emphasized ? 24 : 22} color={iconColor} />
       <Text
         style={{
           color: accent ? designTokens.accent : color,
@@ -94,7 +79,7 @@ function CaptureButton() {
         marginTop: -28,
         backgroundColor: designTokens.accent,
       }}>
-      <Ionicons name="add" size={30} color={designTokens.white} />
+      <Ionicons name="add" size={30} color={designTokens.black} />
     </Pressable>
   );
 }

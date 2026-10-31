@@ -15,22 +15,6 @@ type ScreenHeaderProps = {
   onBack?: () => void;
 };
 
-function HeaderButton({
-  label,
-  onPress,
-}: {
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable onPress={onPress} hitSlop={12} accessibilityRole="button">
-      <Text style={{ color: designTokens.accent, fontSize: 16, fontWeight: '500' }}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
 export function ScreenHeader({ title, right, leading = 'back', onBack }: ScreenHeaderProps) {
   const router = useRouter();
   const { theme } = useThemeStore();
@@ -93,4 +77,3 @@ export function ScreenHeader({ title, right, leading = 'back', onBack }: ScreenH
   );
 }
 
-export { HeaderButton };

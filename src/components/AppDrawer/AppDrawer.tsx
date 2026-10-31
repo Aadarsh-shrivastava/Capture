@@ -7,7 +7,6 @@ import {Box} from '@/components/ui/box';
 import {useDrawerStore} from '@/store/drawerStore';
 import {useThemeStore} from '@/store/themeStore';
 
-import {DrawerGradient} from './components/DrawerGradient';
 import {DrawerMenuItem} from './components/DrawerMenuItem';
 import {DrawerProfile} from './components/DrawerProfile';
 
@@ -24,10 +23,8 @@ export function AppDrawer() {
   const isOpen = useDrawerStore(state => state.isOpen);
   const close = useDrawerStore(state => state.close);
   const {theme} = useThemeStore();
-  const {colors, spacing, rounded} = theme;
+  const {colors, spacing} = theme;
   const insets = useSafeAreaInsets();
-
-  const drawerBorder = 'rgba(255, 255, 255, 0.14)';
 
   if (!isOpen) return null;
 
@@ -49,16 +46,10 @@ export function AppDrawer() {
             left: 0,
             bottom: 0,
             width: DRAWER_WIDTH,
-            overflow: 'hidden',
-            borderTopRightRadius: rounded.xl,
-            borderBottomRightRadius: rounded.xl,
-            borderTopWidth: 1,
+            backgroundColor: colors.surfaceContainerLow,
             borderRightWidth: 1,
-            borderBottomWidth: 1,
-            borderColor: drawerBorder,
+            borderRightColor: colors.border,
           }}>
-          <DrawerGradient />
-
           <Box
             style={{
               flex: 1,

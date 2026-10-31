@@ -1,8 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, Switch, Text, View } from 'react-native';
 import { Pressable } from '@/ui/HapticPressable';
 import { ScreenShell } from '@/components/ScreenShell/ScreenShell';
 import { DB_VERSION } from '@/db/database';
+import { useReminderSettings } from '@/notifications';
+import { POSTPONE_OPTIONS, usePostponeSettings } from '@/taskActions';
+import { SelectChip } from '@/ui/components/Primitives';
 import { useThemeStore } from '@/store/themeStore';
 import { useAppStyles } from '@/ui/appStyles';
 
@@ -48,6 +51,8 @@ function SettingsRow({ icon, title, subtitle, onPress, trailing }: SettingsRowPr
 export function SettingsScreen() {
   const styles = useAppStyles();
   const { themeName, theme } = useThemeStore();
+  const reminders = useReminderSettings();
+  const postpone = usePostponeSettings();
 
   return (
     <ScreenShell title="Settings" leading="back">
@@ -74,6 +79,25 @@ export function SettingsScreen() {
           title="Database schema"
           trailing={`v${DB_VERSION}`}
         />
+
+        <Text style={styles.sectionLabel}>Notifications</Text>
+        <View style={[styles.row, { flexDirection: 'row', alignItems: 'center', gap: 14 }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.rowTitle}>Task reminders</Text>
+            <Text style={styles.rowMeta}>Nudges 30 and 5 min before timed tasks, plus an 8 AM summary.</Text>
+          </View>
+          <Switch value={reminders.enabled} onValueChange={reminders.setEnabled} />
+        </View>
+
+        <Text style={styles.sectionLabel}>Tasks</Text>
+        <View style={[styles.row, { gap: 10 }]}>
+          <Text style={styles.rowTitle}>"Later" pushes a task by</Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {POSTPONE_OPTIONS.map((h) => (
+              <SelectChip key={h} label={`${h}h`} active={postpone.hours === h} onPress={() => postpone.setHours(h)} />
+            ))}
+          </View>
+        </View>
 
         <Text style={styles.sectionLabel}>Capture</Text>
         <SettingsRow

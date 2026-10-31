@@ -47,9 +47,7 @@ function parsePath(href: string): NavTarget {
   if (path === '/timeline') return { screen: 'Timeline', params };
   if (path === '/create-item') return { screen: 'CreateItem', params };
   if (path === '/settings') return { screen: 'Settings', params };
-  if (path === '/history') return { screen: 'History', params };
-  if (path === '/habits') return { screen: 'Habits', params };
-  if (path === '/routines') return { screen: 'Routines', params };
+  if (path === '/search') return { screen: 'Search', params };
   if (path === '/profile') return { screen: 'Profile', params };
   if (path === '/home' || path === '/focus') return { screen: 'MainTabs', params: { screen: 'index', params } };
 

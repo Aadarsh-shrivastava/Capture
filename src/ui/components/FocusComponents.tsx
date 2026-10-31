@@ -1,5 +1,4 @@
 import {Ionicons} from '@expo/vector-icons';
-import {useState} from 'react';
 import {ActivityIndicator, Text, View} from 'react-native';
 
 import {Pressable} from '@/ui/HapticPressable';
@@ -14,90 +13,49 @@ type TaskActionsProps = {
   compact?: boolean;
 };
 
-function TaskActions({onComplete, onReschedule, onDefer, compact}: TaskActionsProps) {
-  const btnStyle = compact
-    ? {paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8}
-    : {paddingVertical: 10, paddingHorizontal: 14, borderRadius: 10};
-
+function TextAction({label, onPress, strong}: {label: string; onPress: () => void; strong?: boolean}) {
   return (
-    <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: compact ? 10 : 14}}>
-      <Pressable
-        onPress={onComplete}
-        style={[btnStyle, {backgroundColor: designTokens.accent}]}>
-        <Text style={{color: '#fff', fontWeight: '600', fontSize: compact ? 13 : 14}}>Complete</Text>
-      </Pressable>
-      <Pressable
-        onPress={onReschedule}
-        style={[btnStyle, {borderWidth: 1, borderColor: designTokens.surfaceBorder}]}>
-        <Text style={{color: designTokens.textSecondary, fontWeight: '500', fontSize: compact ? 13 : 14}}>
-          Reschedule
-        </Text>
-      </Pressable>
-      <Pressable onPress={onDefer} style={[btnStyle, {borderWidth: 1, borderColor: designTokens.surfaceBorder}]}>
-        <Text style={{color: designTokens.textTertiary, fontWeight: '500', fontSize: compact ? 13 : 14}}>
-          Later
-        </Text>
-      </Pressable>
-    </View>
+    <Pressable onPress={onPress} hitSlop={10} accessibilityRole="button">
+      <Text
+        style={{
+          color: strong ? designTokens.textPrimary : designTokens.textTertiary,
+          fontSize: 14,
+          fontWeight: strong ? '600' : '500',
+        }}>
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
-type OverdueTaskCardProps = {
-  task: FocusTask;
-  onPress: () => void;
-  onComplete: () => void;
-  onReschedule: () => void;
-  onDefer: () => void;
-};
-
-export function OverdueTaskCard({
-  task,
-  onPress,
-  onComplete,
-  onReschedule,
-  onDefer,
-}: OverdueTaskCardProps) {
-  const dueLabel = formatDueLabel(task.dueAt);
-
+/** Text-only actions: Reschedule · Later on the left, Complete on the right. */
+function TaskActions({onComplete, onReschedule, onDefer, compact}: TaskActionsProps) {
   return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        borderWidth: 1,
-        borderColor: 'rgba(184, 75, 62, 0.45)',
-        backgroundColor: 'rgba(184, 75, 62, 0.08)',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 10,
-      }}>
-      <Text style={{color: designTokens.accent, fontSize: 12, fontWeight: '700', letterSpacing: 0.6, marginBottom: 8}}>
-        OVERDUE
-      </Text>
-      <Text style={{color: designTokens.textPrimary, fontSize: 17, fontWeight: '600', lineHeight: 24}}>
-        {task.title}
-      </Text>
-      {dueLabel ? (
-        <Text style={{color: designTokens.accent, fontSize: 13, marginTop: 6}}>{dueLabel}</Text>
-      ) : null}
-      <TaskActions compact onComplete={onComplete} onReschedule={onReschedule} onDefer={onDefer} />
-    </Pressable>
+    <View style={{flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: compact ? 14 : 20}}>
+      <TextAction label="Reschedule" onPress={onReschedule} />
+      <TextAction label="Later" onPress={onDefer} />
+      <View style={{flex: 1}} />
+      <TextAction label="Complete" onPress={onComplete} strong />
+    </View>
   );
 }
 
 type DoNowCardProps = {
   task: FocusTask;
   onPress: () => void;
+  onLongPress?: () => void;
   onComplete: () => void;
   onReschedule: () => void;
   onDefer: () => void;
 };
 
-export function DoNowCard({task, onPress, onComplete, onReschedule, onDefer}: DoNowCardProps) {
+export function DoNowCard({task, onPress, onLongPress, onComplete, onReschedule, onDefer}: DoNowCardProps) {
   const dueLabel = formatDueLabel(task.dueAt);
 
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
       style={{
         backgroundColor: designTokens.surfaceRaised,
         borderWidth: 1,
@@ -106,16 +64,13 @@ export function DoNowCard({task, onPress, onComplete, onReschedule, onDefer}: Do
         padding: 22,
         marginBottom: 8,
       }}>
-      <Text style={{color: designTokens.textTertiary, fontSize: 12, fontWeight: '700', letterSpacing: 1, marginBottom: 12}}>
-        DO NOW
-      </Text>
       <Text style={{color: designTokens.textPrimary, fontSize: 24, fontWeight: '700', lineHeight: 30}}>
         {task.title}
       </Text>
       {dueLabel ? (
         <Text style={{color: designTokens.textSecondary, fontSize: 14, marginTop: 10}}>{dueLabel}</Text>
       ) : null}
-      <TaskActions onComplete={onComplete} onReschedule={onReschedule} onDefer={onDefer} />
+      <TaskActions compact onComplete={onComplete} onReschedule={onReschedule} onDefer={onDefer} />
     </Pressable>
   );
 }
@@ -123,14 +78,16 @@ export function DoNowCard({task, onPress, onComplete, onReschedule, onDefer}: Do
 type NextTaskRowProps = {
   task: FocusTask;
   onPress: () => void;
+  onLongPress?: () => void;
 };
 
-export function NextTaskRow({task, onPress}: NextTaskRowProps) {
+export function NextTaskRow({task, onPress, onLongPress}: NextTaskRowProps) {
   const dueLabel = formatDueLabel(task.dueAt);
 
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -139,7 +96,6 @@ export function NextTaskRow({task, onPress}: NextTaskRowProps) {
         borderBottomWidth: 1,
         borderBottomColor: designTokens.surfaceBorder,
       }}>
-      <Text style={{color: designTokens.textTertiary, fontSize: 18}}>○</Text>
       <View style={{flex: 1}}>
         <Text style={{color: designTokens.textSecondary, fontSize: 16, fontWeight: '500'}}>{task.title}</Text>
         {dueLabel ? (
@@ -150,61 +106,22 @@ export function NextTaskRow({task, onPress}: NextTaskRowProps) {
   );
 }
 
-type LaterSectionProps = {
-  tasks: FocusTask[];
-  onPressTask: (task: FocusTask) => void;
-};
-
-export function LaterSection({tasks, onPressTask}: LaterSectionProps) {
-  const [expanded, setExpanded] = useState(false);
-
-  if (tasks.length === 0) return null;
-
-  return (
-    <View>
-      <Pressable
-        onPress={() => setExpanded((value) => !value)}
-        style={{flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8}}>
-        <Text style={{color: designTokens.textTertiary, fontSize: 13, fontWeight: '600'}}>
-          {tasks.length} deferred {tasks.length === 1 ? 'task' : 'tasks'}
-        </Text>
-        <Ionicons
-          name={expanded ? 'chevron-down' : 'chevron-forward'}
-          size={14}
-          color={designTokens.textTertiary}
-        />
-        {!expanded ? (
-          <Text style={{color: designTokens.textTertiary, fontSize: 12}}>Show</Text>
-        ) : null}
-      </Pressable>
-
-      {expanded
-        ? tasks.map((task) => (
-            <Pressable
-              key={task.id}
-              onPress={() => onPressTask(task)}
-              style={{
-                paddingVertical: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: designTokens.surfaceBorder,
-              }}>
-              <Text style={{color: designTokens.textTertiary, fontSize: 15}}>{task.title}</Text>
-            </Pressable>
-          ))
-        : null}
-    </View>
-  );
+function emptyMessage(hour = new Date().getHours()): {title: string; body: string} {
+  if (hour < 12) return {title: 'Fresh start', body: "What's first today? Pull down or tap + to capture."};
+  if (hour < 18) return {title: 'Nothing pressing', body: 'Good moment to capture something you have been putting off.'};
+  return {title: 'Quiet evening', body: 'Anything for tomorrow? Capture it now and sleep on a clear head.'};
 }
 
 export function FocusEmptyState() {
+  const message = emptyMessage();
   return (
     <View style={{paddingVertical: 48, alignItems: 'center', gap: 8}}>
       <Ionicons name="checkmark-circle-outline" size={36} color={designTokens.textTertiary} />
       <Text style={{color: designTokens.textSecondary, fontSize: 16, fontWeight: '500'}}>
-        Nothing needs your attention
+        {message.title}
       </Text>
       <Text style={{color: designTokens.textTertiary, fontSize: 14, textAlign: 'center', lineHeight: 20}}>
-        Tap + to capture a thought. Tasks will show up here when they need action.
+        {message.body}
       </Text>
     </View>
   );

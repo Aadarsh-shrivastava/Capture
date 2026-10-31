@@ -1,20 +1,12 @@
-import {useCallback, useMemo, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 
-import {partitionFocusTasks} from '@/domain/focusPriority';
-import type {FocusQueue, FocusTask} from '@/models/focusTask';
+import type {FocusTask} from '@/models/focusTask';
 import {focusRepository} from '@/repositories/focusRepository';
+import {useDataVersionStore} from '@/store/dataVersionStore';
 import {syncHomeWidgetFocusFromTasks} from '@/widget/syncHomeWidgetFocus';
-
-const EMPTY_QUEUE: FocusQueue = {
-  overdue: [],
-  doNow: null,
-  next: [],
-  later: [],
-};
 
 export function useFocusData() {
   const [tasks, setTasks] = useState<FocusTask[]>([]);
-  const [queue, setQueue] = useState<FocusQueue>(EMPTY_QUEUE);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +15,6 @@ export function useFocusData() {
       setError(null);
       const loaded = await focusRepository.findActiveTasks();
       setTasks(loaded);
-      setQueue(partitionFocusTasks(loaded));
       syncHomeWidgetFocusFromTasks(loaded);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load focus');
@@ -32,14 +23,10 @@ export function useFocusData() {
     }
   }, []);
 
-  const stats = useMemo(
-    () => ({
-      overdueCount: queue.overdue.length,
-      nextCount: queue.next.length,
-      laterCount: queue.later.length,
-    }),
-    [queue],
-  );
+  const version = useDataVersionStore(state => state.version);
+  useEffect(() => {
+    if (version > 0) refresh();
+  }, [version, refresh]);
 
-  return {tasks, queue, loading, error, stats, refresh};
+  return {tasks, loading, error, refresh};
 };

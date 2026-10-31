@@ -4,20 +4,31 @@ import {buildCaptureSystemPrompt} from '@/capture/buildCaptureSystemPrompt';
 import {analyzeCaptureText} from '@/capture/captureHeuristics';
 import {parseCaptureJson, type CaptureItemDraft} from '@/capture/captureItemDraft';
 import {normalizeCaptureDraftTitle} from '@/capture/captureTitle';
+import {groupsService} from '@/groups';
 import {useLlamaModel} from '@/hooks/useLlamaModel';
+import {runSelectiveAgent} from '@/selectiveKnowledge/agent';
+import {useSelectiveKnowledgeStore} from '@/selectiveKnowledge/store';
 
 /** Shared capture analysis pipeline — Qwen LLM with heuristics fallback. */
 export function useCaptureAnalysis() {
   const {ready, busy, loadModel, complete} = useLlamaModel();
+  const selective = useSelectiveKnowledgeStore(state => state.enabled);
 
   const analyzeText = useCallback(
-    async (text: string): Promise<CaptureItemDraft> => {
+    async (text: string, onStep?: (steps: string[]) => void): Promise<CaptureItemDraft> => {
       const trimmed = text.trim();
       if (!trimmed) {
         throw new Error('No text to analyze');
       }
 
       const now = new Date();
+
+      if (ready && selective) {
+        const groups = await groupsService.getActiveGroups().catch(() => []);
+        const {draft, journey} = await runSelectiveAgent(trimmed, complete, now, onStep, groups);
+        if (__DEV__) console.log('[selective-knowledge]', journey.join(' → '));
+        return draft;
+      }
 
       if (ready) {
         try {
@@ -40,7 +51,7 @@ export function useCaptureAnalysis() {
 
       return analyzeCaptureText(trimmed, undefined, now);
     },
-    [ready, complete],
+    [ready, selective, complete],
   );
 
   const preloadModel = useCallback(() => {

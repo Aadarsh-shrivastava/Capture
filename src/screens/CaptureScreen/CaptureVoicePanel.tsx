@@ -61,7 +61,7 @@ export function CaptureVoicePanel({
           <Ionicons
             name={isListening ? 'stop' : 'mic'}
             size={40}
-            color={isListening ? '#fff' : designTokens.accent}
+            color={isListening ? designTokens.black : designTokens.accent}
           />
         )}
       </Pressable>

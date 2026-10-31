@@ -22,7 +22,7 @@ type CaptureState = {
   /** Unified capture flow modal (text / review) */
   flowVisible: boolean;
   flowRequest: CaptureFlowRequest | null;
-  openTextCapture: (initialText?: string) => void;
+  openTextCapture: (initialText?: string, groupName?: string) => void;
   openReviewCapture: (draft: CaptureItemDraft) => void;
   closeFlow: () => void;
 };
@@ -43,10 +43,10 @@ export const useCaptureStore = create<CaptureState>((set) => ({
   flowVisible: false,
   flowRequest: null,
 
-  openTextCapture: (initialText = '') =>
+  openTextCapture: (initialText = '', groupName) =>
     set({
       flowVisible: true,
-      flowRequest: {step: 'text', initialText},
+      flowRequest: {step: 'text', initialText, groupName},
     }),
 
   openReviewCapture: (draft) =>

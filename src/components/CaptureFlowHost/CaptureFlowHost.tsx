@@ -1,4 +1,3 @@
-import {Alert} from 'react-native';
 import {useRouter} from 'expo-router';
 
 import {AddQuicklySheet} from '@/components/sheets/AddQuicklySheet';
@@ -17,10 +16,6 @@ export function CaptureFlowHost() {
   const quickAddOpen = useCaptureStore((s) => s.quickAddOpen);
   const closeQuickAdd = useCaptureStore((s) => s.closeQuickAdd);
 
-  function handleSaved(title: string) {
-    Alert.alert('Captured', `"${title}" was saved.`);
-    closeFlow();
-  }
 
   return (
     <>
@@ -38,9 +33,10 @@ export function CaptureFlowHost() {
           step={flowRequest.step}
           initialText={flowRequest.initialText}
           initialDraft={flowRequest.initialDraft}
+          groupName={flowRequest.groupName}
           onClose={closeFlow}
-          onSaved={handleSaved}
-          onBackToText={() => openTextCapture(flowRequest.initialText)}
+          onSaved={closeFlow}
+          onBackToText={() => openTextCapture(flowRequest.initialText, flowRequest.groupName)}
         />
       ) : null}
     </>

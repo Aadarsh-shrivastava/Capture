@@ -1,18 +1,21 @@
 import moment from 'moment';
 import {useState} from 'react';
-import {Platform, Text, TextInput, View} from 'react-native';
+import DateTimePicker, {DateTimePickerAndroid} from '@react-native-community/datetimepicker';
+import {Platform, Text, View} from 'react-native';
 
 import {Sheet} from '@/components/Sheet/Sheet';
 import {Pressable} from '@/ui/HapticPressable';
 import {Divider, PrimaryButton, PropertyRow} from '@/ui/components/Primitives';
-import {designTokens, radius} from '@/ui/designTokens';
+import {designTokens} from '@/ui/designTokens';
 
 type DateSheetProps = {
   visible: boolean;
   onClose: () => void;
-  /** Receives YYYY-MM-DD. */
+  /** Receives YYYY-MM-DD, or a local ISO datetime when a time was picked. */
   onSelect: (date: string) => void;
   onClear?: () => void;
+  /** Let the custom picker choose a time too. */
+  withTime?: boolean;
 };
 
 type Preset = {
@@ -34,8 +37,8 @@ function buildPresets(): Preset[] {
 }
 
 /** Date picker sheet — presets plus a custom date field. */
-export function DateSheet({visible, onClose, onSelect, onClear}: DateSheetProps) {
-  const [custom, setCustom] = useState('');
+export function DateSheet({visible, onClose, onSelect, onClear, withTime = false}: DateSheetProps) {
+  const [custom, setCustom] = useState(() => new Date());
   const [customOpen, setCustomOpen] = useState(false);
   const presets = buildPresets();
 
@@ -44,12 +47,31 @@ export function DateSheet({visible, onClose, onSelect, onClear}: DateSheetProps)
     onClose();
   }
 
-  function applyCustom() {
-    const parsed = moment(custom.trim(), ['YYYY-MM-DD', 'MMM D YYYY', 'MMM D', 'D MMM YYYY', 'D MMM'], false);
-    if (!parsed.isValid()) return;
-    choose(parsed);
-    setCustom('');
+  function chooseCustom(date: Date) {
     setCustomOpen(false);
+    if (!withTime) return choose(moment(date));
+    onSelect(moment(date).seconds(0).format());
+    onClose();
+  }
+
+  function openCustom() {
+    if (Platform.OS === 'ios') return setCustomOpen((open) => !open);
+    // Android has no combined picker: date dialog, then time dialog.
+    DateTimePickerAndroid.open({
+      value: custom,
+      mode: 'date',
+      onChange: (event, date) => {
+        if (event.type !== 'set' || !date) return;
+        if (!withTime) return chooseCustom(date);
+        DateTimePickerAndroid.open({
+          value: date,
+          mode: 'time',
+          onChange: (timeEvent, time) => {
+            if (timeEvent.type === 'set' && time) chooseCustom(time);
+          },
+        });
+      },
+    });
   }
 
   return (
@@ -70,29 +92,24 @@ export function DateSheet({visible, onClose, onSelect, onClear}: DateSheetProps)
 
         <PropertyRow
           icon="calendar-outline"
-          title="Custom date"
-          onPress={() => setCustomOpen((open) => !open)}
+          title={withTime ? 'Custom date & time' : 'Custom date'}
+          onPress={openCustom}
         />
 
         {customOpen ? (
-          <View style={{gap: 12, paddingBottom: 8}}>
-            <TextInput
+          <View style={{gap: 12, paddingBottom: 8, alignItems: 'center'}}>
+            <DateTimePicker
               value={custom}
-              onChangeText={setCustom}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={designTokens.textTertiary}
-              autoCapitalize="none"
-              autoFocus={Platform.OS === 'ios'}
-              style={{
-                backgroundColor: designTokens.field,
-                borderRadius: radius.md,
-                paddingHorizontal: 16,
-                paddingVertical: 14,
-                color: designTokens.textPrimary,
-                fontSize: 16,
-              }}
+              mode={withTime ? 'datetime' : 'date'}
+              display="spinner"
+              themeVariant="dark"
+              onChange={(_, date) => date && setCustom(date)}
             />
-            <PrimaryButton label="Set date" onPress={applyCustom} disabled={!custom.trim()} />
+            <PrimaryButton
+              label={withTime ? 'Set date & time' : 'Set date'}
+              onPress={() => chooseCustom(custom)}
+              style={{alignSelf: 'stretch'}}
+            />
           </View>
         ) : null}
 

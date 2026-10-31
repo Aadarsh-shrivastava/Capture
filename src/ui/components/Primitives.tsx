@@ -47,9 +47,11 @@ type ButtonProps = {
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
+  /** Shorter button with smaller text. */
+  compact?: boolean;
 };
 
-export function PrimaryButton({label, onPress, icon, loading, disabled, style}: ButtonProps) {
+export function PrimaryButton({label, onPress, icon, loading, disabled, style, compact}: ButtonProps) {
   const inactive = disabled || loading;
 
   return (
@@ -62,9 +64,9 @@ export function PrimaryButton({label, onPress, icon, loading, disabled, style}: 
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 10,
-          height: 54,
-          borderRadius: radius.md,
+          gap: compact ? 6 : 10,
+          height: compact ? 38 : 54,
+          borderRadius: compact ? radius.sm : radius.md,
           backgroundColor: designTokens.white,
           opacity: inactive ? 0.45 : pressed ? 0.85 : 1,
         },
@@ -74,8 +76,8 @@ export function PrimaryButton({label, onPress, icon, loading, disabled, style}: 
         <ActivityIndicator color={designTokens.black} />
       ) : (
         <>
-          {icon ? <Ionicons name={icon} size={18} color={designTokens.black} /> : null}
-          <Text style={{color: designTokens.black, fontSize: 16, fontWeight: '600'}}>{label}</Text>
+          {icon ? <Ionicons name={icon} size={compact ? 15 : 18} color={designTokens.black} /> : null}
+          <Text style={{color: designTokens.black, fontSize: compact ? 14 : 16, fontWeight: '600'}}>{label}</Text>
         </>
       )}
     </Pressable>

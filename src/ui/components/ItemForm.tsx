@@ -6,10 +6,12 @@ import {Pressable} from '@/ui/HapticPressable';
 import {type CaptureItemDraft} from '@/capture/captureItemDraft';
 import {extractShortSubject} from '@/capture/captureTitle';
 import {DateSheet} from '@/components/sheets/DateSheet';
+import {OptionsSheet} from '@/components/sheets/OptionsSheet';
 import {TagsSheet} from '@/components/sheets/TagsSheet';
 import {getDefaultFieldValues} from '@/domain/behaviorDefinitions';
 import {filterValidOptionalBehaviors} from '@/domain/behaviorTypeConfig';
 import type {Group} from '@/models/group';
+import {RepeatField} from '@/recurrence';
 import {
   priorityFromImportance,
   priorityLabel,
@@ -158,8 +160,7 @@ export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
 
   const [notesOpen, setNotesOpen] = useState(Boolean(draft.content?.trim()) && !textPrimary);
   const [titleOpen, setTitleOpen] = useState(Boolean(draft.title.trim()) && textPrimary);
-  const [groupOpen, setGroupOpen] = useState(Boolean(groupName));
-  const [sheet, setSheet] = useState<'tags' | 'date' | null>(null);
+  const [sheet, setSheet] = useState<'tags' | 'date' | 'group' | null>(null);
 
   function setTypeName(typeName: ItemTypeName) {
     const optional = filterValidOptionalBehaviors(typeName, draft.optionalBehaviorNames ?? []);
@@ -275,6 +276,11 @@ export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
           </View>
 
           <View>
+            <Label>Repeat</Label>
+            <RepeatField draft={draft} onChange={onChange} />
+          </View>
+
+          <View>
             <Label>Priority</Label>
             <View style={{flexDirection: 'row', gap: 8}}>
               {PRIORITIES.map((level) => (
@@ -308,34 +314,26 @@ export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
       </View>
 
       <View>
-        {groupOpen ? (
-          groups.length === 0 ? (
-            <Text style={{color: designTokens.textTertiary, fontSize: 14}}>
-              No groups. Create one first.
-            </Text>
-          ) : (
-            <>
-              <Label>Group</Label>
-              <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8}}>
-                {groups.map((group) => (
-                  <SelectChip
-                    key={group.id}
-                    label={group.name}
-                    active={groupName === group.name}
-                    onPress={() =>
-                      onChange({
-                        ...draft,
-                        groupNames: groupName === group.name ? [] : [group.name],
-                      })
-                    }
-                  />
-                ))}
-              </View>
-            </>
-          )
-        ) : (
-          <AddButton label="Add to group" onPress={() => setGroupOpen(true)} />
-        )}
+        <Label>Group</Label>
+        <Pressable
+          onPress={() => setSheet('group')}
+          disabled={groups.length === 0}
+          accessibilityRole="button"
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            backgroundColor: designTokens.field,
+            borderRadius: radius.md,
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+          }}>
+          <Ionicons name="folder-outline" size={18} color={designTokens.textSecondary} />
+          <Text style={{flex: 1, color: groupName ? designTokens.textPrimary : designTokens.textTertiary, fontSize: 16}}>
+            {groups.length === 0 ? 'No groups yet' : groupName ?? 'No group'}
+          </Text>
+          <Ionicons name="chevron-down" size={16} color={designTokens.textTertiary} />
+        </Pressable>
       </View>
 
       <TagsSheet
@@ -345,10 +343,20 @@ export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
         onSubmit={(names) => onChange({...draft, tagNames: names})}
       />
 
+      <OptionsSheet
+        visible={sheet === 'group'}
+        onClose={() => setSheet(null)}
+        title="Group"
+        value={groupName ?? ''}
+        options={[{label: 'No group', value: ''}, ...groups.map((g) => ({label: g.name, value: g.name}))]}
+        onSelect={(name) => onChange({...draft, groupNames: name ? [name] : []})}
+      />
+
       <DateSheet
         visible={sheet === 'date'}
         onClose={() => setSheet(null)}
         onSelect={setDue}
+        withTime
         onClear={dueAt ? () => setDue('') : undefined}
       />
     </View>

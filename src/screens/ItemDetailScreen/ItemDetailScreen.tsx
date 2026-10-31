@@ -1,12 +1,17 @@
 import { useCallback, useState } from 'react';
-import { Alert, Linking, ScrollView, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Linking, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Pressable } from '@/ui/HapticPressable';
 import { itemApi } from '@/api/itemApi';
-import { HeaderButton } from '@/components/ScreenHeader/ScreenHeader';
+import { OptionsSheet } from '@/components/sheets/OptionsSheet';
+import { isRepeatUnit, repeatLabel } from '@/recurrence';
+import { completeTask, deleteItem } from '@/taskActions';
 import { ScreenShell } from '@/components/ScreenShell/ScreenShell';
 import type { ItemFull } from '@/models/behaviorData';
+import { PrimaryButton } from '@/ui/components/Primitives';
 import { SectionHeader } from '@/ui/components/SectionHeader';
 import { TypeBadge } from '@/ui/components/TypeBadge';
 import { designTokens, formatRelativeDay } from '@/ui/designTokens';
@@ -18,11 +23,14 @@ export function ItemDetailScreen() {
   const { theme } = useThemeStore();
   const { spacing } = theme;
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ id: string }>();
   const itemId = Number(params.id);
 
   const [item, setItem] = useState<ItemFull | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   const loadItem = useCallback(async () => {
     if (Number.isNaN(itemId)) {
@@ -45,19 +53,14 @@ export function ItemDetailScreen() {
     }, [loadItem])
   );
 
-  function confirmDelete() {
+  async function remove() {
     if (!item) return;
-    Alert.alert('Delete item', `Delete "${item.title}"?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await itemApi.deleteItem(item.id);
-          router.replace('/(tabs)/library');
-        },
-      },
-    ]);
+    try {
+      await deleteItem(item.id, item.title);
+      router.back();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to delete');
+    }
   }
 
   if (!item) {
@@ -74,12 +77,35 @@ export function ItemDetailScreen() {
   const visitable = item.behaviorData.Visitable;
   const doable = item.behaviorData.Doable;
   const dueAt = doable?.due_at?.trim();
+  const repeatUnit = item.behaviorData.Repeatable?.interval_unit;
+
+  async function complete() {
+    if (!item) return;
+    setCompleting(true);
+    try {
+      await completeTask(item.id, item.title);
+      await loadItem();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to complete');
+    } finally {
+      setCompleting(false);
+    }
+  }
+
+  const meta = [
+    item.importance != null ? `Importance ${item.importance}` : '',
+    item.urgency != null ? `Urgency ${item.urgency}` : '',
+  ].filter(Boolean);
 
   return (
     <ScreenShell
       title={item.typeName}
       leading="back"
-      right={<HeaderButton label="Edit" onPress={() => router.push(`/create-item?id=${item.id}`)} />}
+      right={
+        <Pressable onPress={() => setMenuOpen(true)} hitSlop={12} accessibilityLabel="More options">
+          <Ionicons name="ellipsis-horizontal" size={22} color={designTokens.textPrimary} />
+        </Pressable>
+      }
     >
       <ScrollView
         contentContainerStyle={{
@@ -105,8 +131,37 @@ export function ItemDetailScreen() {
         </Text>
 
         <Text style={{ color: designTokens.textTertiary, fontSize: 13, marginBottom: 16 }}>
-          {typeConfig.hint} · {formatRelativeDay(item.createdAt)}
+          {typeConfig.label} · {formatRelativeDay(item.createdAt)}
+          {doable?.status === 'completed' ? ' · Completed' : ''}
         </Text>
+
+        {dueAt ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <Ionicons name="calendar-outline" size={16} color={designTokens.textSecondary} />
+            <Text style={{ color: designTokens.textSecondary, fontSize: 15 }}>
+              {formatDateTimeForDisplay(dueAt)}
+              {isRepeatUnit(repeatUnit) ? ` · Repeats ${repeatLabel(repeatUnit).toLowerCase()}` : ''}
+            </Text>
+          </View>
+        ) : null}
+
+        {visitable?.url ? (
+          <Pressable
+            onPress={() => Linking.openURL(visitable.url)}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}
+          >
+            <Ionicons name="link-outline" size={16} color={designTokens.textSecondary} />
+            <Text numberOfLines={1} style={{ flex: 1, color: designTokens.textPrimary, fontSize: 15, textDecorationLine: 'underline' }}>
+              {visitable.url}
+            </Text>
+          </Pressable>
+        ) : null}
+
+        {meta.length > 0 ? (
+          <Text style={{ color: designTokens.textTertiary, fontSize: 13, marginBottom: 16 }}>
+            {meta.join(' · ')}
+          </Text>
+        ) : null}
 
         {item.content ? (
           <>
@@ -115,71 +170,6 @@ export function ItemDetailScreen() {
               {item.content}
             </Text>
           </>
-        ) : null}
-
-        {(item.importance != null || item.urgency != null || dueAt) && (
-          <Text style={{ color: designTokens.textTertiary, fontSize: 13, marginBottom: 16 }}>
-            {item.importance != null ? `Importance ${item.importance}` : ''}
-            {item.importance != null && item.urgency != null ? ' · ' : ''}
-            {item.urgency != null ? `Urgency ${item.urgency}` : ''}
-            {(item.importance != null || item.urgency != null) && dueAt ? ' · ' : ''}
-            {dueAt ? `Due ${formatDateTimeForDisplay(dueAt)}` : ''}
-          </Text>
-        )}
-
-        {doable && doable.status !== 'completed' ? (
-          <Pressable
-            style={{
-              backgroundColor: designTokens.accent,
-              borderRadius: 10,
-              paddingVertical: 14,
-              alignItems: 'center',
-              marginBottom: 12,
-            }}
-            onPress={async () => {
-              await itemApi.saveItem(
-                {
-                  typeId: item.typeId,
-                  title: item.title,
-                  content: item.content,
-                  importance: item.importance,
-                  urgency: item.urgency,
-                  status: item.status,
-                  optionalBehaviorIds: item.optionalBehaviorIds,
-                  behaviorData: {
-                    ...item.behaviorData,
-                    Doable: { ...doable, status: 'completed' },
-                  },
-                  groupIds: item.groupIds,
-                  tagNames: item.tagNames,
-                },
-                item.id
-              );
-              await loadItem();
-            }}
-          >
-            <Text style={{ color: designTokens.white, fontSize: 16, fontWeight: '600' }}>
-              Complete
-            </Text>
-          </Pressable>
-        ) : null}
-
-        {visitable?.url ? (
-          <Pressable
-            onPress={() => Linking.openURL(visitable.url)}
-            style={{
-              borderWidth: 1,
-              borderColor: designTokens.surfaceBorder,
-              borderRadius: 10,
-              paddingVertical: 14,
-              alignItems: 'center',
-              marginBottom: 12,
-            }}
-          >
-            <Text style={{ color: designTokens.accent, fontSize: 16, fontWeight: '500' }}>
-              Open link →
-            </Text>
-          </Pressable>
         ) : null}
 
         {item.tagNames.length > 0 ? (
@@ -204,14 +194,39 @@ export function ItemDetailScreen() {
           </>
         ) : null}
 
-        <Pressable onPress={confirmDelete} style={{ alignItems: 'center', paddingVertical: 14 }}>
-          <Text style={{ color: '#ff8a80', fontSize: 15 }}>Delete</Text>
-        </Pressable>
-
         {error ? (
           <Text style={{ color: '#ff8a80', fontSize: 13, marginTop: 12 }}>{error}</Text>
         ) : null}
       </ScrollView>
+
+      {doable && doable.status !== 'completed' ? (
+        <View
+          style={{
+            paddingHorizontal: spacing.marginMobile,
+            paddingTop: 8,
+            paddingBottom: insets.bottom + 8,
+            borderTopWidth: 1,
+            borderTopColor: designTokens.divider,
+          }}
+        >
+          <PrimaryButton compact label="Complete" icon="checkmark" loading={completing} onPress={complete} />
+        </View>
+      ) : null}
+
+      <OptionsSheet
+        visible={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        title={item.title}
+        value={null}
+        options={[
+          { label: 'Edit', value: 'edit', icon: 'create-outline' },
+          { label: 'Delete', value: 'delete', icon: 'trash-outline' },
+        ]}
+        onSelect={(value) => {
+          if (value === 'edit') router.push(`/create-item?id=${item.id}`);
+          if (value === 'delete') remove();
+        }}
+      />
     </ScreenShell>
   );
 }

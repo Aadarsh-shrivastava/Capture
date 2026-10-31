@@ -18,9 +18,12 @@ import {type CaptureFlowStep} from '@/capture/captureFlow';
 import {type CaptureItemDraft} from '@/capture/captureItemDraft';
 import {useCaptureAnalysis} from '@/hooks/useCaptureAnalysis';
 import {groupApi} from '@/api/groupApi';
+import {itemApi} from '@/api/itemApi';
+import {showUndo} from '@/undo';
 import type {Group} from '@/models/group';
 import {createItemFromCaptureDraft} from '@/services/captureItemService';
 import {ItemForm} from '@/ui/components/ItemForm';
+import {PrimaryButton} from '@/ui/components/Primitives';
 import {designTokens} from '@/ui/designTokens';
 import {useThemeStore} from '@/store/themeStore';
 
@@ -35,6 +38,8 @@ type Props = {
   onSaved: (title: string) => void;
   /** Called when user goes back from review to text input. */
   onBackToText?: () => void;
+  /** Force this group onto the analyzed draft. */
+  groupName?: string;
 };
 
 export function CaptureFlowModal({
@@ -45,6 +50,7 @@ export function CaptureFlowModal({
   onClose,
   onSaved,
   onBackToText,
+  groupName,
 }: Props) {
   const {theme} = useThemeStore();
   const {colors, spacing} = theme;
@@ -57,6 +63,7 @@ export function CaptureFlowModal({
   const [submitting, setSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState<CaptureFlowStep>(step);
   const [groups, setGroups] = useState<Group[]>([]);
+  const [steps, setSteps] = useState<string[]>([]);
 
   useEffect(() => {
     if (visible) {
@@ -87,10 +94,11 @@ export function CaptureFlowModal({
   async function runAnalysis(text: string) {
     setError(null);
     setCurrentStep('analyzing');
+    setSteps([]);
 
     try {
-      const result = await analyzeText(text);
-      setDraft(result);
+      const result = await analyzeText(text, setSteps);
+      setDraft(groupName ? {...result, groupNames: [groupName]} : result);
       setCurrentStep('review');
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -112,6 +120,7 @@ export function CaptureFlowModal({
 
     try {
       const saved = await createItemFromCaptureDraft(draft);
+      showUndo(`Captured "${saved.title}"`, () => itemApi.deleteItem(saved.id));
       onSaved(saved.title);
       onClose();
     } catch (e) {
@@ -141,7 +150,7 @@ export function CaptureFlowModal({
         : 'Review item';
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={[styles.root, {backgroundColor: colors.background}]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -160,7 +169,13 @@ export function CaptureFlowModal({
             </Pressable>
           )}
           <Text style={[styles.headerTitle, {color: colors.onSurface}]}>{headerTitle}</Text>
-          <View style={{width: 24}} />
+          {currentStep === 'review' ? (
+            <Pressable onPress={onClose} hitSlop={12} accessibilityLabel="Discard">
+              <Ionicons name="close" size={24} color={colors.onSurface} />
+            </Pressable>
+          ) : (
+            <View style={{width: 24}} />
+          )}
         </View>
 
         <ScrollView
@@ -196,7 +211,7 @@ export function CaptureFlowModal({
                 onPress={handleAnalyze}
                 disabled={!input.trim() || analyzing}>
                 {analyzing ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color={designTokens.black} />
                 ) : (
                   <Text style={styles.btnText}>Analyze</Text>
                 )}
@@ -221,32 +236,41 @@ export function CaptureFlowModal({
               <Text style={[styles.analyzingText, {color: colors.onSurfaceVariant}]}>
                 Turning your words into a structured item…
               </Text>
+              {steps.map((line) => (
+                <Text key={line} style={{color: colors.onSurface, fontSize: 13, marginTop: 6}}>
+                  ✓ {line}
+                </Text>
+              ))}
             </View>
           ) : null}
 
           {currentStep === 'review' && draft ? (
             <>
               <ItemForm draft={draft} onChange={setDraft} groups={groups} />
-              <Pressable
-                style={[
-                  styles.btn,
-                  {marginTop: 8},
-                  submitting && styles.dim,
-                  {backgroundColor: colors.primaryContainer},
-                ]}
-                onPress={handleSubmit}
-                disabled={submitting || !draft.title.trim()}>
-                {submitting ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.btnText}>Create item</Text>
-                )}
-              </Pressable>
             </>
           ) : null}
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
         </ScrollView>
+
+        {currentStep === 'review' && draft ? (
+          <View
+            style={{
+              paddingHorizontal: spacing.marginMobile,
+              paddingTop: 8,
+              paddingBottom: insets.bottom + 8,
+              borderTopWidth: 1,
+              borderTopColor: designTokens.divider,
+            }}>
+            <PrimaryButton
+              compact
+              label="Create item"
+              loading={submitting}
+              disabled={!draft.title.trim()}
+              onPress={handleSubmit}
+            />
+          </View>
+        ) : null}
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -281,7 +305,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
   },
-  btnText: {color: '#fff', fontWeight: '600', fontSize: 16},
+  btnText: {color: designTokens.black, fontWeight: '600', fontSize: 16},
   btnSecondary: {
     paddingVertical: 14,
     borderRadius: 10,

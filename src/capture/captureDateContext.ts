@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 /** Reference clock for resolving relative dates in capture (LLM + heuristics). */
 export type CaptureDateContext = {
   now: Date;
@@ -121,14 +123,14 @@ export function inferDueAtFromText(text: string, now = new Date()): string {
   if (hoursMatch) {
     const result = new Date(now);
     result.setHours(result.getHours() + Number(hoursMatch[1]));
-    return result.toISOString();
+    return moment(result).format();
   }
 
   const minutesMatch = lower.match(/\bin\s+(\d+)\s*min(?:ute)?s?\b/);
   if (minutesMatch) {
     const result = new Date(now);
     result.setMinutes(result.getMinutes() + Number(minutesMatch[1]));
-    return result.toISOString();
+    return moment(result).format();
   }
 
   let baseDate: Date | null = null;
@@ -143,7 +145,7 @@ export function inferDueAtFromText(text: string, now = new Date()): string {
 
   if (baseDate) {
     const withTime = parseClockTime(lower, baseDate);
-    if (withTime) return withTime.toISOString();
+    if (withTime) return moment(withTime).format();
     return formatLocalDate(baseDate);
   }
 

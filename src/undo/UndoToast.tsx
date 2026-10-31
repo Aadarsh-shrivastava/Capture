@@ -2,6 +2,7 @@ import {useEffect} from 'react';
 import {Text, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
+import {Mascot} from '@/mascot';
 import {Appear} from '@/motion';
 import {designTokens, radius} from '@/ui/designTokens';
 import {Pressable} from '@/ui/HapticPressable';
@@ -43,6 +44,7 @@ export function UndoToast() {
           borderWidth: 1,
           borderColor: designTokens.surfaceBorder,
         }}>
+        {current.pose ? <Mascot pose={current.pose} width={34} halo={false} /> : null}
         <Text numberOfLines={1} style={{flex: 1, color: designTokens.textPrimary, fontSize: 15}}>
           {current.label}
         </Text>

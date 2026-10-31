@@ -14,7 +14,7 @@ export async function completeTask(itemId: number, title: string, opts: {undo?: 
   const {before, nextDue} = await service.completeTask(itemId);
   if (opts.undo === false) return;
   const label = nextDue ? `Done · next ${moment(nextDue).calendar(null, {sameElse: 'MMM D'})}` : `Completed "${title}"`;
-  showUndo(label, () => service.restoreDoable(itemId, before));
+  showUndo(label, () => service.restoreDoable(itemId, before), 'chibiHappy');
 }
 
 /** "Later": push the due time by the configured hours, with Undo. */
@@ -31,9 +31,13 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 export async function completeTasks(tasks: Named[]): Promise<void> {
   const done: {id: number; before: Record<string, string>}[] = [];
   for (const task of tasks) done.push({id: task.id, ...(await service.completeTask(task.id))});
-  showUndo(`Completed ${plural(done.length, 'task')}`, async () => {
-    for (const d of done) await service.restoreDoable(d.id, d.before);
-  });
+  showUndo(
+    `Completed ${plural(done.length, 'task')}`,
+    async () => {
+      for (const d of done) await service.restoreDoable(d.id, d.before);
+    },
+    'chibiHappy',
+  );
 }
 
 /** Bulk delete; one Undo recreates them all. */

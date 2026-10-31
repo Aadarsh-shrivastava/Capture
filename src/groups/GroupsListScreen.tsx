@@ -7,6 +7,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {TabScreenShell} from '@/components/TabScreenShell/TabScreenShell';
 import type {GroupWithCount} from '@/models/group';
 import {Appear} from '@/motion';
+import {MascotMessage} from '@/mascot';
 import {SelectionTint} from '@/selection';
 import {useDataVersionStore} from '@/store/dataVersionStore';
 import {showUndo} from '@/undo';
@@ -111,9 +112,7 @@ export function GroupsListScreen() {
       <TabScreenShell title="Groups" action={{icon: 'add', label: 'New group', onPress: () => setCreating(true)}}>
         <ScrollView contentContainerStyle={{paddingHorizontal: 20, paddingBottom: 40}}>
           {active.length === 0 ? (
-            <Text style={{color: designTokens.textTertiary, fontSize: 14, paddingVertical: 32, textAlign: 'center'}}>
-              No groups yet. Tap + to create one.
-            </Text>
+            <MascotMessage pose="chibiIdea" message="No groups yet. Tap + to create one." />
           ) : (
             active.map(g => (
               <GroupListRow key={g.id} group={g} selected={selected.has(g.id)} onPress={() => open(g)} onLongPress={() => toggle(g.id)} />

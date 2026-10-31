@@ -6,6 +6,7 @@ import {ScreenShell} from '@/components/ScreenShell/ScreenShell';
 import type {ItemWithType} from '@/models/item';
 import {searchRepository} from '@/repositories/searchRepository';
 import {Selectable} from '@/selection';
+import {Mascot} from '@/mascot';
 import {useDataVersionStore} from '@/store/dataVersionStore';
 import {ItemCard} from '@/ui/components/ItemCard';
 import {SearchBar} from '@/ui/components/SearchBar';
@@ -37,8 +38,14 @@ export function SearchScreen() {
         <SearchBar value={query} onChangeText={setQuery} placeholder="Titles, notes, tags, groups" autoFocus />
       </View>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{paddingHorizontal: 20, paddingBottom: 40, gap: 10}}>
-        {query.trim() && results.length === 0 ? (
-          <Text style={{color: designTokens.textTertiary, fontSize: 14, textAlign: 'center', paddingVertical: 32}}>No matches.</Text>
+        {results.length === 0 ? (
+          // Stays until there are results to show.
+          <View style={{alignItems: 'center', paddingVertical: 24, gap: 8}}>
+            <Mascot pose="chibiPeek" width={110} />
+            <Text style={{color: designTokens.textTertiary, fontSize: 14}}>
+              {query.trim() ? 'No matches.' : 'Search titles, notes, tags and groups.'}
+            </Text>
+          </View>
         ) : null}
         {results.map(item => (
           <Selectable key={item.id} item={item} onOpen={() => router.push(`/item/${item.id}`)}>

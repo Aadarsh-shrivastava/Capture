@@ -4,6 +4,7 @@ import {ScrollView, Text, View} from 'react-native';
 
 import {ScreenShell} from '@/components/ScreenShell/ScreenShell';
 import {getBehaviorLabel} from '@/domain/behaviorTypeConfig';
+import {Mascot} from '@/mascot';
 import {designTokens, radius} from '@/ui/designTokens';
 import {Pressable} from '@/ui/HapticPressable';
 import {getItemTypeConfig} from '@/ui/itemTypeConfig';
@@ -25,6 +26,7 @@ export function ItemTypesScreen() {
         </Pressable>
       }>
       <ScrollView contentContainerStyle={{paddingHorizontal: 20, paddingBottom: 40, gap: 10}}>
+        <Mascot pose="thinking" width={96} style={{alignSelf: 'center'}} />
         {types.map(type => (
           <Pressable
             key={type.id}

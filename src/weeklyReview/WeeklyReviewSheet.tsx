@@ -5,6 +5,7 @@ import {AppState, ScrollView, Text, View} from 'react-native';
 import {Sheet} from '@/components/Sheet/Sheet';
 import {isDailyReviewOpen, openDailyReview} from '@/dailyReview';
 import {useDatabaseReady} from '@/providers/DatabaseProvider';
+import {Mascot} from '@/mascot';
 import {taskHistoryRepository, type TaskHistoryRow} from '@/repositories/taskHistoryRepository';
 import {SecondaryButton} from '@/ui/components/Primitives';
 import {designTokens} from '@/ui/designTokens';
@@ -68,6 +69,7 @@ export function WeeklyReviewSheet() {
   return (
     <Sheet visible={visible} onClose={close} title="Your week">
       <ScrollView style={{maxHeight: 460}} contentContainerStyle={{paddingHorizontal: 20, paddingBottom: 12}}>
+        <Mascot pose="reading" width={96} style={{alignSelf: 'center', marginBottom: 8}} />
         {summary ? (
           <>
             <Section label="Done" rows={summary.done} empty="Nothing completed this week." />

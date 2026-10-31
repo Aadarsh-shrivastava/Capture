@@ -4,6 +4,7 @@ import {AppState, ScrollView, Text, View} from 'react-native';
 import {Sheet} from '@/components/Sheet/Sheet';
 import type {FocusTask} from '@/models/focusTask';
 import {useDatabaseReady} from '@/providers/DatabaseProvider';
+import {Mascot} from '@/mascot';
 import {completeTask, deleteItem} from '@/taskActions';
 import {PrimaryButton} from '@/ui/components/Primitives';
 import {designTokens, radius} from '@/ui/designTokens';
@@ -89,7 +90,10 @@ export function DailyReviewSheet() {
       }>
       <ScrollView style={{maxHeight: 420}} contentContainerStyle={{paddingHorizontal: 20, paddingBottom: 12}}>
         {tasks.length === 0 ? (
-          <Text style={{color: designTokens.textTertiary, fontSize: 14, paddingVertical: 16}}>All caught up.</Text>
+          <View style={{alignItems: 'center', paddingVertical: 12, gap: 6}}>
+            <Mascot pose="wink" width={110} />
+            <Text style={{color: designTokens.textTertiary, fontSize: 14}}>All caught up.</Text>
+          </View>
         ) : (
           tasks.map(task => (
             <View key={task.id} style={{paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: designTokens.divider, gap: 8}}>

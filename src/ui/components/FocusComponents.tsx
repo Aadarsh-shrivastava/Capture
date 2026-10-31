@@ -1,10 +1,10 @@
-import {Ionicons} from '@expo/vector-icons';
 import {ActivityIndicator, Text, View} from 'react-native';
 
 import {Pressable} from '@/ui/HapticPressable';
 import {formatDueLabel} from '@/domain/focusPriority';
 import type {FocusTask} from '@/models/focusTask';
 import {designTokens} from '@/ui/designTokens';
+import {Mascot, type MascotPose} from '@/mascot';
 
 type TaskActionsProps = {
   onComplete: () => void;
@@ -106,17 +106,17 @@ export function NextTaskRow({task, onPress, onLongPress}: NextTaskRowProps) {
   );
 }
 
-function emptyMessage(hour = new Date().getHours()): {title: string; body: string} {
-  if (hour < 12) return {title: 'Fresh start', body: "What's first today? Pull down or tap + to capture."};
-  if (hour < 18) return {title: 'Nothing pressing', body: 'Good moment to capture something you have been putting off.'};
-  return {title: 'Quiet evening', body: 'Anything for tomorrow? Capture it now and sleep on a clear head.'};
+function emptyMessage(hour = new Date().getHours()): {title: string; body: string; pose: MascotPose} {
+  if (hour < 12) return {title: 'Fresh start', body: "What's first today? Pull down or tap + to capture.", pose: 'wink'};
+  if (hour < 18) return {title: 'Nothing pressing', body: 'Good moment to capture something you have been putting off.', pose: 'thinking'};
+  return {title: 'Quiet evening', body: 'Anything for tomorrow? Capture it now and sleep on a clear head.', pose: 'chibiSleeping'};
 }
 
 export function FocusEmptyState() {
   const message = emptyMessage();
   return (
     <View style={{paddingVertical: 48, alignItems: 'center', gap: 8}}>
-      <Ionicons name="checkmark-circle-outline" size={36} color={designTokens.textTertiary} />
+      <Mascot pose={message.pose} width={140} />
       <Text style={{color: designTokens.textSecondary, fontSize: 16, fontWeight: '500'}}>
         {message.title}
       </Text>

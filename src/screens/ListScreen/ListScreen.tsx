@@ -20,8 +20,8 @@ import { useDataVersionStore } from '@/store/dataVersionStore';
 import { formatDueDateLabel } from '@/ui/formatDateTime';
 import { Pressable } from '@/ui/HapticPressable';
 import { useItemsData } from '@/hooks/useItemsData';
-import { EmptyState } from '@/ui/components/EmptyState';
 import { Selectable } from '@/selection';
+import { MascotMessage } from '@/mascot';
 import { ItemCard } from '@/ui/components/ItemCard';
 import { SearchBar } from '@/ui/components/SearchBar';
 import { typeHasBehavior } from '@/domain/behaviorTypeConfig';
@@ -133,7 +133,7 @@ export function ListScreen() {
         ) : null}
 
         {filteredItems.length === 0 ? (
-          <EmptyState message={emptyMessage} />
+          <MascotMessage pose="chibiPeek" message={emptyMessage} />
         ) : (
           <View style={{ gap: 10 }}>
             {filteredItems.map((item) => (

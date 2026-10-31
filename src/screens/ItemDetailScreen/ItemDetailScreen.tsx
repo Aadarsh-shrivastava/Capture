@@ -8,6 +8,7 @@ import { Pressable } from '@/ui/HapticPressable';
 import { itemApi } from '@/api/itemApi';
 import { OptionsSheet } from '@/components/sheets/OptionsSheet';
 import { ChecklistView, parseNumbers } from '@/behaviors';
+import { Mascot } from '@/mascot';
 import { isRepeatUnit, repeatLabel } from '@/recurrence';
 import { completeTask, deleteItem } from '@/taskActions';
 import { ScreenShell } from '@/components/ScreenShell/ScreenShell';
@@ -145,6 +146,8 @@ export function ItemDetailScreen() {
           {typeConfig.label} · {formatRelativeDay(item.createdAt)}
           {doable?.status === 'completed' ? ' · Completed' : ''}
         </Text>
+
+        {doable?.status === 'completed' ? <Mascot pose="wink" width={110} style={{ alignSelf: 'center', marginBottom: 12 }} /> : null}
 
         {dueAt ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>

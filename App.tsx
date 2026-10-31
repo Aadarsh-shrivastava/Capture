@@ -1,15 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationContainer } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
+import { useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { AppShell } from '@/navigation/AppShell';
+import { OnboardingFlow } from '@/onboarding';
 import { DatabaseProvider } from '@/providers/DatabaseProvider';
+import { getVaultConfig } from '@/vault';
 
 export default function App() {
+  // No vault yet = first run: onboarding creates it before the database (which lives inside it) opens.
+  const [hasVault, setHasVault] = useState(() => getVaultConfig() !== null);
   const [fontsLoaded] = useFonts({
     ...Ionicons.font,
   });
@@ -26,11 +31,15 @@ export default function App() {
     <GestureHandlerRootView style={{flex: 1}}>
       <SafeAreaProvider>
         <GluestackUIProvider mode="dark">
-          <DatabaseProvider>
-            <NavigationContainer>
-              <AppShell />
-            </NavigationContainer>
-          </DatabaseProvider>
+          {hasVault ? (
+            <DatabaseProvider>
+              <NavigationContainer>
+                <AppShell />
+              </NavigationContainer>
+            </DatabaseProvider>
+          ) : (
+            <OnboardingFlow onDone={() => setHasVault(true)} />
+          )}
         </GluestackUIProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -3,6 +3,8 @@ import {Platform} from 'react-native';
 import RNFS from 'react-native-fs';
 import {initLlama, type LlamaContext} from 'llama.rn';
 
+import {vaultPaths} from '@/vault';
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const BUNDLED_MODEL = require('../../llm-models/qwen-q4_k_m.gguf');
 const MODEL_NAME = 'qwen-q4_k_m.gguf';
@@ -43,7 +45,7 @@ async function copyBundledModelTo(dest: string, bundledUri: string): Promise<voi
 }
 
 async function ensureModelOnDisk(): Promise<string> {
-  const dest = `${RNFS.DocumentDirectoryPath}/${MODEL_NAME}`;
+  const dest = `${vaultPaths().models}/${MODEL_NAME}`;
   if (await RNFS.exists(dest)) {
     return dest;
   }

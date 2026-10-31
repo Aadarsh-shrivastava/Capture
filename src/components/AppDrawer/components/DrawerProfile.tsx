@@ -1,22 +1,22 @@
-import { Ionicons } from '@expo/vector-icons';
-
 import { useRouter } from 'expo-router';
 
 import { Pressable } from '@/ui/HapticPressable';
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
 import { useDrawerStore } from '@/store/drawerStore';
+import { Avatar, useProfileStore } from '@/profile';
 import { useThemeStore } from '@/store/themeStore';
 
 export function DrawerProfile() {
   const router = useRouter();
   const close = useDrawerStore((state) => state.close);
   const { theme } = useThemeStore();
-  const { colors, spacing, rounded, typography } = theme;
+  const { colors, spacing, typography } = theme;
+  const profile = useProfileStore();
 
   function goToProfile() {
     close();
-    router.push('/(tabs)/profile');
+    router.push('/profile');
   }
 
   return (
@@ -30,20 +30,7 @@ export function DrawerProfile() {
         marginBottom: spacing.stackMd,
       }}
     >
-      <Box
-        style={{
-          width: 48,
-          height: 48,
-          borderRadius: rounded.full,
-          backgroundColor: colors.surfaceContainerHighest,
-          borderWidth: 1,
-          borderColor: colors.border,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Ionicons name="person-outline" size={22} color={colors.onSurface} />
-      </Box>
+      <Avatar size={48} />
 
       <Box style={{ flex: 1 }}>
         <Text
@@ -53,7 +40,7 @@ export function DrawerProfile() {
             fontWeight: '600',
           }}
         >
-          Aadarsh
+          {profile.name || 'Your profile'}
         </Text>
         <Text
           style={{

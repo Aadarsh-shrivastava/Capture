@@ -1,5 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 
+import { vaultPaths } from '@/vault';
+
 import { runMigrations } from './migrations';
 import { seedDatabase } from './seed';
 
@@ -8,7 +10,8 @@ let initPromise: Promise<void> | null = null;
 
 export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   if (!database) {
-    database = await SQLite.openDatabaseAsync('lockedin.db');
+    // Lives in the user's vault (created during onboarding, before this ever runs).
+    database = await SQLite.openDatabaseAsync('lockedin.db', undefined, vaultPaths().db);
     await database.execAsync('PRAGMA foreign_keys = ON;');
   }
 

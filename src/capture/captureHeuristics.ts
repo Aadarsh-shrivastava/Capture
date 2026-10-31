@@ -12,6 +12,8 @@ import {
   filterValidOptionalBehaviors,
   getDefaultBehaviorsForType,
 } from '@/domain/behaviorTypeConfig';
+// Pure util path: the module entry also exports UI, which plain-logic callers shouldn't load.
+import { inferRepeatUnit } from '@/recurrence/utils';
 import type { ItemTypeName } from '@/ui/itemTypeConfig';
 
 const URL_RE = /https?:\/\/[^\s<>"{}|\\^`[\]]+/i;
@@ -81,7 +83,7 @@ function inferBehaviorData(
   if (effective.has('Repeatable')) {
     data.Repeatable = {
       interval_value: '1',
-      interval_unit: 'week',
+      interval_unit: inferRepeatUnit(text),
       next_occurrence_at: '',
       start_date: '',
       end_date: '',

@@ -2,9 +2,26 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
+import { Ionicons } from '@expo/vector-icons';
+
 import { ScreenShell } from '@/components/ScreenShell/ScreenShell';
+import { ListOptionsSheet } from '@/components/sheets/ListOptionsSheet';
+import {
+  filterTasks,
+  sortForList,
+  TASK_FILTER_OPTIONS,
+  TASK_SORT_OPTIONS,
+  type TaskFilter,
+  type TaskSort,
+  type TaskState,
+} from '@/domain/itemListing';
+import { taskHistoryRepository } from '@/repositories/taskHistoryRepository';
+import { useDataVersionStore } from '@/store/dataVersionStore';
+import { formatDueDateLabel } from '@/ui/formatDateTime';
+import { Pressable } from '@/ui/HapticPressable';
 import { useItemsData } from '@/hooks/useItemsData';
 import { EmptyState } from '@/ui/components/EmptyState';
+import { Selectable } from '@/selection';
 import { ItemCard } from '@/ui/components/ItemCard';
 import { SearchBar } from '@/ui/components/SearchBar';
 import { getItemTypeConfig } from '@/ui/itemTypeConfig';
@@ -15,6 +32,20 @@ export function ListScreen() {
   const params = useLocalSearchParams<{ type?: string }>();
   const { items, types, error, refresh } = useItemsData();
   const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<TaskSort>('due');
+  const [filter, setFilter] = useState<TaskFilter>('all');
+  const [sortOpen, setSortOpen] = useState(false);
+  const [taskStates, setTaskStates] = useState<Map<number, TaskState>>(new Map());
+  const version = useDataVersionStore((state) => state.version);
+  const isTaskList = params.type === 'Task';
+
+  useEffect(() => {
+    if (!isTaskList) return;
+    taskHistoryRepository
+      .findAll()
+      .then((rows) => setTaskStates(new Map(rows.map((r) => [r.id, {dueAt: r.dueAt, status: r.status}]))))
+      .catch(() => {});
+  }, [isTaskList, version]);
 
   const activeType = useMemo(() => {
     if (!params.type || types.length === 0) return null;
@@ -50,8 +81,9 @@ export function ListScreen() {
       );
     }
 
-    return result;
-  }, [items, activeType, search]);
+    if (activeType.name === 'Task') result = filterTasks(result, filter, taskStates);
+    return sortForList(result, activeType.name, sort, taskStates);
+  }, [items, activeType, search, sort, filter, taskStates]);
 
   const emptyMessage = useMemo(() => {
     if (search.trim()) return 'No matching items.';
@@ -73,7 +105,30 @@ export function ListScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <SearchBar value={search} onChangeText={setSearch} />
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <SearchBar value={search} onChangeText={setSearch} />
+          </View>
+          {isTaskList ? (
+            <Pressable
+              onPress={() => setSortOpen(true)}
+              accessibilityLabel="Sort and filter"
+              style={{
+                width: 46,
+                height: 46,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 14,
+                backgroundColor: designTokens.field,
+              }}>
+              <Ionicons
+                name="options-outline"
+                size={20}
+                color={filter === 'all' ? designTokens.textSecondary : designTokens.textPrimary}
+              />
+            </Pressable>
+          ) : null}
+        </View>
 
         {error ? (
           <Text style={{ color: designTokens.textSecondary, fontSize: 13, marginBottom: 12 }}>
@@ -86,17 +141,38 @@ export function ListScreen() {
         ) : (
           <View style={{ gap: 10 }}>
             {filteredItems.map((item) => (
-              <ItemCard
-                key={item.id}
-                title={item.title}
-                typeName={item.typeName}
-                createdAt={item.createdAt}
-                onPress={() => router.push(`/item/${item.id}`)}
-              />
+              <Selectable key={item.id} item={item} onOpen={() => router.push(`/item/${item.id}`)}>
+                {(select) => {
+                  const task = isTaskList ? taskStates.get(item.id) : undefined;
+                  const done = task?.status === 'completed';
+                  return (
+                    <View style={{ opacity: done ? 0.45 : 1 }}>
+                      <ItemCard
+                        title={item.title}
+                        typeName={item.typeName}
+                        createdAt={item.createdAt}
+                        meta={done ? 'Done' : task?.dueAt ? formatDueDateLabel(task.dueAt) : isTaskList ? 'No due date' : null}
+                        {...select}
+                      />
+                    </View>
+                  );
+                }}
+              </Selectable>
             ))}
           </View>
         )}
       </ScrollView>
+
+      <ListOptionsSheet
+        visible={sortOpen}
+        onClose={() => setSortOpen(false)}
+        sortOptions={TASK_SORT_OPTIONS}
+        sort={sort}
+        onSort={setSort}
+        filterOptions={TASK_FILTER_OPTIONS}
+        filter={filter}
+        onFilter={setFilter}
+      />
     </ScreenShell>
   );
 }

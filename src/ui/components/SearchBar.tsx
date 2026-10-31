@@ -7,12 +7,14 @@ type SearchBarProps = {
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
+  autoFocus?: boolean;
 };
 
 export function SearchBar({
   value,
   onChangeText,
   placeholder = 'Search items',
+  autoFocus,
 }: SearchBarProps) {
   return (
     <View
@@ -33,6 +35,7 @@ export function SearchBar({
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={designTokens.textTertiary}
+        autoFocus={autoFocus}
         style={{ flex: 1, color: designTokens.textPrimary, fontSize: 15 }}
       />
     </View>

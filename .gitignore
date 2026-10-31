@@ -75,3 +75,6 @@ llm-models/*.gguf
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Kotlin compiler cache
+android/.kotlin/

@@ -1,5 +1,4 @@
 declare module 'expo-router' {
-  import type { ReactNode } from 'react';
 
   export function useRouter(): {
     push: (href: string | { pathname: string; params?: Record<string, string | undefined> }) => void;

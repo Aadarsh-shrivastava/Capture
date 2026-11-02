@@ -164,6 +164,18 @@ const MIGRATIONS: Record<number, string[]> = {
         OR (t.name = 'Note' AND b.name IN ('Visitable','Memorable'))
         OR (t.name IN ('Journal','Idea') AND b.name = 'Visitable');`,
   ],
+  // Words that point to a type (generated once, edited by the user, learned from corrections).
+  6: [`ALTER TABLE item_types ADD COLUMN keywords TEXT NOT NULL DEFAULT '[]';`],
+  // "Come back": Memorable gets a weight (how often), its current gap, and a count. Ideas get it by default.
+  7: [
+    `ALTER TABLE memorable_items ADD COLUMN weight INTEGER;`,
+    `ALTER TABLE memorable_items ADD COLUMN interval_days REAL;`,
+    `ALTER TABLE memorable_items ADD COLUMN times_shown INTEGER NOT NULL DEFAULT 0;`,
+    `INSERT OR IGNORE INTO type_behaviors (type_id, behavior_id, is_default)
+     SELECT t.id, b.id, 1 FROM item_types t, behaviors b WHERE t.name = 'Idea' AND b.name = 'Memorable';`,
+    `INSERT OR IGNORE INTO memorable_items (item_id)
+     SELECT i.id FROM items i JOIN item_types t ON t.id = i.type_id WHERE t.name = 'Idea';`,
+  ],
 };
 
 async function getCurrentVersion(db: SQLiteDatabase): Promise<number> {

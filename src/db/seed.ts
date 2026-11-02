@@ -29,6 +29,7 @@ const TYPE_BEHAVIOR_MAPPINGS: SeedMapping[] = [
   { typeName: 'Journal', behaviorName: 'Notable' },
   { typeName: 'Journal', behaviorName: 'Memorable' },
   { typeName: 'Idea', behaviorName: 'Notable' },
+  { typeName: 'Idea', behaviorName: 'Memorable' },
 ];
 
 async function upsertType(db: SQLiteDatabase, type: SeedType, now: string) {

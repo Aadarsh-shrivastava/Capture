@@ -66,14 +66,20 @@ export const behaviorDataRepository = {
         break;
       case 'Memorable':
         await db.runAsync(
-          `INSERT INTO memorable_items (item_id, review_at, last_reviewed_at)
-           VALUES (?, ?, ?)
+          `INSERT INTO memorable_items (item_id, review_at, last_reviewed_at, weight, interval_days, times_shown)
+           VALUES (?, ?, ?, ?, ?, ?)
            ON CONFLICT(item_id) DO UPDATE SET
              review_at = excluded.review_at,
-             last_reviewed_at = excluded.last_reviewed_at`,
+             last_reviewed_at = excluded.last_reviewed_at,
+             weight = excluded.weight,
+             interval_days = excluded.interval_days,
+             times_shown = excluded.times_shown`,
           itemId,
           data.review_at?.trim() || null,
-          data.last_reviewed_at?.trim() || null
+          data.last_reviewed_at?.trim() || null,
+          parseNumber(data.weight),
+          parseNumber(data.interval_days),
+          parseNumber(data.times_shown) ?? 0
         );
         break;
       case 'Visitable': {
@@ -171,11 +177,17 @@ export const behaviorDataRepository = {
         const row = await db.getFirstAsync<{
           review_at: string | null;
           last_reviewed_at: string | null;
+          weight: number | null;
+          interval_days: number | null;
+          times_shown: number;
         }>('SELECT * FROM memorable_items WHERE item_id = ?', itemId);
         if (!row) return {};
         return {
           review_at: row.review_at ?? '',
           last_reviewed_at: row.last_reviewed_at ?? '',
+          weight: row.weight?.toString() ?? '',
+          interval_days: row.interval_days?.toString() ?? '',
+          times_shown: String(row.times_shown ?? 0),
         };
       }
       case 'Visitable': {
@@ -243,6 +255,13 @@ export const behaviorDataRepository = {
   },
 
   /** All rows of one JSON behavior: item id → data (for jobs like reminders). */
+  /** Ids of items that hold a link (Visitable lives in its own table). */
+  async linkedItemIds(): Promise<Set<number>> {
+    const db = await getDatabase();
+    const rows = await db.getAllAsync<{ item_id: number }>('SELECT item_id FROM visitable_items');
+    return new Set(rows.map((r) => r.item_id));
+  },
+
   async allForBehavior(behaviorName: string): Promise<Map<number, Record<string, string>>> {
     const db = await getDatabase();
     const rows = await db.getAllAsync<{ item_id: number; data: string }>(

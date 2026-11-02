@@ -6,6 +6,7 @@ import { openDailyReview } from '@/dailyReview';
 import { useOnboardingPreview } from '@/onboarding';
 import { openWeeklyReview } from '@/weeklyReview';
 import { runReminderJobNow } from '@/notifications';
+import { makeAllDue } from '@/resurface';
 import { useSelectiveKnowledgeStore } from '@/selectiveKnowledge/store';
 import { useAppStyles } from '@/ui/appStyles';
 import { PrimaryButton } from '@/ui/components/Primitives';
@@ -51,6 +52,19 @@ export function DevPanel({ onClose }: { onClose: () => void }) {
         <PrimaryButton compact label="Show weekly review" icon="calendar-outline" onPress={() => {
           onClose();
           setTimeout(openWeeklyReview, 350);
+        }} />
+
+        <Text style={styles.sectionLabel}>Come back</Text>
+        <PrimaryButton compact label="Make all suggestions due now" icon="sparkles-outline" onPress={async () => {
+          try {
+            const n = await makeAllDue();
+            Alert.alert(
+              `${n} suggestion${n === 1 ? '' : 's'} due`,
+              n ? 'Cards show on Focus when today is clear, or under Now when it is 45+ min away (up to 3, one per kind).' : 'No items with Come back on. Capture an idea first.',
+            );
+          } catch (err) {
+            Alert.alert('Failed', err instanceof Error ? err.message : String(err));
+          }
         }} />
 
         <Text style={styles.sectionLabel}>Onboarding</Text>

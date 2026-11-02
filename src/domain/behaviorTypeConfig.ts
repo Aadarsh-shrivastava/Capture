@@ -123,7 +123,7 @@ export const TYPE_BEHAVIOR_RULES: Record<ItemTypeName, TypeBehaviorRules> = {
     typeHint: 'Reflective · worth remembering',
   },
   Idea: {
-    defaults: ['Notable'],
+    defaults: ['Notable', 'Memorable'],
     optionalAllowed: ['Visitable'],
     typeHint: 'Quick capture',
   },

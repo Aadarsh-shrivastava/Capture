@@ -8,6 +8,8 @@ export type BehaviorFieldDef = {
   required?: boolean;
   placeholder?: string;
   options?: { label: string; value: string }[];
+  /** Written by the app, never by the user or the model (e.g. a repeat's done days). */
+  system?: boolean;
 };
 
 export type BehaviorDefinition = {
@@ -55,8 +57,14 @@ export const BEHAVIOR_DEFINITIONS: Record<string, BehaviorDefinition> = {
     name: 'Memorable',
     tableName: 'memorable_items',
     fields: [
-      { name: 'review_at', label: 'Review at', input: 'datetime', placeholder: 'e.g. Mon, Sep 29' },
-      { name: 'last_reviewed_at', label: 'Last reviewed', input: 'datetime', placeholder: 'e.g. Mon, Sep 29' },
+      // weight: '' = auto (by kind), '0' off, '1' rarely, '2' sometimes, '3' often. The rest is scheduling state (src/resurface).
+      { name: 'weight', label: 'Come back', input: 'select', options: [
+        { label: 'Auto', value: '' }, { label: 'Often', value: '3' }, { label: 'Sometimes', value: '2' }, { label: 'Rarely', value: '1' }, { label: 'Off', value: '0' },
+      ] },
+      { name: 'review_at', label: 'Review at', input: 'datetime', system: true },
+      { name: 'last_reviewed_at', label: 'Last reviewed', input: 'datetime', system: true },
+      { name: 'interval_days', label: 'Gap (days)', input: 'number', system: true },
+      { name: 'times_shown', label: 'Times shown', input: 'number', system: true },
     ],
   },
   Visitable: {
@@ -80,6 +88,8 @@ export const BEHAVIOR_DEFINITIONS: Record<string, BehaviorDefinition> = {
         options: INTERVAL_UNIT_OPTIONS,
       },
       { name: 'days', label: 'On days (0=Sun … 6=Sat)', input: 'numbers' },
+      // Local YYYY-MM-DD of each completed occurrence — the repeat's history (progress, streaks, heatmaps).
+      { name: 'done', label: 'Done days', input: 'list', system: true },
     ],
   },
   Divisible: {

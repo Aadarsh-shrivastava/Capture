@@ -10,6 +10,7 @@ import { DevButton } from '@/dev';
 import { SelectionBar } from '@/selection';
 import { UndoToast } from '@/undo';
 import { WeeklyReviewSheet } from '@/weeklyReview';
+import { TypeCheckSheet } from '@/typeCheck';
 import { HomeWidgetHandler } from '@/widget/HomeWidgetHandler';
 
 import { RootNavigator } from './RootNavigator';
@@ -26,6 +27,7 @@ export function AppShell() {
       <HomeWidgetHandler />
       <TaskReminders />
       <UndoToast />
+      <TypeCheckSheet />
       <DailyReviewSheet />
       <WeeklyReviewSheet />
       <DevButton />

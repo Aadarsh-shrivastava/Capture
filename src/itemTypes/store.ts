@@ -11,6 +11,8 @@ export type TypeInfo = {
   defaults: string[];
   /** Behaviors items of this type may add. */
   optional: string[];
+  /** Words that point to this type (capture matching). */
+  keywords: string[];
 };
 
 /** Runtime copy of item_types + type_behaviors. Pure (no DB import) so domain code and tests can read it. */

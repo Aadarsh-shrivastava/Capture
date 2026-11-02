@@ -1,5 +1,7 @@
 import {typeHasBehavior} from '@/domain/behaviorTypeConfig';
 import { inferDueAtFromText } from '@/capture/captureDateContext';
+import { useItemTypesStore } from '@/itemTypes/store';
+import { bestTypeByKeywords } from '@/selectiveKnowledge/typeKeywords';
 import type { CaptureItemDraft } from '@/capture/captureItemDraft';
 import { extractCaptureTitle, extractShortSubject } from '@/capture/captureTitle';
 import {
@@ -94,6 +96,11 @@ function inferBehaviorData(
   return data;
 }
 
+function customTypeFor(text: string): string | undefined {
+  const custom = useItemTypesStore.getState().types.filter((t) => !t.isSystem);
+  return bestTypeByKeywords(custom, text)?.name;
+}
+
 /**
  * Rule-based capture analysis — uses captureHeuristicsGuide.ts.
  * LLM prompt includes the same guide via formatHeuristicsGuideForPrompt().
@@ -104,7 +111,8 @@ export function analyzeCaptureText(
   now = new Date(),
 ): CaptureItemDraft {
   const text = rawText.trim();
-  const typeName = overrides?.typeName ?? inferTypeFromGuide(text);
+  // A custom type the text clearly points to (by its keywords) wins over the built-in guess.
+  const typeName = overrides?.typeName ?? customTypeFor(text) ?? inferTypeFromGuide(text);
   const optionalBehaviorNames =
     overrides?.optionalBehaviorNames ?? inferOptionalBehaviors(text, typeName);
 

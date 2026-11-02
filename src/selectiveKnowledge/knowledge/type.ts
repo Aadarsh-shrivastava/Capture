@@ -15,4 +15,26 @@ export const TYPE_KNOWLEDGE: KnowledgeEntry[] = [
 
 Answer with ONE word only: Task, Note, Journal or Idea.`,
   },
+  {
+    id: 'type.custom',
+    step: 'customType',
+    appliesTo: '*',
+    summary: "Narrow down to one of the user's own types.",
+    body: `The user has their own item types, listed below with what each is for.
+The text mentions something related to them. If the item is one of these types, answer that name.
+Links, dates or notes in the text do not matter — pick by what the item IS.
+
+Answer with the type name exactly as written, or NONE.`,
+  },
+  {
+    id: 'type.keywords',
+    step: 'typeKeywords',
+    appliesTo: '*',
+    summary: 'Expand a type into words people use for it.',
+    body: `List 20 single words someone might use when writing about this kind of item:
+synonyms, related things, verbs and places. Lowercase, separated by commas. No sentences.
+
+Example — Workout: gym training:
+gym, workout, exercise, training, run, lift, cardio, legs, weights, yoga, swim, sets, reps, coach, stretch, fitness, squat, bench, jog, sport`,
+  },
 ];

@@ -11,13 +11,11 @@ import {useDataVersionStore} from '@/store/dataVersionStore';
 import {designTokens, radius} from '@/ui/designTokens';
 import {Pressable} from '@/ui/HapticPressable';
 
-import {activityByDay} from './activity';
-import {ActivityCard} from './ActivityCard';
 import {EditProfileSheet} from './EditProfileSheet';
 import {Avatar} from './Avatar';
 import {useProfileStore} from './store';
 
-type Stats = {done: number; week: number; total: number; activity: Map<string, number>};
+type Stats = {done: number; week: number; total: number};
 
 function Stat({label, value}: {label: string; value: number}) {
   return (
@@ -32,7 +30,7 @@ export function ProfileScreen() {
   const profile = useProfileStore();
   const version = useDataVersionStore(state => state.version);
   const [sheet, setSheet] = useState<'menu' | 'edit' | null>(null);
-  const [stats, setStats] = useState<Stats>({done: 0, week: 0, total: 0, activity: new Map()});
+  const [stats, setStats] = useState<Stats>({done: 0, week: 0, total: 0});
 
   useEffect(() => {
     Promise.all([itemApi.getItems(), taskHistoryRepository.findAll()])
@@ -42,7 +40,6 @@ export function ProfileScreen() {
           done: tasks.filter(t => t.status === 'completed').length,
           week: items.filter(i => moment(i.createdAt).isAfter(weekAgo)).length,
           total: items.length,
-          activity: activityByDay(items.map(i => i.createdAt), tasks.map(t => t.completedAt)),
         });
       })
       .catch(() => {});
@@ -70,8 +67,6 @@ export function ProfileScreen() {
           <Stat label="Captured this week" value={stats.week} />
           <Stat label="Total items" value={stats.total} />
         </View>
-
-        <ActivityCard activity={stats.activity} />
       </ScrollView>
 
       <OptionsSheet

@@ -3,7 +3,7 @@ import {ScrollView, Text, useWindowDimensions, View} from 'react-native';
 import {useFocusEffect, useRouter} from 'expo-router';
 
 import {TabScreenShell} from '@/components/TabScreenShell/TabScreenShell';
-import {LibraryGroups} from '@/groups';
+import {GROUPS_ENABLED, LibraryGroups} from '@/groups';
 import {useItemsData} from '@/hooks/useItemsData';
 import {TypeGridCard} from '@/ui/components/ItemCard';
 import {designTokens} from '@/ui/designTokens';
@@ -65,7 +65,7 @@ export function ItemsScreen() {
           ))}
         </View>
 
-        <LibraryGroups />
+        {GROUPS_ENABLED ? <LibraryGroups /> : null}
       </ScrollView>
     </TabScreenShell>
   );

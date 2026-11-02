@@ -15,17 +15,10 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import { Pressable } from '@/ui/HapticPressable';
 import {type CaptureFlowStep} from '@/capture/captureFlow';
-import {type CaptureItemDraft} from '@/capture/captureItemDraft';
 import {useCaptureAnalysis} from '@/hooks/useCaptureAnalysis';
-import {groupApi} from '@/api/groupApi';
-import {itemApi} from '@/api/itemApi';
-import {showUndo} from '@/undo';
-import type {Group} from '@/models/group';
-import {createItemFromCaptureDraft} from '@/services/captureItemService';
-import {ItemForm} from '@/ui/components/ItemForm';
 import {Mascot} from '@/mascot';
 import {ThoughtTicker} from '@/motion';
-import {PrimaryButton} from '@/ui/components/Primitives';
+import {saveCaptures} from '@/services/saveCaptures';
 import {designTokens} from '@/ui/designTokens';
 import {useThemeStore} from '@/store/themeStore';
 
@@ -34,13 +27,8 @@ type Props = {
   step: CaptureFlowStep;
   /** Pre-filled text when opening text mode (e.g. from voice transcript edit). */
   initialText?: string;
-  /** Draft when opening directly in review mode. */
-  initialDraft?: CaptureItemDraft | null;
   onClose: () => void;
-  onSaved: (title: string) => void;
-  /** Called when user goes back from review to text input. */
-  onBackToText?: () => void;
-  /** Force this group onto the analyzed draft. */
+  /** Force this group onto every analyzed draft. */
   groupName?: string;
 };
 
@@ -48,108 +36,53 @@ export function CaptureFlowModal({
   visible,
   step,
   initialText = '',
-  initialDraft = null,
   onClose,
-  onSaved,
-  onBackToText,
   groupName,
 }: Props) {
   const {theme} = useThemeStore();
   const {colors, spacing} = theme;
   const insets = useSafeAreaInsets();
-  const {ready, analyzing, loadModel, analyzeText, preloadModel} = useCaptureAnalysis();
+  const {ready, analyzing, loadModel, analyzeMany, preloadModel} = useCaptureAnalysis();
 
   const [input, setInput] = useState('');
-  const [draft, setDraft] = useState<CaptureItemDraft | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState<CaptureFlowStep>(step);
-  const [groups, setGroups] = useState<Group[]>([]);
   const [steps, setSteps] = useState<string[]>([]);
 
   useEffect(() => {
-    if (visible) {
-      preloadModel();
-      void groupApi.getGroups().then(setGroups).catch(() => setGroups([]));
-    }
+    if (visible) preloadModel();
   }, [visible, preloadModel]);
 
   useEffect(() => {
     if (!visible) {
       setInput('');
-      setDraft(null);
       setError(null);
-      setSubmitting(false);
       setCurrentStep('text');
       return;
     }
 
     setCurrentStep(step);
-    if (step === 'text') {
-      setInput(initialText);
-      setDraft(null);
-    } else if (step === 'review' && initialDraft) {
-      setDraft(initialDraft);
-    }
-  }, [visible, step, initialText, initialDraft]);
+    setInput(initialText);
+  }, [visible, step, initialText]);
 
-  async function runAnalysis(text: string) {
+  /** Analyze (one item per thought), save straight away, close. Edits happen later from the item itself. */
+  async function handleCapture() {
+    const text = input.trim();
+    if (!text || analyzing) return;
     setError(null);
     setCurrentStep('analyzing');
     setSteps([]);
-
     try {
-      const result = await analyzeText(text, setSteps);
-      setDraft(groupName ? {...result, groupNames: [groupName]} : result);
-      setCurrentStep('review');
+      const drafts = await analyzeMany(text, setSteps);
+      await saveCaptures(groupName ? drafts.map(d => ({...d, groupNames: [groupName]})) : drafts);
+      onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setCurrentStep('text');
     }
   }
 
-  async function handleAnalyze() {
-    const text = input.trim();
-    if (!text || analyzing) return;
-    await runAnalysis(text);
-  }
-
-  async function handleSubmit() {
-    if (!draft?.title.trim() || submitting) return;
-
-    setSubmitting(true);
-    setError(null);
-
-    try {
-      const saved = await createItemFromCaptureDraft(draft);
-      showUndo(`Captured "${saved.title}"`, () => itemApi.deleteItem(saved.id));
-      onSaved(saved.title);
-      onClose();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  function handleBack() {
-    if (currentStep === 'review') {
-      if (onBackToText) {
-        onBackToText();
-      } else {
-        setCurrentStep('text');
-      }
-    } else {
-      onClose();
-    }
-  }
-
-  const headerTitle =
-    currentStep === 'text'
-      ? 'Type capture'
-      : currentStep === 'analyzing'
-        ? 'Analyzing…'
-        : 'Review item';
+  const headerTitle = currentStep === 'text' ? 'Type capture' : 'Capturing…';
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
@@ -157,27 +90,11 @@ export function CaptureFlowModal({
         style={[styles.root, {backgroundColor: colors.background}]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={[styles.header, {paddingTop: insets.top + spacing.stackSm}]}>
-          {currentStep === 'review' || currentStep === 'analyzing' ? (
-            <Pressable onPress={handleBack} hitSlop={12} disabled={currentStep === 'analyzing'}>
-              <Ionicons
-                name="arrow-back"
-                size={22}
-                color={currentStep === 'analyzing' ? colors.onSurfaceVariant : colors.onSurface}
-              />
-            </Pressable>
-          ) : (
-            <Pressable onPress={onClose} hitSlop={12}>
-              <Ionicons name="close" size={24} color={colors.onSurface} />
-            </Pressable>
-          )}
+          <Pressable onPress={onClose} hitSlop={12} disabled={currentStep === 'analyzing'}>
+            <Ionicons name="close" size={24} color={currentStep === 'analyzing' ? colors.onSurfaceVariant : colors.onSurface} />
+          </Pressable>
           <Text style={[styles.headerTitle, {color: colors.onSurface}]}>{headerTitle}</Text>
-          {currentStep === 'review' ? (
-            <Pressable onPress={onClose} hitSlop={12} accessibilityLabel="Discard">
-              <Ionicons name="close" size={24} color={colors.onSurface} />
-            </Pressable>
-          ) : (
-            <View style={{width: 24}} />
-          )}
+          <View style={{width: 24}} />
         </View>
 
         <ScrollView
@@ -186,7 +103,7 @@ export function CaptureFlowModal({
           keyboardShouldPersistTaps="handled">
           {currentStep === 'text' ? (
             <>
-              <Mascot pose="chibiIdea" width={96} style={{alignSelf: 'center', marginBottom: 12}} />
+              <Mascot pose="curious" width={96} style={{alignSelf: 'center', marginBottom: 12}} />
               <TextInput
                 value={input}
                 onChangeText={setInput}
@@ -211,12 +128,12 @@ export function CaptureFlowModal({
                   (!input.trim() || analyzing) && styles.dim,
                   {backgroundColor: designTokens.accent},
                 ]}
-                onPress={handleAnalyze}
+                onPress={handleCapture}
                 disabled={!input.trim() || analyzing}>
                 {analyzing ? (
                   <ActivityIndicator color={designTokens.black} />
                 ) : (
-                  <Text style={styles.btnText}>Analyze</Text>
+                  <Text style={styles.btnText}>Capture</Text>
                 )}
               </Pressable>
 
@@ -235,9 +152,9 @@ export function CaptureFlowModal({
 
           {currentStep === 'analyzing' ? (
             <View style={styles.analyzingBox}>
-              <Mascot pose="chibiThinking" width={120} />
+              <Mascot pose="thinking" width={120} />
               <Text style={[styles.analyzingText, {color: colors.onSurfaceVariant}]}>
-                Turning your words into a structured item…
+                Sorting your thoughts…
               </Text>
               {/* Latest agent step only, crossfading as the next one arrives. Fixed height so nothing shifts. */}
               <ThoughtTicker
@@ -245,12 +162,6 @@ export function CaptureFlowModal({
                 style={{color: colors.onSurface, fontSize: 14, marginTop: 10, minHeight: 40, textAlign: 'center'}}
               />
             </View>
-          ) : null}
-
-          {currentStep === 'review' && draft ? (
-            <>
-              <ItemForm draft={draft} onChange={setDraft} groups={groups} />
-            </>
           ) : null}
 
           {error ? (
@@ -261,24 +172,6 @@ export function CaptureFlowModal({
           ) : null}
         </ScrollView>
 
-        {currentStep === 'review' && draft ? (
-          <View
-            style={{
-              paddingHorizontal: spacing.marginMobile,
-              paddingTop: 8,
-              paddingBottom: insets.bottom + 8,
-              borderTopWidth: 1,
-              borderTopColor: designTokens.divider,
-            }}>
-            <PrimaryButton
-              compact
-              label="Create item"
-              loading={submitting}
-              disabled={!draft.title.trim()}
-              onPress={handleSubmit}
-            />
-          </View>
-        ) : null}
       </KeyboardAvoidingView>
     </Modal>
   );

@@ -32,11 +32,8 @@ export function CaptureFlowHost() {
           visible={flowVisible}
           step={flowRequest.step}
           initialText={flowRequest.initialText}
-          initialDraft={flowRequest.initialDraft}
           groupName={flowRequest.groupName}
           onClose={closeFlow}
-          onSaved={closeFlow}
-          onBackToText={() => openTextCapture(flowRequest.initialText, flowRequest.groupName)}
         />
       ) : null}
     </>

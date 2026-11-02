@@ -1,11 +1,8 @@
-import type {CaptureItemDraft} from '@/capture/captureItemDraft';
-
-export type CaptureFlowStep = 'text' | 'analyzing' | 'review';
+export type CaptureFlowStep = 'text' | 'analyzing';
 
 export type CaptureFlowRequest = {
   step: CaptureFlowStep;
   initialText?: string;
-  initialDraft?: CaptureItemDraft | null;
   /** Pre-assign this group to whatever gets captured. */
   groupName?: string;
 };

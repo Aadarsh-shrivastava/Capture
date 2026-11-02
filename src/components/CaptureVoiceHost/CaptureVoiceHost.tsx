@@ -5,6 +5,7 @@ import {Sheet} from '@/components/Sheet/Sheet';
 import {useCaptureAnalysis} from '@/hooks/useCaptureAnalysis';
 import {useSpeechCapture} from '@/hooks/useSpeechCapture';
 import {CaptureVoicePanel} from '@/screens/CaptureScreen/CaptureVoicePanel';
+import {saveCaptures} from '@/services/saveCaptures';
 import {useCaptureStore} from '@/store/captureStore';
 import {PillButton, PrimaryButton} from '@/ui/components/Primitives';
 
@@ -13,10 +14,9 @@ export function CaptureVoiceHost() {
   const visible = useCaptureStore((s) => s.voiceCaptureOpen);
   const closeVoiceCapture = useCaptureStore((s) => s.closeVoiceCapture);
   const openTextCapture = useCaptureStore((s) => s.openTextCapture);
-  const openReviewCapture = useCaptureStore((s) => s.openReviewCapture);
 
   const speech = useSpeechCapture();
-  const {analyzeText, analyzing, preloadModel} = useCaptureAnalysis();
+  const {analyzeMany, analyzing, preloadModel} = useCaptureAnalysis();
   const [isAnalyzingVoice, setIsAnalyzingVoice] = useState(false);
 
   useEffect(() => {
@@ -45,10 +45,10 @@ export function CaptureVoiceHost() {
 
     setIsAnalyzingVoice(true);
     try {
-      const draft = await analyzeText(text);
+      // One item per thought, saved straight away — "Saved · Undo" shows instead of a review form.
+      await saveCaptures(await analyzeMany(text));
       closeVoiceCapture();
       speech.reset();
-      openReviewCapture(draft);
     } catch (e) {
       Alert.alert('Analysis failed', e instanceof Error ? e.message : String(e));
     } finally {

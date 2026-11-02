@@ -1,8 +1,9 @@
 import {analyzeCaptureText} from '@/capture/captureHeuristics';
 import {normalizeCaptureDraftTitle} from '@/capture/captureTitle';
 import {createItemFromCaptureDraft} from '@/services/captureItemService';
+import {splitThoughts} from '@/selectiveKnowledge/split';
 
-/** Analyze plain text and persist an item (widget, share target, deep links). */
+/** Analyze plain text and persist one item per thought (widget, share target, deep links). */
 export async function quickCaptureFromText(text: string) {
   const trimmed = text.trim();
   if (!trimmed) {
@@ -10,7 +11,9 @@ export async function quickCaptureFromText(text: string) {
   }
 
   const now = new Date();
-  const draft = analyzeCaptureText(trimmed, undefined, now);
-  const {title, content} = normalizeCaptureDraftTitle(draft, trimmed);
-  return createItemFromCaptureDraft({...draft, title, content});
+  for (const part of await splitThoughts(trimmed)) {
+    const draft = analyzeCaptureText(part, undefined, now);
+    const {title, content} = normalizeCaptureDraftTitle(draft, part);
+    await createItemFromCaptureDraft({...draft, title, content});
+  }
 }

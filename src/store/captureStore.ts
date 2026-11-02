@@ -1,7 +1,6 @@
 import {create} from 'zustand';
 
 import type {CaptureFlowRequest} from '@/capture/captureFlow';
-import type {CaptureItemDraft} from '@/capture/captureItemDraft';
 
 type CaptureState = {
   /** Legacy overlay — kept for CaptureModal compatibility */
@@ -23,7 +22,6 @@ type CaptureState = {
   flowVisible: boolean;
   flowRequest: CaptureFlowRequest | null;
   openTextCapture: (initialText?: string, groupName?: string) => void;
-  openReviewCapture: (draft: CaptureItemDraft) => void;
   closeFlow: () => void;
 };
 
@@ -47,12 +45,6 @@ export const useCaptureStore = create<CaptureState>((set) => ({
     set({
       flowVisible: true,
       flowRequest: {step: 'text', initialText, groupName},
-    }),
-
-  openReviewCapture: (draft) =>
-    set({
-      flowVisible: true,
-      flowRequest: {step: 'review', initialDraft: draft},
     }),
 
   closeFlow: () => set({flowVisible: false, flowRequest: null}),

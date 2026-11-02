@@ -13,6 +13,8 @@ export const PRIORITY_IMPORTANCE: Record<PriorityLevel, number | null> = {
   high: 5,
 };
 
+export {URGENT_THRESHOLD, URGENT_VALUE} from '@/domain/urgency';
+
 export function priorityFromImportance(importance: number | null): PriorityLevel {
   if (importance == null) return 'none';
   if (importance <= 2) return 'low';

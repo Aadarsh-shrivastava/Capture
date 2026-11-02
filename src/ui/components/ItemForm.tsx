@@ -9,17 +9,23 @@ import {DateSheet} from '@/components/sheets/DateSheet';
 import {OptionsSheet} from '@/components/sheets/OptionsSheet';
 import {TagsSheet} from '@/components/sheets/TagsSheet';
 import {getDefaultFieldValues} from '@/domain/behaviorDefinitions';
-import {filterValidOptionalBehaviors, typeAllowsBehavior} from '@/domain/behaviorTypeConfig';
+import {
+  filterValidOptionalBehaviors,
+  typeAllowsBehavior,
+} from '@/domain/behaviorTypeConfig';
+import {GROUPS_ENABLED} from '@/groups';
 import type {Group} from '@/models/group';
-import {ChecklistField, RemindField} from '@/behaviors';
-import {RepeatField} from '@/recurrence';
+import {BEHAVIOR_FIELDS} from '@/behaviors';
 import {
   priorityFromImportance,
   priorityLabel,
   PRIORITY_IMPORTANCE,
+  URGENT_THRESHOLD,
+  URGENT_VALUE,
   type PriorityLevel,
 } from '@/services/itemDetailService';
 import {SelectChip} from '@/ui/components/Primitives';
+import {SelectField} from '@/ui/components/SelectField';
 import {designTokens, radius} from '@/ui/designTokens';
 import {formatDayTimeSummary} from '@/ui/formatDateTime';
 import {
@@ -50,7 +56,10 @@ const fieldStyle = {
 
 function Label({children}: {children: string}) {
   return (
-    <Text style={{color: designTokens.textTertiary, fontSize: 13, marginBottom: 8}}>{children}</Text>
+    <Text
+      style={{color: designTokens.textTertiary, fontSize: 13, marginBottom: 8}}>
+      {children}
+    </Text>
   );
 }
 
@@ -68,7 +77,9 @@ function AddButton({label, onPress}: {label: string; onPress: () => void}) {
         opacity: pressed ? 0.6 : 1,
       })}>
       <Ionicons name="add" size={16} color={designTokens.textSecondary} />
-      <Text style={{color: designTokens.textSecondary, fontSize: 15}}>{label}</Text>
+      <Text style={{color: designTokens.textSecondary, fontSize: 15}}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -80,78 +91,24 @@ function TypeDropdown({
   value: ItemTypeName;
   onChange: (type: ItemTypeName) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const config = getItemTypeConfig(value);
-
   return (
-    <View>
-      <Pressable
-        onPress={() => setOpen((current) => !current)}
-        accessibilityRole="button"
-        accessibilityLabel={`Type: ${config.label}`}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 10,
-          backgroundColor: designTokens.field,
-          borderRadius: radius.md,
-          paddingHorizontal: 16,
-          paddingVertical: 14,
-        }}>
-        <Ionicons name={config.icon} size={18} color={designTokens.textPrimary} />
-        <Text style={{flex: 1, color: designTokens.textPrimary, fontSize: 16}}>{config.label}</Text>
-        <Ionicons
-          name={open ? 'chevron-up' : 'chevron-down'}
-          size={18}
-          color={designTokens.textTertiary}
-        />
-      </Pressable>
-
-      {open ? (
-        <View
-          style={{
-            marginTop: 6,
-            backgroundColor: designTokens.card,
-            borderRadius: radius.md,
-            overflow: 'hidden',
-          }}>
-          {allTypeNames().map((typeName) => {
-            const option = getItemTypeConfig(typeName);
-            const selected = typeName === value;
-
-            return (
-              <Pressable
-                key={typeName}
-                onPress={() => {
-                  onChange(typeName);
-                  setOpen(false);
-                }}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 10,
-                  paddingHorizontal: 16,
-                  paddingVertical: 14,
-                }}>
-                <Ionicons name={option.icon} size={18} color={designTokens.textSecondary} />
-                <Text style={{flex: 1, color: designTokens.textPrimary, fontSize: 15}}>
-                  {option.label}
-                </Text>
-                {selected ? (
-                  <Ionicons name="checkmark" size={16} color={designTokens.textPrimary} />
-                ) : null}
-              </Pressable>
-            );
-          })}
-        </View>
-      ) : null}
-    </View>
+    <SelectField
+      title="Type"
+      options={allTypeNames().map(name => ({
+        label: getItemTypeConfig(name).label,
+        value: name,
+        icon: getItemTypeConfig(name).icon,
+      }))}
+      value={value}
+      onChange={onChange}
+    />
   );
 }
 
 /** The single item form — used by manual create/edit and by capture review. */
 export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
-  const allows = (behavior: string) => typeAllowsBehavior(draft.typeName, behavior);
+  const allows = (behavior: string) =>
+    typeAllowsBehavior(draft.typeName, behavior);
   const isTask = allows('Doable');
   const textPrimary = isTextPrimaryType(draft.typeName);
   const bodyLabel = getBodyFieldLabel(draft.typeName);
@@ -160,15 +117,30 @@ export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
   const groupName = draft.groupNames?.[0] ?? null;
   const dueAt = draft.behaviorData?.Doable?.due_at?.trim() ?? '';
 
-  const [notesOpen, setNotesOpen] = useState(Boolean(draft.content?.trim()) && !textPrimary);
-  const [titleOpen, setTitleOpen] = useState(Boolean(draft.title.trim()) && textPrimary);
+  const [notesOpen, setNotesOpen] = useState(
+    Boolean(draft.content?.trim()) && !textPrimary,
+  );
+  const [titleOpen, setTitleOpen] = useState(
+    Boolean(draft.title.trim()) && textPrimary,
+  );
   const [sheet, setSheet] = useState<'tags' | 'date' | 'group' | null>(null);
 
   function setTypeName(typeName: ItemTypeName) {
-    const optional = filterValidOptionalBehaviors(typeName, draft.optionalBehaviorNames ?? []);
-    const next: CaptureItemDraft = {...draft, typeName, optionalBehaviorNames: optional};
+    const optional = filterValidOptionalBehaviors(
+      typeName,
+      draft.optionalBehaviorNames ?? [],
+    );
+    const next: CaptureItemDraft = {
+      ...draft,
+      typeName,
+      optionalBehaviorNames: optional,
+    };
 
-    if (isTextPrimaryType(typeName) && !next.content?.trim() && draft.title.trim()) {
+    if (
+      isTextPrimaryType(typeName) &&
+      !next.content?.trim() &&
+      draft.title.trim()
+    ) {
       next.content = draft.title;
       next.title = extractShortSubject(draft.title, typeName);
     }
@@ -202,18 +174,25 @@ export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
           <Label>{bodyLabel}</Label>
           <TextInput
             value={draft.content ?? ''}
-            onChangeText={(content) => onChange({...draft, content: content || null})}
+            onChangeText={content =>
+              onChange({...draft, content: content || null})
+            }
             placeholder={`Write your ${bodyLabel.toLowerCase()}…`}
             placeholderTextColor={designTokens.textTertiary}
             multiline
             autoFocus={autoFocus}
-            style={{...fieldStyle, minHeight: 160, lineHeight: 24, textAlignVertical: 'top'}}
+            style={{
+              ...fieldStyle,
+              minHeight: 160,
+              lineHeight: 24,
+              textAlignVertical: 'top',
+            }}
           />
 
           {titleOpen ? (
             <TextInput
               value={draft.title}
-              onChangeText={(title) => onChange({...draft, title})}
+              onChangeText={title => onChange({...draft, title})}
               placeholder="Short title"
               placeholderTextColor={designTokens.textTertiary}
               style={{...fieldStyle, marginTop: 10}}
@@ -227,7 +206,7 @@ export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
           <Label>Title</Label>
           <TextInput
             value={draft.title}
-            onChangeText={(title) => onChange({...draft, title})}
+            onChangeText={title => onChange({...draft, title})}
             placeholder="What needs doing?"
             placeholderTextColor={designTokens.textTertiary}
             autoFocus={autoFocus}
@@ -237,11 +216,19 @@ export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
           {notesOpen ? (
             <TextInput
               value={draft.content ?? ''}
-              onChangeText={(content) => onChange({...draft, content: content || null})}
+              onChangeText={content =>
+                onChange({...draft, content: content || null})
+              }
               placeholder="Notes"
               placeholderTextColor={designTokens.textTertiary}
               multiline
-              style={{...fieldStyle, marginTop: 10, minHeight: 90, lineHeight: 22, textAlignVertical: 'top'}}
+              style={{
+                ...fieldStyle,
+                marginTop: 10,
+                minHeight: 90,
+                lineHeight: 22,
+                textAlignVertical: 'top',
+              }}
             />
           ) : (
             <AddButton label="Add notes" onPress={() => setNotesOpen(true)} />
@@ -265,11 +252,17 @@ export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
                 paddingHorizontal: 16,
                 paddingVertical: 14,
               }}>
-              <Ionicons name="calendar-outline" size={18} color={designTokens.textSecondary} />
+              <Ionicons
+                name="calendar-outline"
+                size={18}
+                color={designTokens.textSecondary}
+              />
               <Text
                 style={{
                   flex: 1,
-                  color: dueAt ? designTokens.textPrimary : designTokens.textTertiary,
+                  color: dueAt
+                    ? designTokens.textPrimary
+                    : designTokens.textTertiary,
                   fontSize: 16,
                 }}>
                 {dueAt ? formatDayTimeSummary(dueAt) : 'No date'}
@@ -277,44 +270,52 @@ export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
             </Pressable>
           </View>
 
-          {allows('Repeatable') ? (
-            <View>
-              <Label>Repeat</Label>
-              <RepeatField draft={draft} onChange={onChange} />
-            </View>
-          ) : null}
-
-
-          {allows('Remindable') ? (
-            <View>
-              <Label>Reminders</Label>
-              <RemindField draft={draft} onChange={onChange} />
-            </View>
-          ) : null}
-
-
           <View>
             <Label>Priority</Label>
-            <View style={{flexDirection: 'row', gap: 8}}>
-              {PRIORITIES.map((level) => (
-                <SelectChip
-                  key={level}
-                  label={priorityLabel(level)}
-                  active={priorityFromImportance(draft.importance ?? null) === level}
-                  onPress={() => onChange({...draft, importance: PRIORITY_IMPORTANCE[level]})}
-                />
-              ))}
-            </View>
+            <SelectField
+              title="Priority"
+              icon="flag-outline"
+              options={PRIORITIES.map(level => ({
+                label: priorityLabel(level),
+                value: level,
+              }))}
+              value={priorityFromImportance(draft.importance ?? null)}
+              onChange={level =>
+                onChange({
+                  ...draft,
+                  importance: PRIORITY_IMPORTANCE[level as PriorityLevel],
+                })
+              }
+            />
+          </View>
+
+          <View>
+            <Label>Urgency</Label>
+            <SelectField
+              title="Urgency"
+              icon="alert-circle-outline"
+              options={[
+                {label: 'Not urgent', value: 'no'},
+                {label: 'Urgent', value: 'yes'},
+              ]}
+              value={(draft.urgency ?? 0) >= URGENT_THRESHOLD ? 'yes' : 'no'}
+              onChange={v =>
+                onChange({...draft, urgency: v === 'yes' ? URGENT_VALUE : null})
+              }
+            />
           </View>
         </>
       ) : null}
 
-      {allows('Divisible') ? (
-        <View>
-          <Label>Steps</Label>
-          <ChecklistField draft={draft} onChange={onChange} />
+      {/* One field per behavior this type allows (registry in src/behaviors/fields.ts). */}
+      {BEHAVIOR_FIELDS.filter(
+        b => allows(b.behavior) && (!b.needsDoable || isTask),
+      ).map(({behavior, label, Field}) => (
+        <View key={behavior}>
+          <Label>{label}</Label>
+          <Field draft={draft} onChange={onChange} />
         </View>
-      ) : null}
+      ))}
 
       <View>
         {tagNames.length > 0 ? (
@@ -323,8 +324,13 @@ export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
             <Pressable
               onPress={() => setSheet('tags')}
               style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8}}>
-              {tagNames.map((tag) => (
-                <SelectChip key={tag} label={tag} active={false} onPress={() => setSheet('tags')} />
+              {tagNames.map(tag => (
+                <SelectChip
+                  key={tag}
+                  label={tag}
+                  active={false}
+                  onPress={() => setSheet('tags')}
+                />
               ))}
             </Pressable>
           </>
@@ -333,34 +339,51 @@ export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
         )}
       </View>
 
-      <View>
-        <Label>Group</Label>
-        <Pressable
-          onPress={() => setSheet('group')}
-          disabled={groups.length === 0}
-          accessibilityRole="button"
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 10,
-            backgroundColor: designTokens.field,
-            borderRadius: radius.md,
-            paddingHorizontal: 16,
-            paddingVertical: 14,
-          }}>
-          <Ionicons name="folder-outline" size={18} color={designTokens.textSecondary} />
-          <Text style={{flex: 1, color: groupName ? designTokens.textPrimary : designTokens.textTertiary, fontSize: 16}}>
-            {groups.length === 0 ? 'No groups yet' : groupName ?? 'No group'}
-          </Text>
-          <Ionicons name="chevron-down" size={16} color={designTokens.textTertiary} />
-        </Pressable>
-      </View>
+      {GROUPS_ENABLED ? (
+        <View>
+          <Label>Group</Label>
+          <Pressable
+            onPress={() => setSheet('group')}
+            disabled={groups.length === 0}
+            accessibilityRole="button"
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+              backgroundColor: designTokens.field,
+              borderRadius: radius.md,
+              paddingHorizontal: 16,
+              paddingVertical: 14,
+            }}>
+            <Ionicons
+              name="folder-outline"
+              size={18}
+              color={designTokens.textSecondary}
+            />
+            <Text
+              style={{
+                flex: 1,
+                color: groupName
+                  ? designTokens.textPrimary
+                  : designTokens.textTertiary,
+                fontSize: 16,
+              }}>
+              {groups.length === 0 ? 'No groups yet' : groupName ?? 'No group'}
+            </Text>
+            <Ionicons
+              name="chevron-down"
+              size={16}
+              color={designTokens.textTertiary}
+            />
+          </Pressable>
+        </View>
+      ) : null}
 
       <TagsSheet
         visible={sheet === 'tags'}
         onClose={() => setSheet(null)}
         selected={tagNames}
-        onSubmit={(names) => onChange({...draft, tagNames: names})}
+        onSubmit={names => onChange({...draft, tagNames: names})}
       />
 
       <OptionsSheet
@@ -368,8 +391,11 @@ export function ItemForm({draft, onChange, groups, autoFocus = false}: Props) {
         onClose={() => setSheet(null)}
         title="Group"
         value={groupName ?? ''}
-        options={[{label: 'No group', value: ''}, ...groups.map((g) => ({label: g.name, value: g.name}))]}
-        onSelect={(name) => onChange({...draft, groupNames: name ? [name] : []})}
+        options={[
+          {label: 'No group', value: ''},
+          ...groups.map(g => ({label: g.name, value: g.name})),
+        ]}
+        onSelect={name => onChange({...draft, groupNames: name ? [name] : []})}
       />
 
       <DateSheet

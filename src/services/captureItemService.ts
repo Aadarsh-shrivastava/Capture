@@ -4,6 +4,7 @@ import {parseCaptureJson, type CaptureItemDraft} from '@/capture/captureItemDraf
 import {extractShortSubject} from '@/capture/captureTitle';
 import {isTextPrimaryType, type ItemTypeName} from '@/ui/itemTypeConfig';
 import {
+  typeHasBehavior,
   filterValidOptionalBehaviors,
   getDefaultBehaviorsForType,
 } from '@/domain/behaviorTypeConfig';
@@ -74,8 +75,9 @@ export async function resolveCaptureDraft(draft: CaptureItemDraft): Promise<Save
     typeId: itemType.id,
     title: title || 'Untitled',
     content,
-    importance: draft.importance ?? null,
-    urgency: draft.urgency ?? null,
+    // Priority/urgency only belong to doable items.
+    importance: typeHasBehavior(draft.typeName, 'Doable') ? (draft.importance ?? null) : null,
+    urgency: typeHasBehavior(draft.typeName, 'Doable') ? (draft.urgency ?? null) : null,
     optionalBehaviorIds,
     behaviorData,
     groupIds,

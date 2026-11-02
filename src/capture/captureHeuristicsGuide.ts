@@ -516,12 +516,10 @@ export function inferUrgencyFromGuide(text: string, typeName: ItemTypeName): num
   return scoreFromBands(text, URGENCY_HEURISTICS);
 }
 
+/** Priority only applies to doable items (tasks); notes/journals/ideas get none. */
 export function inferImportanceFromGuide(text: string, typeName: ItemTypeName): number | null {
-  const scored = scoreFromBands(text, IMPORTANCE_HEURISTICS);
-  if (scored != null) return scored;
-  if (typeName === 'Journal') return 2;
-  if (typeHasBehavior(typeName, 'Doable')) return 3;
-  return null;
+  if (!typeHasBehavior(typeName, 'Doable')) return null;
+  return scoreFromBands(text, IMPORTANCE_HEURISTICS) ?? 3;
 }
 
 export function inferTagsFromGuide(text: string, typeName: ItemTypeName): string[] {

@@ -4,7 +4,7 @@ import { Pressable } from '@/ui/HapticPressable';
 import { ScreenShell } from '@/components/ScreenShell/ScreenShell';
 import { useReminderSettings } from '@/notifications';
 import { POSTPONE_OPTIONS, usePostponeSettings } from '@/taskActions';
-import { SelectChip } from '@/ui/components/Primitives';
+import { SelectField } from '@/ui/components/SelectField';
 import { useThemeStore } from '@/store/themeStore';
 import { getVaultConfig } from '@/vault';
 import { useRouter } from 'expo-router';
@@ -79,11 +79,13 @@ export function SettingsScreen() {
         <Text style={styles.sectionLabel}>Tasks</Text>
         <View style={[styles.row, { gap: 10 }]}>
           <Text style={styles.rowTitle}>"Later" pushes a task by</Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {POSTPONE_OPTIONS.map((h) => (
-              <SelectChip key={h} label={`${h}h`} active={postpone.hours === h} onPress={() => postpone.setHours(h)} />
-            ))}
-          </View>
+          <SelectField
+            title='"Later" pushes a task by'
+            icon="time-outline"
+            options={POSTPONE_OPTIONS.map((h) => ({ label: `${h} hour${h === 1 ? '' : 's'}`, value: String(h) }))}
+            value={String(postpone.hours)}
+            onChange={(v) => postpone.setHours(Number(v))}
+          />
         </View>
 
         <Text style={styles.sectionLabel}>About</Text>

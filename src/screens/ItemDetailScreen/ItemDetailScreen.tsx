@@ -10,15 +10,13 @@ import { OptionsSheet } from '@/components/sheets/OptionsSheet';
 import { ChecklistView, parseNumbers } from '@/behaviors';
 import { Mascot } from '@/mascot';
 import { isRepeatUnit, repeatLabel } from '@/recurrence';
-import { completeTask, deleteItem } from '@/taskActions';
+import { completeTask, deleteItem, setTaskStatus } from '@/taskActions';
 import { ScreenShell } from '@/components/ScreenShell/ScreenShell';
 import type { ItemFull } from '@/models/behaviorData';
 import { PrimaryButton } from '@/ui/components/Primitives';
-import { SectionHeader } from '@/ui/components/SectionHeader';
-import { TypeBadge } from '@/ui/components/TypeBadge';
 import { designTokens, formatRelativeDay } from '@/ui/designTokens';
 import { formatDateTimeForDisplay } from '@/ui/formatDateTime';
-import { getItemTypeConfig } from '@/ui/itemTypeConfig';
+import { priorityFromImportance, priorityLabel, URGENT_THRESHOLD } from '@/services/itemDetailService';
 import { useDataVersionStore } from '@/store/dataVersionStore';
 import { useThemeStore } from '@/store/themeStore';
 
@@ -84,7 +82,6 @@ export function ItemDetailScreen() {
     );
   }
 
-  const typeConfig = getItemTypeConfig(item.typeName);
   const visitable = item.behaviorData.Visitable;
   const doable = item.behaviorData.Doable;
   const dueAt = doable?.due_at?.trim();
@@ -104,9 +101,11 @@ export function ItemDetailScreen() {
     }
   }
 
+  // Priority/urgency only mean something for doable items.
+  const priority = doable ? priorityFromImportance(item.importance) : 'none';
   const meta = [
-    item.importance != null ? `Importance ${item.importance}` : '',
-    item.urgency != null ? `Urgency ${item.urgency}` : '',
+    priority !== 'none' ? `${priorityLabel(priority)} priority` : '',
+    doable && (item.urgency ?? 0) >= URGENT_THRESHOLD ? 'Urgent' : '',
   ].filter(Boolean);
 
   return (
@@ -126,8 +125,6 @@ export function ItemDetailScreen() {
           paddingBottom: spacing.stackLg,
         }}
       >
-        <TypeBadge typeName={item.typeName} size="md" />
-
         <Text
           style={{
             color: designTokens.textPrimary,
@@ -135,7 +132,7 @@ export function ItemDetailScreen() {
             fontWeight: '600',
             letterSpacing: -0.4,
             lineHeight: 34,
-            marginTop: 16,
+            marginTop: 4,
             marginBottom: 8,
           }}
         >
@@ -143,7 +140,7 @@ export function ItemDetailScreen() {
         </Text>
 
         <Text style={{ color: designTokens.textTertiary, fontSize: 13, marginBottom: 16 }}>
-          {typeConfig.label} · {formatRelativeDay(item.createdAt)}
+          {formatRelativeDay(item.createdAt)}
           {doable?.status === 'completed' ? ' · Completed' : ''}
         </Text>
 
@@ -180,17 +177,13 @@ export function ItemDetailScreen() {
         ) : null}
 
         {item.content ? (
-          <>
-            <SectionHeader label="Content" />
-            <Text style={{ color: designTokens.textSecondary, fontSize: 16, lineHeight: 24, marginBottom: 20 }}>
-              {item.content}
-            </Text>
-          </>
+          <Text style={{ color: designTokens.textSecondary, fontSize: 16, lineHeight: 24, marginBottom: 20 }}>
+            {item.content}
+          </Text>
         ) : null}
 
         {item.tagNames.length > 0 ? (
           <>
-            <SectionHeader label="Tags" />
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
               {item.tagNames.map((tag) => (
                 <View
@@ -236,10 +229,14 @@ export function ItemDetailScreen() {
         value={null}
         options={[
           { label: 'Edit', value: 'edit', icon: 'create-outline' },
+          ...(doable?.status === 'completed'
+            ? [{ label: 'Mark as not done', value: 'reopen', icon: 'arrow-undo-outline' as const }]
+            : []),
           { label: 'Delete', value: 'delete', icon: 'trash-outline' },
         ]}
         onSelect={(value) => {
           if (value === 'edit') router.push(`/create-item?id=${item.id}`);
+          if (value === 'reopen') setTaskStatus(item.id, 'pending').catch(() => {});
           if (value === 'delete') remove();
         }}
       />

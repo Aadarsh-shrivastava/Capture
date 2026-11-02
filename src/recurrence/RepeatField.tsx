@@ -1,36 +1,35 @@
 import {View} from 'react-native';
 
 import type {CaptureItemDraft} from '@/capture/captureItemDraft';
-import {SelectChip} from '@/ui/components/Primitives';
+import {MultiSelectField, SelectField} from '@/ui/components/SelectField';
 
-import {REPEAT_OPTIONS, repeatDaysOf, repeatUnitOf, WEEKDAY_LABELS, withRepeat} from './utils';
+import {REPEAT_OPTIONS, repeatDaysOf, repeatUnitOf, withRepeat, type RepeatUnit} from './utils';
 
-/** Never / Daily / Weekly / Monthly chips for the item form. */
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/** Repeat: Never / Daily / Weekly / Monthly, plus optional weekdays for weekly — all via sheets. */
 export function RepeatField({draft, onChange}: {draft: CaptureItemDraft; onChange: (draft: CaptureItemDraft) => void}) {
   const current = repeatUnitOf(draft);
   const days = repeatDaysOf(draft);
-  const toggleDay = (day: number) =>
-    onChange(withRepeat(draft, 'week', days.includes(day) ? days.filter(d => d !== day) : [...days, day]));
 
   return (
-    <View style={{gap: 10}}>
-      <View style={{flexDirection: 'row', gap: 8}}>
-        {REPEAT_OPTIONS.map(option => (
-          <SelectChip
-            key={option.label}
-            label={option.label}
-            active={current === option.value}
-            onPress={() => onChange(withRepeat(draft, option.value))}
-          />
-        ))}
-      </View>
+    <View style={{gap: 8}}>
+      <SelectField
+        title="Repeat"
+        icon="repeat-outline"
+        options={REPEAT_OPTIONS.map(o => ({label: o.label, value: o.value ?? ''}))}
+        value={current ?? ''}
+        onChange={v => onChange(withRepeat(draft, (v || null) as RepeatUnit | null))}
+      />
       {current === 'week' ? (
-        // Optional: pick weekdays (none = same weekday as the due date).
-        <View style={{flexDirection: 'row', gap: 6}}>
-          {WEEKDAY_LABELS.map((label, day) => (
-            <SelectChip key={day} label={label} active={days.includes(day)} onPress={() => toggleDay(day)} />
-          ))}
-        </View>
+        <MultiSelectField
+          title="On days"
+          icon="calendar-outline"
+          options={DAY_NAMES.map((label, day) => ({label, value: String(day)}))}
+          values={days.map(String)}
+          onChange={v => onChange(withRepeat(draft, 'week', v.map(Number)))}
+          emptyText="Same weekday as the due date"
+        />
       ) : null}
     </View>
   );

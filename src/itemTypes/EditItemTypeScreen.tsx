@@ -6,7 +6,9 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {ScreenShell} from '@/components/ScreenShell/ScreenShell';
 import {getBehaviorLabel} from '@/domain/behaviorTypeConfig';
-import {PrimaryButton, SelectChip} from '@/ui/components/Primitives';
+import {BEHAVIOR_FIELDS} from '@/behaviors';
+import {PrimaryButton} from '@/ui/components/Primitives';
+import {SelectField} from '@/ui/components/SelectField';
 import {designTokens, radius} from '@/ui/designTokens';
 import {Pressable} from '@/ui/HapticPressable';
 
@@ -15,21 +17,48 @@ import {useItemTypesStore} from './store';
 
 type Mode = 'off' | 'optional' | 'always';
 
-// ponytail: only behaviors with working UI/logic are offered; add others here once they do something.
-const MANAGEABLE: {name: string; hint: string; needsDoable?: boolean; alwaysOnly?: boolean}[] = [
-  {name: 'Doable', hint: 'Due date, completion, Focus and reminders', alwaysOnly: true},
-  {name: 'Notable', hint: 'Main text is the body (notes, journals)', alwaysOnly: true},
-  {name: 'Repeatable', hint: 'Repeats daily, weekly or on chosen days', needsDoable: true},
-  {name: 'Remindable', hint: 'Custom reminder times', needsDoable: true},
-  {name: 'Divisible', hint: 'Checklist of steps'},
-  {name: 'Visitable', hint: 'Holds a link'},
+// Core behaviors are on/off only; every behavior with a form field (src/behaviors/fields.ts) is listed
+// automatically, so new behaviors show up here without touching this screen.
+const MANAGEABLE: {
+  name: string;
+  needsDoable?: boolean;
+  alwaysOnly?: boolean;
+}[] = [
+  {name: 'Doable', alwaysOnly: true},
+  {name: 'Notable', alwaysOnly: true},
+  ...BEHAVIOR_FIELDS.map(b => ({name: b.behavior, needsDoable: b.needsDoable})),
 ];
 
+const MODE_LABEL: Record<Mode, string> = {
+  off: 'Off',
+  optional: 'Optional',
+  always: 'Always',
+};
+
+const iconLabel = (name: string) =>
+  name.replace(/-outline$/, '').replace(/-/g, ' ');
+
 const ICONS = [
-  'ellipse-outline', 'checkmark-circle-outline', 'document-text-outline', 'book-outline', 'bulb-outline',
-  'barbell-outline', 'cart-outline', 'cash-outline', 'briefcase-outline', 'home-outline',
-  'heart-outline', 'airplane-outline', 'school-outline', 'restaurant-outline', 'medkit-outline',
-  'musical-notes-outline', 'film-outline', 'code-slash-outline', 'people-outline', 'leaf-outline',
+  'ellipse-outline',
+  'checkmark-circle-outline',
+  'document-text-outline',
+  'book-outline',
+  'bulb-outline',
+  'barbell-outline',
+  'cart-outline',
+  'cash-outline',
+  'briefcase-outline',
+  'home-outline',
+  'heart-outline',
+  'airplane-outline',
+  'school-outline',
+  'restaurant-outline',
+  'medkit-outline',
+  'musical-notes-outline',
+  'film-outline',
+  'code-slash-outline',
+  'people-outline',
+  'leaf-outline',
 ] as const;
 
 const field = {
@@ -42,7 +71,18 @@ const field = {
 };
 
 function Label({children}: {children: string}) {
-  return <Text style={{color: designTokens.textSecondary, fontSize: 13, fontWeight: '600', marginTop: 20, marginBottom: 10}}>{children}</Text>;
+  return (
+    <Text
+      style={{
+        color: designTokens.textSecondary,
+        fontSize: 13,
+        fontWeight: '600',
+        marginTop: 20,
+        marginBottom: 10,
+      }}>
+      {children}
+    </Text>
+  );
 }
 
 /** Create or edit an item type: name, icon, description and which behaviors it has. */
@@ -56,12 +96,18 @@ export function EditItemTypeScreen() {
 
   const [name, setName] = useState(existing?.name ?? '');
   const [description, setDescription] = useState(existing?.description ?? '');
+  const originalKeywords = (existing?.keywords ?? []).join(', ');
+  const [keywords, setKeywords] = useState(originalKeywords);
   const [icon, setIcon] = useState<string | null>(existing?.icon ?? null);
   const [modes, setModes] = useState<Record<string, Mode>>(() =>
     Object.fromEntries(
       MANAGEABLE.map(b => [
         b.name,
-        existing?.defaults.includes(b.name) ? 'always' : existing?.optional.includes(b.name) ? 'optional' : 'off',
+        existing?.defaults.includes(b.name)
+          ? 'always'
+          : existing?.optional.includes(b.name)
+          ? 'optional'
+          : 'off',
       ]),
     ),
   );
@@ -72,7 +118,8 @@ export function EditItemTypeScreen() {
       const next = {...prev, [behavior]: mode};
       const def = MANAGEABLE.find(b => b.name === behavior);
       // Repeat/reminders need a due date, so they bring Doable along.
-      if (mode !== 'off' && def?.needsDoable && next.Doable === 'off') next.Doable = 'always';
+      if (mode !== 'off' && def?.needsDoable && next.Doable === 'off')
+        next.Doable = 'always';
       if (behavior === 'Doable' && mode === 'off') {
         for (const b of MANAGEABLE) if (b.needsDoable) next[b.name] = 'off';
       }
@@ -80,7 +127,11 @@ export function EditItemTypeScreen() {
     });
   }
 
-  const nameTaken = types.some(t => t.name.toLowerCase() === name.trim().toLowerCase() && t.id !== existing?.id);
+  const nameTaken = types.some(
+    t =>
+      t.name.toLowerCase() === name.trim().toLowerCase() &&
+      t.id !== existing?.id,
+  );
 
   async function save() {
     setSaving(true);
@@ -90,16 +141,32 @@ export function EditItemTypeScreen() {
         name,
         description,
         icon,
-        defaults: MANAGEABLE.filter(b => modes[b.name] === 'always').map(b => b.name),
+        // Keywords left as they were but name/description changed → clear so they regenerate on next capture.
+        keywords:
+          keywords === originalKeywords &&
+          (name.trim() !== (existing?.name ?? '') ||
+            description.trim() !== (existing?.description ?? ''))
+            ? []
+            : keywords.split(','),
+        defaults: MANAGEABLE.filter(b => modes[b.name] === 'always').map(
+          b => b.name,
+        ),
         // Keep any optional behaviors this screen doesn't manage.
         optional: [
-          ...MANAGEABLE.filter(b => modes[b.name] === 'optional').map(b => b.name),
-          ...(existing?.optional ?? []).filter(b => !MANAGEABLE.some(m => m.name === b)),
+          ...MANAGEABLE.filter(b => modes[b.name] === 'optional').map(
+            b => b.name,
+          ),
+          ...(existing?.optional ?? []).filter(
+            b => !MANAGEABLE.some(m => m.name === b),
+          ),
         ],
       });
       router.back();
     } catch (err) {
-      Alert.alert('Could not save type', err instanceof Error ? err.message : String(err));
+      Alert.alert(
+        'Could not save type',
+        err instanceof Error ? err.message : String(err),
+      );
     } finally {
       setSaving(false);
     }
@@ -108,14 +175,20 @@ export function EditItemTypeScreen() {
   async function remove() {
     if (!existing) return;
     const count = await countItemsOfType(existing.id);
-    const fallback = types.find(t => t.name === (existing.defaults.includes('Doable') ? 'Task' : 'Note'));
+    const fallback = types.find(
+      t => t.name === (existing.defaults.includes('Doable') ? 'Task' : 'Note'),
+    );
     const doDelete = async () => {
       await deleteItemType(existing.id, fallback!.id);
       router.back();
     };
     Alert.alert(
       `Delete "${existing.name}"?`,
-      count ? `${count} item${count === 1 ? '' : 's'} will become ${fallback?.name}s.` : 'No items use this type.',
+      count
+        ? `${count} item${count === 1 ? '' : 's'} will become ${
+            fallback?.name
+          }s.`
+        : 'No items use this type.',
       [
         {text: 'Cancel', style: 'cancel'},
         {text: 'Delete', style: 'destructive', onPress: doDelete},
@@ -129,12 +202,21 @@ export function EditItemTypeScreen() {
       leading="back"
       right={
         existing && !locked ? (
-          <Pressable onPress={remove} hitSlop={12} accessibilityLabel="Delete type">
-            <Ionicons name="trash-outline" size={22} color={designTokens.textPrimary} />
+          <Pressable
+            onPress={remove}
+            hitSlop={12}
+            accessibilityLabel="Delete type">
+            <Ionicons
+              name="trash-outline"
+              size={22}
+              color={designTokens.textPrimary}
+            />
           </Pressable>
         ) : undefined
       }>
-      <ScrollView contentContainerStyle={{paddingHorizontal: 20, paddingBottom: 24}} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={{paddingHorizontal: 20, paddingBottom: 24}}
+        keyboardShouldPersistTaps="handled">
         <Label>Name</Label>
         <TextInput
           value={name}
@@ -144,7 +226,16 @@ export function EditItemTypeScreen() {
           placeholderTextColor={designTokens.textTertiary}
           style={[field, locked && {opacity: 0.5}]}
         />
-        {nameTaken ? <Text style={{color: designTokens.textTertiary, fontSize: 12, marginTop: 6}}>A type with this name already exists.</Text> : null}
+        {nameTaken ? (
+          <Text
+            style={{
+              color: designTokens.textTertiary,
+              fontSize: 12,
+              marginTop: 6,
+            }}>
+            A type with this name already exists.
+          </Text>
+        ) : null}
 
         <Label>Description</Label>
         <TextInput
@@ -155,56 +246,72 @@ export function EditItemTypeScreen() {
           style={field}
         />
 
+        <Label>Keywords</Label>
+        <TextInput
+          value={keywords}
+          onChangeText={setKeywords}
+          placeholder="Filled in automatically on your next capture"
+          placeholderTextColor={designTokens.textTertiary}
+          autoCapitalize="none"
+          multiline
+          style={[field, {minHeight: 64, textAlignVertical: 'top'}]}
+        />
+
         <Label>Icon</Label>
-        <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 10}}>
-          {ICONS.map(name => {
-            const active = (icon ?? '') === name;
+        <SelectField
+          title="Icon"
+          options={ICONS.map(name => ({
+            label: iconLabel(name),
+            value: name,
+            icon: name,
+          }))}
+          value={icon ?? ''}
+          onChange={setIcon}
+        />
+
+        <Label>Behaviors</Label>
+        <View style={{gap: 10}}>
+          {MANAGEABLE.map(b => {
+            const lockedDefault = locked && existing?.defaults.includes(b.name);
+            const options: Mode[] = lockedDefault
+              ? ['always']
+              : b.alwaysOnly
+              ? locked
+                ? ['off']
+                : ['off', 'always']
+              : ['off', 'optional', ...(locked ? [] : (['always'] as Mode[]))];
             return (
-              <Pressable
-                key={name}
-                onPress={() => setIcon(name)}
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: radius.md,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: active ? designTokens.surfaceRaised : designTokens.card,
-                  borderWidth: 1,
-                  borderColor: active ? designTokens.textSecondary : 'transparent',
-                }}>
-                <Ionicons name={name} size={20} color={designTokens.textPrimary} />
-              </Pressable>
+              <View key={b.name} style={{gap: 6}}>
+                <Text style={{color: designTokens.textPrimary, fontSize: 14}}>
+                  {getBehaviorLabel(b.name)}
+                </Text>
+                <SelectField
+                  title={getBehaviorLabel(b.name)}
+                  options={options.map(o => ({label: MODE_LABEL[o], value: o}))}
+                  value={modes[b.name]}
+                  onChange={o => setMode(b.name, o as Mode)}
+                />
+              </View>
             );
           })}
         </View>
-
-        <Label>Behaviors</Label>
-        <Text style={{color: designTokens.textTertiary, fontSize: 12, marginTop: -4, marginBottom: 8}}>
-          Always = every item has it. Optional = items can turn it on.
-        </Text>
-        {MANAGEABLE.map(b => {
-          const mode = modes[b.name];
-          const lockedDefault = locked && existing?.defaults.includes(b.name);
-          const options: Mode[] = lockedDefault ? ['always'] : b.alwaysOnly ? (locked ? ['off'] : ['off', 'always']) : ['off', 'optional', ...(locked ? [] : (['always'] as Mode[]))];
-          return (
-            <View key={b.name} style={{paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: designTokens.divider, gap: 8}}>
-              <View>
-                <Text style={{color: designTokens.textPrimary, fontSize: 15, fontWeight: '500'}}>{getBehaviorLabel(b.name)}</Text>
-                <Text style={{color: designTokens.textTertiary, fontSize: 12, marginTop: 2}}>{b.hint}</Text>
-              </View>
-              <View style={{flexDirection: 'row', gap: 8}}>
-                {options.map(o => (
-                  <SelectChip key={o} label={o === 'off' ? 'Off' : o === 'optional' ? 'Optional' : 'Always'} active={mode === o} onPress={() => setMode(b.name, o)} />
-                ))}
-              </View>
-            </View>
-          );
-        })}
       </ScrollView>
 
-      <View style={{paddingHorizontal: 20, paddingTop: 8, paddingBottom: insets.bottom + 8, borderTopWidth: 1, borderTopColor: designTokens.divider}}>
-        <PrimaryButton compact label="Save" loading={saving} disabled={!name.trim() || nameTaken} onPress={save} />
+      <View
+        style={{
+          paddingHorizontal: 20,
+          paddingTop: 8,
+          paddingBottom: insets.bottom + 8,
+          borderTopWidth: 1,
+          borderTopColor: designTokens.divider,
+        }}>
+        <PrimaryButton
+          compact
+          label="Save"
+          loading={saving}
+          disabled={!name.trim() || nameTaken}
+          onPress={save}
+        />
       </View>
     </ScreenShell>
   );

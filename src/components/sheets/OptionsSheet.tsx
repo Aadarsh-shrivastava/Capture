@@ -1,5 +1,5 @@
 import {Ionicons} from '@expo/vector-icons';
-import {Text, View} from 'react-native';
+import {ScrollView, Text, View} from 'react-native';
 
 import {Pressable} from '@/ui/HapticPressable';
 import {Sheet} from '@/components/Sheet/Sheet';
@@ -25,7 +25,7 @@ type OptionsSheetProps = {
 export function OptionsSheet({visible, onClose, title, options, value, onSelect}: OptionsSheetProps) {
   return (
     <Sheet visible={visible} onClose={onClose} title={title}>
-      <View style={{paddingHorizontal: 20, paddingBottom: 8}}>
+      <ScrollView style={{maxHeight: 460}} contentContainerStyle={{paddingHorizontal: 20, paddingBottom: 8}}>
         {options.map((option, index) => {
           const active = option.value === value;
 
@@ -59,7 +59,7 @@ export function OptionsSheet({visible, onClose, title, options, value, onSelect}
             </View>
           );
         })}
-      </View>
+      </ScrollView>
     </Sheet>
   );
 }

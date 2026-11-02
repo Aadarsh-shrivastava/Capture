@@ -41,7 +41,7 @@ export function SearchScreen() {
         {results.length === 0 ? (
           // Stays until there are results to show.
           <View style={{alignItems: 'center', paddingVertical: 24, gap: 8}}>
-            <Mascot pose="chibiPeek" width={110} />
+            <Mascot pose="curious" width={110} />
             <Text style={{color: designTokens.textTertiary, fontSize: 14}}>
               {query.trim() ? 'No matches.' : 'Search titles, notes, tags and groups.'}
             </Text>

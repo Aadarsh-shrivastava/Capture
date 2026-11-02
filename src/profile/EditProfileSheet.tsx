@@ -6,6 +6,8 @@ import {PrimaryButton} from '@/ui/components/Primitives';
 import {designTokens, radius} from '@/ui/designTokens';
 import {Pressable} from '@/ui/HapticPressable';
 
+import {CharacterPicker} from '@/mascot';
+
 import {Avatar} from './Avatar';
 import {pickProfilePhoto} from './photo';
 
@@ -61,6 +63,8 @@ export function EditProfileSheet({visible, onClose}: {visible: boolean; onClose:
           placeholderTextColor={designTokens.textTertiary}
           style={field}
         />
+        <Text style={{color: designTokens.textSecondary, fontSize: 13, fontWeight: '600', marginTop: 4}}>Companion</Text>
+        <CharacterPicker size={52} />
         <Text style={{color: designTokens.textTertiary, fontSize: 12}}>Stored only on this device.</Text>
         <PrimaryButton
           compact

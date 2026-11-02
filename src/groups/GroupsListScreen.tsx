@@ -112,7 +112,7 @@ export function GroupsListScreen() {
       <TabScreenShell title="Groups" action={{icon: 'add', label: 'New group', onPress: () => setCreating(true)}}>
         <ScrollView contentContainerStyle={{paddingHorizontal: 20, paddingBottom: 40}}>
           {active.length === 0 ? (
-            <MascotMessage pose="chibiIdea" message="No groups yet. Tap + to create one." />
+            <MascotMessage pose="curious" message="No groups yet. Tap + to create one." />
           ) : (
             active.map(g => (
               <GroupListRow key={g.id} group={g} selected={selected.has(g.id)} onPress={() => open(g)} onLongPress={() => toggle(g.id)} />

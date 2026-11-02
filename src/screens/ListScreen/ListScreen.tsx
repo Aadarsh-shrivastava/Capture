@@ -133,7 +133,7 @@ export function ListScreen() {
         ) : null}
 
         {filteredItems.length === 0 ? (
-          <MascotMessage pose="chibiPeek" message={emptyMessage} />
+          <MascotMessage pose="curious" message={emptyMessage} />
         ) : (
           <View style={{ gap: 10 }}>
             {filteredItems.map((item) => (

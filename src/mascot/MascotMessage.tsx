@@ -2,7 +2,7 @@ import {Text, View} from 'react-native';
 
 import {designTokens} from '@/ui/designTokens';
 
-import type {MascotPose} from './frames';
+import type {MascotPose} from './characters';
 import {Mascot} from './Mascot';
 
 /** Empty/edge-state block: a pose with a short line under it. */

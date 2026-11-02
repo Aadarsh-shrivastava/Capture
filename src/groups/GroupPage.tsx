@@ -92,7 +92,7 @@ export function GroupPage() {
         {error ? <Text style={{color: designTokens.textSecondary, fontSize: 13}}>{error}</Text> : null}
 
         {items.length === 0 ? (
-          <MascotMessage pose="chibiAway" message="Nothing here yet. Add items below, or capture something that fits." />
+          <MascotMessage pose="away" message="Nothing here yet. Add items below, or capture something that fits." />
         ) : (
           sectionsByType(items).map(section => (
             <View key={section.typeName}>

@@ -4,7 +4,7 @@ import {Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {Appear} from '@/motion';
-import {Mascot} from '@/mascot';
+import {CharacterPicker, Mascot} from '@/mascot';
 import {Avatar, pickProfilePhoto, useProfileStore} from '@/profile';
 import {PrimaryButton} from '@/ui/components/Primitives';
 import {designTokens, radius} from '@/ui/designTokens';
@@ -25,9 +25,9 @@ const field = {
 
 function Title({title, body}: {title: string; body: string}) {
   return (
-    <View style={{gap: 8, marginBottom: 24}}>
-      <Text style={{color: designTokens.textPrimary, fontSize: 28, fontWeight: '700'}}>{title}</Text>
-      <Text style={{color: designTokens.textSecondary, fontSize: 15, lineHeight: 22}}>{body}</Text>
+    <View style={{gap: 8, marginBottom: 28, alignItems: 'center'}}>
+      <Text style={{color: designTokens.textPrimary, fontSize: 28, fontWeight: '700', textAlign: 'center'}}>{title}</Text>
+      <Text style={{color: designTokens.textSecondary, fontSize: 15, lineHeight: 22, textAlign: 'center'}}>{body}</Text>
     </View>
   );
 }
@@ -84,11 +84,14 @@ export function OnboardingFlow({onDone, preview = false}: {onDone: () => void; p
 
       <ScrollView contentContainerStyle={{flexGrow: 1, padding: 24, paddingTop: 48}} keyboardShouldPersistTaps="handled">
         <Appear key={step} from="up">
-          <Mascot
-            pose={step === 'welcome' ? 'neutral' : step === 'vault' ? 'chibiReading' : 'chibiHappy'}
-            width={step === 'welcome' ? 220 : 120}
-            style={{alignSelf: 'center', marginBottom: 16}}
-          />
+          {/* Profile step shows the avatar instead, so there's one figure per screen. */}
+          {step !== 'profile' ? (
+            <Mascot
+              pose={step === 'welcome' ? 'neutral' : 'reading'}
+              width={step === 'welcome' ? 200 : 120}
+              style={{alignSelf: 'center', marginBottom: 16}}
+            />
+          ) : null}
           {step === 'welcome' ? (
             <Title
               title="Capture"
@@ -137,11 +140,14 @@ export function OnboardingFlow({onDone, preview = false}: {onDone: () => void; p
 
           {step === 'profile' ? (
             <>
-              <Title title="About you" body="Just a name for now. You can change this any time from Profile." />
-              <Pressable onPress={choosePhoto} style={{alignItems: 'center', gap: 10, marginBottom: 20}}>
-                <Avatar size={96} />
-                <Text style={{color: designTokens.textSecondary, fontSize: 14}}>{profile.photo ? 'Change photo' : 'Add a photo'}</Text>
+              <Pressable onPress={choosePhoto} style={{alignItems: 'center', gap: 8, marginBottom: 20}}>
+                <Avatar size={112} />
+                <Text style={{color: designTokens.textTertiary, fontSize: 13}}>{profile.photo ? 'Change photo' : 'Add a photo (optional)'}</Text>
               </Pressable>
+              <Title title="About you" body="Pick a companion and add your name." />
+              <View style={{marginBottom: 24}}>
+                <CharacterPicker />
+              </View>
               <TextInput value={name} onChangeText={setName} placeholder="Your name" placeholderTextColor={designTokens.textTertiary} style={field} />
             </>
           ) : null}

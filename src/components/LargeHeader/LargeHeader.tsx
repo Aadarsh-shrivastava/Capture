@@ -1,4 +1,5 @@
 import {Ionicons} from '@expo/vector-icons';
+import type {ReactNode} from 'react';
 import {Text, View} from 'react-native';
 
 import {Pressable} from '@/ui/HapticPressable';
@@ -18,10 +19,12 @@ type LargeHeaderProps = {
   secondaryAction?: HeaderAction;
   /** Shows a back chevron instead of the drawer toggle. */
   onBack?: () => void;
+  /** Replaces the title text, e.g. view tabs. */
+  titleNode?: ReactNode;
 };
 
 /** One compact row: menu/back on the left, centered title, action icons on the right. */
-export function LargeHeader({title, action, secondaryAction, onBack}: LargeHeaderProps) {
+export function LargeHeader({title, action, secondaryAction, onBack, titleNode}: LargeHeaderProps) {
   const actions = [secondaryAction, action].filter((a): a is HeaderAction => Boolean(a));
 
   return (
@@ -36,9 +39,11 @@ export function LargeHeader({title, action, secondaryAction, onBack}: LargeHeade
         )}
       </View>
 
-      <Text numberOfLines={1} style={{...typeScale.sheetTitle, color: designTokens.textPrimary}}>
-        {title}
-      </Text>
+      {titleNode ?? (
+        <Text numberOfLines={1} accessibilityRole="header" style={{...typeScale.sheetTitle, color: designTokens.textPrimary}}>
+          {title}
+        </Text>
+      )}
 
       <View style={{flex: 1, flexDirection: 'row', justifyContent: 'flex-end', gap: 20}}>
         {actions.map(a => (

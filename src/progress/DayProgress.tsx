@@ -1,24 +1,14 @@
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useRef} from 'react';
 import {Animated, Text, View} from 'react-native';
 
-import {taskHistoryRepository} from '@/repositories/taskHistoryRepository';
-import {useDataVersionStore} from '@/store/dataVersionStore';
 import {designTokens} from '@/ui/designTokens';
 
-import {dayProgress} from './utils';
+import {useDayProgress} from './useDayProgress';
 
 /** Slim "3 of 5 done" bar for a day; hidden when nothing is due. */
 export function DayProgress({day}: {day: Date}) {
-  const [progress, setProgress] = useState({done: 0, total: 0});
-  const version = useDataVersionStore(state => state.version);
+  const progress = useDayProgress(day);
   const fill = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    taskHistoryRepository
-      .findAll()
-      .then(rows => setProgress(dayProgress(rows, day)))
-      .catch(() => {});
-  }, [day, version]);
 
   const pct = progress.total ? progress.done / progress.total : 0;
   useEffect(() => {

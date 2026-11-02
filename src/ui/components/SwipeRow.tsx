@@ -5,7 +5,13 @@ import Swipeable from 'react-native-gesture-handler/Swipeable';
 
 import {designTokens, radius} from '@/ui/designTokens';
 
-type SwipeAction = {label: string; icon: keyof typeof Ionicons.glyphMap; onTrigger: () => void};
+type SwipeAction = {
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  onTrigger: () => void;
+  /** Don't snap back — the row is about to leave (e.g. completed), so it shouldn't bounce in first. */
+  stayOpen?: boolean;
+};
 
 type Props = {
   children: ReactNode;
@@ -34,7 +40,7 @@ function ActionPanel({action, align}: {action: SwipeAction; align: 'flex-start' 
   );
 }
 
-/** Row that fires an action on a full swipe, then snaps back. */
+/** Row that fires an action on a full swipe, then snaps back (unless the action `stayOpen`s). */
 export function SwipeRow({children, left, right}: Props) {
   const ref = useRef<Swipeable>(null);
 
@@ -47,8 +53,9 @@ export function SwipeRow({children, left, right}: Props) {
       renderLeftActions={left ? () => <ActionPanel action={left} align="flex-start" /> : undefined}
       renderRightActions={right ? () => <ActionPanel action={right} align="flex-end" /> : undefined}
       onSwipeableOpen={direction => {
-        ref.current?.close();
-        (direction === 'left' ? left : right)?.onTrigger();
+        const action = direction === 'left' ? left : right;
+        if (!action?.stayOpen) ref.current?.close();
+        action?.onTrigger();
       }}>
       {children}
     </Swipeable>

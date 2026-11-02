@@ -7,14 +7,14 @@ import {usePostponeSettings} from './settings';
 
 export {POSTPONE_OPTIONS, usePostponeSettings} from './settings';
 /** Raw delete/restore (no Undo bar) for callers that build their own Undo. */
-export {deleteItem as deleteItemForUndo, rescheduleTask, restoreItem, updateBehaviorData} from './service';
+export {deleteItem as deleteItemForUndo, rescheduleTask, restoreItem, setTaskStatus, updateBehaviorData} from './service';
 
 /** Complete (or roll a repeating task forward) and offer Undo. */
 export async function completeTask(itemId: number, title: string, opts: {undo?: boolean} = {}): Promise<void> {
   const {before, nextDue} = await service.completeTask(itemId);
   if (opts.undo === false) return;
   const label = nextDue ? `Done · next ${moment(nextDue).calendar(null, {sameElse: 'MMM D'})}` : `Completed "${title}"`;
-  showUndo(label, () => service.restoreDoable(itemId, before), 'chibiHappy');
+  showUndo(label, () => service.restoreDoable(itemId, before), 'happy');
 }
 
 /** "Later": push the due time by the configured hours, with Undo. */
@@ -36,7 +36,7 @@ export async function completeTasks(tasks: Named[]): Promise<void> {
     async () => {
       for (const d of done) await service.restoreDoable(d.id, d.before);
     },
-    'chibiHappy',
+    'happy',
   );
 }
 

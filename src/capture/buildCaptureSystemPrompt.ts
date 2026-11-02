@@ -25,6 +25,7 @@ function formatBehaviorFields(): string {
         return `- ${def.name}: no extra fields`;
       }
       const fields = def.fields
+        .filter(f => !f.system)
         .map(f => {
           const opts = f.options?.map(o => o.value).join(' | ') ?? '';
           const req = f.required ? 'required' : 'optional';

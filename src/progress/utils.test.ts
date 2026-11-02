@@ -11,3 +11,9 @@ test('counts only tasks due that day', () => {
     ),
   ).toEqual({done: 1, total: 2});
 });
+
+test('a completed repeat counts as done on the day it was due, even after rolling forward', () => {
+  const gym = {id: 7, title: 'gym', status: 'pending', dueAt: '2026-11-01T18:00:00+05:30', completedAt: null};
+  expect(dayProgress([gym, row('pending', '2026-10-31')], day, new Map([[7, ['2026-10-31']]]))).toEqual({done: 1, total: 2});
+  expect(dayProgress([gym], day)).toEqual({done: 0, total: 0}); // without history it vanished — the old bug
+});

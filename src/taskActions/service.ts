@@ -1,5 +1,5 @@
 import {itemApi} from '@/api/itemApi';
-import {encode, parseNumbers, parseSteps} from '@/behaviors/data';
+import {dayKey, encode, parseDays, parseNumbers, parseSteps} from '@/behaviors/data';
 import type {SaveItemPayload} from '@/models/behaviorData';
 import {isRepeatUnit, nextDueAt} from '@/recurrence';
 
@@ -18,6 +18,11 @@ export async function completeTask(itemId: number): Promise<CompleteResult> {
       : null;
   const after = nextDue ? {...before, status: 'pending', due_at: nextDue} : {...before, status: 'completed'};
   const payload = toSavePayload(full, after);
+  if (nextDue && repeat) {
+    // The occurrence that was due (not today's date) counts as done — finishing yesterday's gym this morning marks yesterday.
+    const day = dayKey(before.due_at);
+    payload.behaviorData = {...payload.behaviorData, Repeatable: {...repeat, done: encode([...new Set([...parseDays(repeat.done), day])])}};
+  }
   // A repeating checklist starts fresh for the next occurrence.
   const steps = full.behaviorData.Divisible?.steps;
   if (nextDue && steps) {
@@ -25,6 +30,12 @@ export async function completeTask(itemId: number): Promise<CompleteResult> {
   }
   await itemApi.saveItem(payload, itemId);
   return {before, nextDue};
+}
+
+/** Move a task between pending / in_progress (board columns). Completing goes through completeTask. */
+export async function setTaskStatus(itemId: number, status: 'pending' | 'in_progress'): Promise<void> {
+  const full = await itemApi.getItemFull(itemId);
+  await itemApi.saveItem(toSavePayload(full, {...doableOf(full), status}), itemId);
 }
 
 /** Replace one attached behavior's data (e.g. ticking a step). */
@@ -52,7 +63,14 @@ export async function postponeTask(itemId: number, hours: number): Promise<Compl
 /** Put a task's Doable block back (undo of complete). */
 export async function restoreDoable(itemId: number, doable: Record<string, string>): Promise<void> {
   const full = await itemApi.getItemFull(itemId);
-  await itemApi.saveItem(toSavePayload(full, doable), itemId);
+  const payload = toSavePayload(full, doable);
+  // Back to an occurrence → it isn't done any more.
+  const repeat = full.behaviorData.Repeatable;
+  if (repeat?.done && doable.due_at) {
+    const day = dayKey(doable.due_at);
+    payload.behaviorData = {...payload.behaviorData, Repeatable: {...repeat, done: encode(parseDays(repeat.done).filter(d => d !== day))}};
+  }
+  await itemApi.saveItem(payload, itemId);
 }
 
 /** Delete an item, returning what's needed to recreate it (gets a new id). */

@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 import type {CaptureItemDraft} from '@/capture/captureItemDraft';
 
 // Behavior fields are strings; structured values (lists) are JSON-encoded inside them.
@@ -16,11 +18,15 @@ export function parseJsonArray<T>(value: string | undefined): T[] {
 
 export const parseSteps = (value?: string) =>
   parseJsonArray<Step>(value).filter(s => typeof s?.text === 'string' && s.text.trim());
+export const parseDays = (value?: string) => parseJsonArray<unknown>(value).filter((d): d is string => typeof d === 'string');
 export const parseNumbers = (value?: string) =>
   parseJsonArray<unknown>(value)
     .filter(v => v !== null && v !== '')
     .map(Number)
     .filter(n => Number.isFinite(n));
+/** Local calendar day of a due date — the key a repeat's done days use. */
+export const dayKey = (dueAt: string) => moment(dueAt).format('YYYY-MM-DD');
+
 export const encode = (value: unknown[]) => JSON.stringify(value);
 
 type Draftish = Pick<CaptureItemDraft, 'optionalBehaviorNames' | 'behaviorData'>;

@@ -10,8 +10,10 @@ import {useFocusData} from '@/hooks/useFocusData';
 import {useCaptureStore} from '@/store/captureStore';
 import {useLingeringDone} from '@/hooks/useLingeringDone';
 import {Appear, SlideOut} from '@/motion';
-import {useRepeatPreview} from '@/recurrence';
-import {DayProgress} from '@/progress';
+import {GhostRow, useRepeatPreview} from '@/recurrence';
+import {Suggestions} from '@/resurface';
+import {UpcomingView, useCurrentView, ViewPicker} from '@/views';
+import {DayProgress, useDayProgress} from '@/progress';
 import type {FocusTask} from '@/models/focusTask';
 import {
   FocusEmptyState,
@@ -41,7 +43,7 @@ function dueMoment(task: FocusTask) {
 function tasksForDay(tasks: FocusTask[], day: moment.Moment) {
   const isToday = day.isSame(moment(), 'day');
 
-  return tasks.filter((task) => {
+  return tasks.filter(task => {
     const due = dueMoment(task);
     if (!due) return isToday;
     if (due.isSame(day, 'day')) return true;
@@ -62,28 +64,42 @@ export function FocusScreen() {
     }, [refresh]),
   );
 
-
   const selected = useMemo(() => moment(selectedDate), [selectedDate]);
-  const openTextCapture = useCaptureStore((state) => state.openTextCapture);
+  const openTextCapture = useCaptureStore(state => state.openTextCapture);
+  // Week / Month live in src/views and replace this screen's body.
+  const view = useCurrentView();
   const {linger, withLingering, isLingering} = useLingeringDone();
   const isToday = selected.isSame(moment(), 'day');
-  // Repeating tasks also appear (dimmed, read-only) on the future days they'll land on.
-  const repeatPreview = useRepeatPreview(tasks, moment(selectedDate).add(14, 'days').toDate());
+  const progress = useDayProgress(selectedDate);
+  // Repeating tasks also appear as ghosts (dimmed, not tappable) on the future days they'll land on.
+  const repeatPreview = useRepeatPreview(
+    tasks,
+    moment(selectedDate).add(14, 'days').toDate(),
+  );
   const previewTasks = useMemo(
-    () => (isToday ? [] : repeatPreview.get(selected.format('YYYY-MM-DD')) ?? []),
+    () =>
+      isToday ? [] : repeatPreview.get(selected.format('YYYY-MM-DD')) ?? [],
     [isToday, repeatPreview, selected],
   );
+  // Real tasks only — ghosts never hide the empty state (and its mascot).
   const dayTasks = useMemo(
-    () => [...tasksForDay(withLingering(tasks), selected), ...previewTasks],
-    [tasks, selected, withLingering, previewTasks],
+    () => tasksForDay(withLingering(tasks), selected),
+    [tasks, selected, withLingering],
   );
   const {now, next, later} = useMemo(() => splitFocusDay(dayTasks), [dayTasks]);
+  // A free stretch: Now is a timed task still 45+ minutes off — room for one "come back" suggestion.
+  const freeNow = Boolean(now && dueMoment(now)?.isAfter(moment().add(45, 'minutes')) && now.dueAt?.includes('T'));
   /** Other days: same order (timed first), no sections. */
-  const dayList = useMemo(() => (now ? [now, ...next, ...later] : []), [now, next, later]);
+  const dayList = useMemo(
+    () => (now ? [now, ...next, ...later] : []),
+    [now, next, later],
+  );
 
   const markedDays = useMemo(
     () => [
-      ...tasks.map((task) => dueMoment(task)?.format('YYYY-MM-DD')).filter((value): value is string => Boolean(value)),
+      ...tasks
+        .map(task => dueMoment(task)?.format('YYYY-MM-DD'))
+        .filter((value): value is string => Boolean(value)),
       ...repeatPreview.keys(),
     ],
     [tasks, repeatPreview],
@@ -98,7 +114,10 @@ export function FocusScreen() {
       await action();
       await refresh();
     } catch (err) {
-      Alert.alert('Unable to update task', err instanceof Error ? err.message : 'Try again');
+      Alert.alert(
+        'Unable to update task',
+        err instanceof Error ? err.message : 'Try again',
+      );
     }
   }
 
@@ -107,28 +126,27 @@ export function FocusScreen() {
     setDateSheetOpen(true);
   }
 
-  function complete(task: FocusTask) {
-    linger(task);
-    completeTask(task.id, task.title).catch((err) =>
-      Alert.alert('Unable to update task', err instanceof Error ? err.message : 'Try again'),
+  /** `swiped`: the swipe already moved the row away, so no second slide-out. */
+  function complete(task: FocusTask, swiped = false) {
+    if (!swiped) linger(task);
+    completeTask(task.id, task.title).catch(err =>
+      Alert.alert(
+        'Unable to update task',
+        err instanceof Error ? err.message : 'Try again',
+      ),
     );
   }
 
   function postpone(task: FocusTask) {
-    postponeTask(task.id, task.title).catch((err) =>
-      Alert.alert('Unable to update task', err instanceof Error ? err.message : 'Try again'),
+    postponeTask(task.id, task.title).catch(err =>
+      Alert.alert(
+        'Unable to update task',
+        err instanceof Error ? err.message : 'Try again',
+      ),
     );
   }
 
   function renderRow(task: FocusTask) {
-    if (previewTasks.includes(task)) {
-      // A future repeat: open the real task, but no swipe/select/complete on the preview.
-      return (
-        <View key={`repeat-${task.id}`} style={{opacity: 0.45}}>
-          <NextTaskRow task={{...task, title: `${task.title} · repeats`}} onPress={() => openTask(task)} />
-        </View>
-      );
-    }
     if (isLingering(task.id)) {
       return (
         <SlideOut key={task.id} out>
@@ -139,10 +157,19 @@ export function FocusScreen() {
     return (
       <Appear key={task.id}>
         <SwipeRow
-          left={{label: 'Complete', icon: 'checkmark', onTrigger: () => complete(task)}}
-          right={{label: 'Reschedule', icon: 'calendar-outline', onTrigger: () => openReschedule(task)}}>
+          left={{
+            label: 'Complete',
+            icon: 'checkmark',
+            onTrigger: () => complete(task, true),
+            stayOpen: true,
+          }}
+          right={{
+            label: 'Reschedule',
+            icon: 'calendar-outline',
+            onTrigger: () => openReschedule(task),
+          }}>
           <Selectable item={task} bleed={8} onOpen={() => openTask(task)}>
-            {(select) => <NextTaskRow task={task} {...select} />}
+            {select => <NextTaskRow task={task} {...select} />}
           </Selectable>
         </SwipeRow>
       </Appear>
@@ -156,72 +183,125 @@ export function FocusScreen() {
 
   return (
     <TabScreenShell
-      title="Capture"
-      action={{icon: 'calendar-outline', label: 'Pick a day', onPress: () => setDateSheetOpen(true)}}
-      secondaryAction={{icon: 'search', label: 'Search', onPress: () => router.push('/search')}}>
-      <ScrollView
-        contentContainerStyle={{paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40}}
-        // ponytail: uses iOS overscroll bounce; Android has none, add a RefreshControl there if needed.
-        onScrollEndDrag={(e) => e.nativeEvent.contentOffset.y < -PULL_TO_CAPTURE && openTextCapture()}
-        showsVerticalScrollIndicator={false}>
-        <Text
-          style={{position: 'absolute', top: -40, left: 0, right: 0, textAlign: 'center', color: designTokens.textTertiary, fontSize: 13}}>
-          Pull to capture
-        </Text>
-        <WeekStrip value={selectedDate} onChange={setSelectedDate} markedDays={markedDays} />
-        <DayProgress day={selectedDate} />
+      title={view.label}
+      titleNode={<ViewPicker />}
+      action={
+        view.key === 'today'
+          ? {
+              icon: 'calendar-outline',
+              label: 'Pick a day',
+              onPress: () => setDateSheetOpen(true),
+            }
+          : undefined
+      }
+      secondaryAction={{
+        icon: 'search',
+        label: 'Search',
+        onPress: () => router.push('/search'),
+      }}>
+      {view.key !== 'today' ? (
+        <UpcomingView days={view.days} />
+      ) : (
+        <ScrollView
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 20,
+            paddingBottom: 40,
+          }}
+          // ponytail: uses iOS overscroll bounce; Android has none, add a RefreshControl there if needed.
+          onScrollEndDrag={e =>
+            e.nativeEvent.contentOffset.y < -PULL_TO_CAPTURE &&
+            openTextCapture()
+          }
+          showsVerticalScrollIndicator={false}>
+          <Text
+            style={{
+              position: 'absolute',
+              top: -40,
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              color: designTokens.textTertiary,
+              fontSize: 13,
+            }}>
+            Pull to capture
+          </Text>
+          <WeekStrip
+            value={selectedDate}
+            onChange={setSelectedDate}
+            markedDays={markedDays}
+          />
+          <DayProgress day={selectedDate} />
 
-        {error ? (
-          <Text style={{color: designTokens.textSecondary, fontSize: 13, marginTop: 16}}>{error}</Text>
-        ) : null}
+          {error ? (
+            <Text
+              style={{
+                color: designTokens.textSecondary,
+                fontSize: 13,
+                marginTop: 16,
+              }}>
+              {error}
+            </Text>
+          ) : null}
 
-        {loading ? <FocusLoadingState /> : null}
+          {loading ? <FocusLoadingState /> : null}
 
-        {!loading && dayTasks.length === 0 ? (
-          <FocusEmptyState />
-        ) : null}
+          {!loading && dayTasks.length === 0 ? <FocusEmptyState allDone={progress.total > 0 && progress.done === progress.total} /> : null}
 
-        {!loading && !isToday && dayList.length > 0 ? (
-          <View style={{marginTop: 20}}>{dayList.map(renderRow)}</View>
-        ) : null}
+          {!loading && isToday && dayTasks.length === 0 ? <Suggestions /> : null}
 
-        {!loading && isToday && now ? (
-          <>
-            <SectionHeader label="Now" />
-            <SlideOut key={now.id} out={isLingering(now.id)}>
-              <Selectable item={now} onOpen={() => openTask(now)}>
-                {(select) => (
-                  <DoNowCard
-                    task={now}
-                    {...select}
-                    onComplete={() => complete(now)}
-                    onReschedule={() => openReschedule(now)}
-                    onDefer={() => postpone(now)}
-                  />
-                )}
-              </Selectable>
-            </SlideOut>
-          </>
-        ) : null}
+          {!loading && !isToday && dayList.length > 0 ? (
+            <View style={{marginTop: 20}}>{dayList.map(renderRow)}</View>
+          ) : null}
 
-        {!loading && isToday && next.length > 0 ? (
-          <CollapsibleSection label="Next" count={next.length}>
-            {next.map(renderRow)}
-          </CollapsibleSection>
-        ) : null}
+          {!loading && previewTasks.length > 0 ? (
+            <View style={{marginTop: dayList.length ? 0 : 20}}>
+              {previewTasks.map(task => <GhostRow key={`repeat-${task.id}`} task={task} />)}
+            </View>
+          ) : null}
 
-        {!loading && isToday && later.length > 0 ? (
-          <CollapsibleSection label="Later" count={later.length} defaultOpen={false}>
-            {later.map(renderRow)}
-          </CollapsibleSection>
-        ) : null}
-      </ScrollView>
+          {!loading && isToday && now ? (
+            <>
+              <SectionHeader label="Now" />
+              <SlideOut key={now.id} out={isLingering(now.id)}>
+                <Selectable item={now} onOpen={() => openTask(now)}>
+                  {select => (
+                    <DoNowCard
+                      task={now}
+                      {...select}
+                      onComplete={() => complete(now)}
+                      onReschedule={() => openReschedule(now)}
+                      onDefer={() => postpone(now)}
+                    />
+                  )}
+                </Selectable>
+              </SlideOut>
+              {freeNow ? <Suggestions count={1} /> : null}
+            </>
+          ) : null}
+
+          {!loading && isToday && next.length > 0 ? (
+            <CollapsibleSection label="Next" count={next.length}>
+              {next.map(renderRow)}
+            </CollapsibleSection>
+          ) : null}
+
+          {!loading && isToday && later.length > 0 ? (
+            <CollapsibleSection
+              label="Later"
+              count={later.length}
+              defaultOpen={false}>
+              {later.map(renderRow)}
+            </CollapsibleSection>
+          ) : null}
+        </ScrollView>
+      )}
 
       <DateSheet
         visible={dateSheetOpen}
         onClose={closeDateSheet}
         withTime={rescheduling !== null}
-        onSelect={(date) => {
+        onSelect={date => {
           if (rescheduling) {
             const task = rescheduling;
             runAction(() => rescheduleTask(task.id, date));

@@ -12,6 +12,7 @@ type TabScreenShellProps = {
   children: ReactNode;
   action?: HeaderAction;
   secondaryAction?: HeaderAction;
+  titleNode?: ReactNode;
 };
 
 type HeaderAction = {
@@ -20,7 +21,7 @@ type HeaderAction = {
   onPress: () => void;
 };
 
-export function TabScreenShell({title, children, action, secondaryAction}: TabScreenShellProps) {
+export function TabScreenShell({title, children, action, secondaryAction, titleNode}: TabScreenShellProps) {
   const {theme} = useThemeStore();
   const navigation = useNavigation();
   const pushed = navigation.getState()?.type === 'stack';
@@ -29,7 +30,7 @@ export function TabScreenShell({title, children, action, secondaryAction}: TabSc
     <SafeAreaView
       style={{flex: 1, backgroundColor: theme.colors.background}}
       edges={['top']}>
-      <LargeHeader title={title} action={action} secondaryAction={secondaryAction} onBack={pushed ? navigation.goBack : undefined} />
+      <LargeHeader title={title} action={action} secondaryAction={secondaryAction} titleNode={titleNode} onBack={pushed ? navigation.goBack : undefined} />
       <View style={{flex: 1}}>{children}</View>
     </SafeAreaView>
   );

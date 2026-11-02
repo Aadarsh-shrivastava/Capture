@@ -1,6 +1,8 @@
 import type {FocusQueue, FocusTask} from '@/models/focusTask';
 import {formatDueDateLabel} from '@/ui/formatDateTime';
 
+const dueAtHasTime = (dueAt: string | null) => Boolean(dueAt?.includes('T'));
+
 function parseDueDate(dueAt: string | null): Date | null {
   if (!dueAt?.trim()) return null;
   const parsed = new Date(dueAt.includes('T') ? dueAt : `${dueAt}T23:59:59`);
@@ -30,6 +32,7 @@ export function scoreFocusTask(task: FocusTask, now = Date.now()): number {
     const due = parseDueDate(task.dueAt);
     if (due) {
       const hoursUntil = (due.getTime() - now) / 3600000;
+      if (hoursUntil >= 0 && hoursUntil <= 1 && dueAtHasTime(task.dueAt)) score += 60; // about to start
       if (hoursUntil >= 0 && hoursUntil <= 24) score += 45;
       else if (hoursUntil >= 0 && hoursUntil <= 72) score += 25;
       else if (hoursUntil >= 0 && hoursUntil <= 168) score += 10;

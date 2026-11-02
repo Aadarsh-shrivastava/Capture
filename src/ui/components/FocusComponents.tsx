@@ -109,11 +109,14 @@ export function NextTaskRow({task, onPress, onLongPress}: NextTaskRowProps) {
 function emptyMessage(hour = new Date().getHours()): {title: string; body: string; pose: MascotPose} {
   if (hour < 12) return {title: 'Fresh start', body: "What's first today? Pull down or tap + to capture.", pose: 'wink'};
   if (hour < 18) return {title: 'Nothing pressing', body: 'Good moment to capture something you have been putting off.', pose: 'thinking'};
-  return {title: 'Quiet evening', body: 'Anything for tomorrow? Capture it now and sleep on a clear head.', pose: 'chibiSleeping'};
+  return {title: 'Quiet evening', body: 'Anything for tomorrow? Capture it now and sleep on a clear head.', pose: 'sleeping'};
 }
 
-export function FocusEmptyState() {
-  const message = emptyMessage();
+/** `allDone`: everything due today was completed — celebrate instead of "fresh start". */
+export function FocusEmptyState({allDone = false}: {allDone?: boolean}) {
+  const message = allDone
+    ? {title: "You're all done for today", body: "Everything's ticked off. Anything more for today? Tap + — or take the win.", pose: 'happy' as MascotPose}
+    : emptyMessage();
   return (
     <View style={{paddingVertical: 48, alignItems: 'center', gap: 8}}>
       <Mascot pose={message.pose} width={140} />

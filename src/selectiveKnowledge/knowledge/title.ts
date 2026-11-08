@@ -5,18 +5,18 @@ export const TITLE_KNOWLEDGE: KnowledgeEntry[] = [
     id: 'title.task',
     step: 'title',
     appliesTo: 'Task',
-    summary: 'Short action title, no dates or times.',
-    body: `Write a title for this task.
+    summary: 'A few of the user\'s own words naming the action.',
+    body: `Write a short title for this task using the user's own words.
 
 Rules:
-- 2 to 6 words, start with a verb.
-- Remove dates, times, urgency words and filler ("I need to", "tomorrow", "at 6 pm").
-- Keep the main action and object only.
+- 2 to 5 words. Start with the action.
+- Only words from the text. No new words.
+- Leave out dates, times, reminders and details ("tomorrow", "at 6 pm", "remind me", "and hit legs").
 
 Examples:
-"I need to go to gym tomorrow at 6 pm and hit legs" -> Go to gym
-"have to call mom tonight" -> Call mom
-"buy milk and eggs today its urgent" -> Buy milk and eggs
+"I need to pick up the dry cleaning tomorrow at 5 and pay the bill" -> Pick up dry cleaning
+"have to text sam tonight" -> Text Sam
+"eye checkup next tuesday, remind me a day before" -> Eye checkup
 
 Answer with the title only.`,
   },
@@ -24,14 +24,13 @@ Answer with the title only.`,
     id: 'title.subject',
     step: 'title',
     appliesTo: '*',
-    summary: 'Short subject for notes, journals and ideas.',
-    body: `Write a short title (2 to 6 words) naming the subject of the text.
-Do not copy the whole text. No quotes.
+    summary: 'A few of the user\'s own words naming the subject.',
+    body: `Write a short title (2 to 5 words) naming the subject, using the user's own words. No new words. No quotes.
 
 Examples:
-"Today was great, went hiking with friends" -> Hiking with friends
-"IDOR is when an app exposes object ids" -> IDOR vulnerability
-"what if the app suggested my next task" -> Next task suggestions
+"yesterday was calm, read a book all evening" -> Calm evening reading
+"my locker code is 4471" -> Locker code
+"what if the fridge could order milk" -> Fridge orders milk
 
 Answer with the title only.`,
   },

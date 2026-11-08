@@ -1,4 +1,4 @@
-import {bestTypeByKeywords, distinctiveWords, keywordScore, parseKeywords} from './typeKeywords';
+import {distinctiveWords, keywordScore, parseKeywords} from './typeKeywords';
 
 test('keyword answers are cleaned', () => {
   expect(parseKeywords('CV, resume,\ninterview; job offer, the, recruiter!')).toEqual(['cv', 'resume', 'interview', 'recruiter']);
@@ -11,10 +11,7 @@ test('distinctive words skip filler and urls', () => {
 const apply = {name: 'Apply', description: 'job applications', keywords: ['cv', 'resume', 'recruiter', 'google', 'amazon']};
 const reads = {name: 'Reads', description: 'articles to read later', keywords: ['article', 'blog', 'paper']};
 
-test('keyword scoring picks a clear winner only', () => {
+test('keyword scoring counts matching keywords', () => {
   expect(keywordScore(apply, 'send my cv to amazon')).toBe(2);
-  expect(bestTypeByKeywords([apply, reads], 'send my cv to amazon')?.name).toBe('Apply');
-  expect(bestTypeByKeywords([apply, reads], 'read this blog paper later')?.name).toBe('Reads');
-  expect(bestTypeByKeywords([apply, reads], 'buy milk')).toBeNull();
-  expect(bestTypeByKeywords([apply, reads], 'google')).toBeNull(); // one weak hit isn't enough
+  expect(keywordScore(reads, 'buy milk')).toBe(0);
 });

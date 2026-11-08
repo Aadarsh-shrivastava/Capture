@@ -1,20 +1,18 @@
 import moment from 'moment';
 import { useState } from 'react';
-import { Alert, Switch, Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 
 import { openDailyReview } from '@/dailyReview';
 import { useOnboardingPreview } from '@/onboarding';
 import { openWeeklyReview } from '@/weeklyReview';
 import { runReminderJobNow } from '@/notifications';
 import { makeAllDue } from '@/resurface';
-import { useSelectiveKnowledgeStore } from '@/selectiveKnowledge/store';
 import { useAppStyles } from '@/ui/appStyles';
 import { PrimaryButton } from '@/ui/components/Primitives';
 
 /** Dev-only tools. Add new test buttons and experimental switches here. */
 export function DevPanel({ onClose }: { onClose: () => void }) {
   const styles = useAppStyles();
-  const selective = useSelectiveKnowledgeStore();
   const [running, setRunning] = useState(false);
 
   async function runReminderJob() {
@@ -74,16 +72,6 @@ export function DevPanel({ onClose }: { onClose: () => void }) {
           setTimeout(() => useOnboardingPreview.getState().setPreview(true), 350);
         }} />
 
-        <Text style={styles.sectionLabel}>Capture</Text>
-        <View style={[styles.row, { flexDirection: 'row', alignItems: 'center', gap: 14 }]}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.rowTitle}>Agentic capture (selective knowledge)</Text>
-            <Text style={styles.rowMeta}>
-              On by default. Off = old single-prompt parser. Resets on app restart.
-            </Text>
-          </View>
-          <Switch value={selective.enabled} onValueChange={selective.setEnabled} />
-        </View>
     </View>
   );
 }

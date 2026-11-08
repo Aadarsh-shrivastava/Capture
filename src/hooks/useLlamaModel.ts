@@ -1,13 +1,8 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
 import {Platform} from 'react-native';
-import RNFS from 'react-native-fs';
 import {initLlama, type LlamaContext} from 'llama.rn';
+import {create} from 'zustand';
 
-import {vaultPaths} from '@/vault';
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const BUNDLED_MODEL = require('../../llm-models/qwen-q4_k_m.gguf');
-const MODEL_NAME = 'qwen-q4_k_m.gguf';
+import {isModelDownloaded, modelPath} from '@/model';
 
 export const LLM_STOP_WORDS = [
   '</s>',
@@ -19,145 +14,111 @@ export const LLM_STOP_WORDS = [
   '<|im_start|>',
 ];
 
-function resolveBundledModelUri(): string {
-  const resolveAssetSource =
-    require('react-native/Libraries/Image/resolveAssetSource') as (
-      asset: number,
-    ) => {uri?: string};
-  const source = resolveAssetSource(BUNDLED_MODEL);
-  if (!source?.uri) {
-    throw new Error('Could not resolve bundled model asset');
-  }
-  return source.uri;
-}
-
-async function copyBundledModelTo(dest: string, bundledUri: string): Promise<void> {
-  if (bundledUri.startsWith('http://') || bundledUri.startsWith('https://')) {
-    const result = await RNFS.downloadFile({fromUrl: bundledUri, toFile: dest}).promise;
-    if (result.statusCode !== 200) {
-      throw new Error(`Model download failed (${result.statusCode})`);
-    }
-    return;
-  }
-
-  const fromPath = bundledUri.replace(/^file:\/\//, '');
-  await RNFS.copyFile(fromPath, dest);
-}
-
-async function ensureModelOnDisk(): Promise<string> {
-  const dest = `${vaultPaths().models}/${MODEL_NAME}`;
-  if (await RNFS.exists(dest)) {
-    return dest;
-  }
-
-  const bundledUri = resolveBundledModelUri();
-  await copyBundledModelTo(dest, bundledUri);
-  return dest;
-}
+/** Free the model's ~400 MB after this long without use; the next capture loads it again. */
+const IDLE_RELEASE_MS = 60_000;
 
 type CompletionMessage = {role: 'system' | 'user' | 'assistant'; content: string};
 
-export function useLlamaModel() {
-  const contextRef = useRef<LlamaContext | null>(null);
-  const [status, setStatus] = useState('Model not loaded');
-  const [loadPct, setLoadPct] = useState(0);
-  const [ready, setReady] = useState(false);
-  const [busy, setBusy] = useState(false);
+/**
+ * One model for the whole app (text and voice capture used to load a copy each).
+ * Module state, not React state: every hook instance shares the same context.
+ */
+let context: LlamaContext | null = null;
+let loading: Promise<boolean> | null = null;
+let idleTimer: ReturnType<typeof setTimeout> | undefined;
 
-  useEffect(() => {
-    return () => {
-      contextRef.current?.release().catch(() => {});
-    };
-  }, []);
+const useLlamaStore = create<{status: string; loadPct: number; ready: boolean; busy: boolean}>(() => ({
+  status: 'Model not loaded',
+  loadPct: 0,
+  ready: false,
+  busy: false,
+}));
+const setState = useLlamaStore.setState;
 
-  const loadModel = useCallback(async () => {
+/** Restart the idle countdown (on load and after every completion). */
+function touch() {
+  if (idleTimer) clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => {
+    if (useLlamaStore.getState().busy) return touch(); // mid-capture: check again later
+    const ctx = context;
+    context = null;
+    setState({ready: false, status: 'Model released (idle)'});
+    ctx?.release().catch(() => {});
+  }, IDLE_RELEASE_MS);
+}
+
+/** Load once (concurrent callers share the same load). False when the model isn't downloaded or fails. */
+export function ensureLoaded(): Promise<boolean> {
+  if (context) {
+    touch();
+    return Promise.resolve(true);
+  }
+  if (loading) return loading;
+  loading = (async () => {
     try {
-      setReady(false);
-      setStatus('Unpacking model if needed…');
-      const modelPath = await ensureModelOnDisk();
-
-      if (contextRef.current) {
-        await contextRef.current.release();
-        contextRef.current = null;
+      if (!(await isModelDownloaded())) {
+        setState({status: 'AI model not downloaded yet'});
+        return false;
       }
-
-      setStatus('Loading model…');
-      setLoadPct(0);
-
-      const ctx = await initLlama(
-        {
-          model: modelPath,
-          n_ctx: 2048,
-          n_gpu_layers: Platform.OS === 'ios' ? 99 : 0,
-          use_mlock: true,
-        },
-        p => setLoadPct(Math.round(p * 100)),
+      setState({status: 'Loading model…', loadPct: 0});
+      context = await initLlama(
+        {model: modelPath(), n_ctx: 2048, n_gpu_layers: Platform.OS === 'ios' ? 99 : 0, use_mlock: true},
+        p => setState({loadPct: Math.round(p * 100)}),
       );
-
-      contextRef.current = ctx;
-      setReady(true);
-      setStatus(`Ready · GPU: ${ctx.gpu ? 'yes' : 'no'}`);
+      setState({ready: true, status: `Ready · GPU: ${context.gpu ? 'yes' : 'no'}`});
+      touch();
+      return true;
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : String(e));
-      setReady(false);
+      setState({ready: false, status: e instanceof Error ? e.message : String(e)});
+      return false;
+    } finally {
+      loading = null;
     }
-  }, []);
+  })();
+  return loading;
+}
 
-  const complete = useCallback(
-    async (
-      messages: CompletionMessage[],
-      onToken?: (text: string) => void,
-      nPredict = 512,
-    ): Promise<string> => {
-      if (!contextRef.current) {
-        throw new Error('Model not loaded');
-      }
+let lock: Promise<unknown> = Promise.resolve();
 
-      setBusy(true);
-      let out = '';
+/** One completion at a time: the capture queue and a new capture's split share one context. */
+/** `grammar` (GBNF) restricts the answer to fixed forms, e.g. one of four type names. */
+export function complete(messages: CompletionMessage[], onToken?: (text: string) => void, nPredict = 512, grammar?: string): Promise<string> {
+  const run = lock.then(() => runCompletion(messages, onToken, nPredict, grammar));
+  lock = run.catch(() => {});
+  return run;
+}
 
-      try {
-        const result = await contextRef.current.completion(
-          {
-            messages,
-            n_predict: nPredict,
-            stop: LLM_STOP_WORDS,
-            jinja: true,
-            enable_thinking: false,
-          },
-          t => {
-            if (t.content) {
-              out = t.content;
-            } else if (t.accumulated_text) {
-              out = t.accumulated_text;
-            } else if (t.token) {
-              out += t.token;
-            }
-            if (out && onToken) {
-              onToken(out);
-            }
-          },
-        );
+async function runCompletion(messages: CompletionMessage[], onToken?: (text: string) => void, nPredict = 512, grammar?: string): Promise<string> {
+  if (!(await ensureLoaded()) || !context) throw new Error('Model not loaded');
+  setState({busy: true});
+  let out = '';
+  try {
+    const result = await context.completion(
+      {messages, n_predict: nPredict, stop: LLM_STOP_WORDS, jinja: true, enable_thinking: false, ...(grammar ? {grammar} : {})},
+      t => {
+        if (t.content) out = t.content;
+        else if (t.accumulated_text) out = t.accumulated_text;
+        else if (t.token) out += t.token;
+        if (out && onToken) onToken(out);
+      },
+    );
+    const reply = result.content?.trim() || result.text?.trim() || out.trim() || '';
+    if (!reply && result.tokens_predicted === 0) {
+      throw new Error(`No tokens generated (stopped: ${result.stopping_word || 'unknown'})`);
+    }
+    return reply;
+  } finally {
+    setState({busy: false});
+    touch();
+  }
+}
 
-        const reply =
-          result.content?.trim() ||
-          result.text?.trim() ||
-          out.trim() ||
-          '';
+const loadModel = async () => {
+  await ensureLoaded();
+};
 
-        if (!reply && result.tokens_predicted === 0) {
-          throw new Error(
-            `No tokens generated (stopped: ${result.stopping_word || 'unknown'})`,
-          );
-        }
-
-        return reply;
-      } finally {
-        setBusy(false);
-      }
-    },
-    [],
-  );
-
-  return {status, loadPct, ready, busy, loadModel, complete};
+/** Shared on-device model. `ensureLoaded` loads on demand, so a capture uses it even after an idle release. */
+export function useLlamaModel() {
+  const {status, loadPct, ready, busy} = useLlamaStore();
+  return {status, loadPct, ready, busy, loadModel, ensureLoaded, complete};
 }

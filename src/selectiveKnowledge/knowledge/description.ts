@@ -2,16 +2,17 @@ import type {KnowledgeEntry} from './index';
 
 export const DESCRIPTION_KNOWLEDGE: KnowledgeEntry[] = [
   {
-    id: 'description.task',
+    id: 'description.fix',
     step: 'description',
-    appliesTo: 'Task',
-    summary: 'Extra task detail not already in the title or date.',
-    body: `Write a one-sentence description with details that are NOT in the title and NOT a date or time.
+    appliesTo: '*',
+    summary: "The user's sentence with its grammar fixed — nothing added.",
+    body: `Rewrite the user's text as a clean sentence: fix grammar, spelling, capitals and punctuation.
+Keep every detail and keep their words. Do not add anything, do not explain, do not summarise.
 
 Examples:
-"go to gym tomorrow at 6 pm and hit those leg muscles" (title: Go to gym) -> Focus on leg muscles.
-"call mom tonight" (title: Call mom) -> NONE
+"need to pick up dry cleaning tmrw at 5 and pay the bil" -> Need to pick up the dry cleaning tomorrow at 5 and pay the bill.
+"yesterday was calm read a book all evening" -> Yesterday was calm; I read a book all evening.
 
-If there is nothing extra, answer NONE. Answer with the description only.`,
+Answer with the sentence only.`,
   },
 ];

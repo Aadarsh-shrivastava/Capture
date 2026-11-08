@@ -4,9 +4,10 @@ import { useFonts } from 'expo-font';
 import { useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+import { ModelGate } from '@/model';
 import { AppShell } from '@/navigation/AppShell';
 import { OnboardingFlow, useOnboardingPreview } from '@/onboarding';
 import { DatabaseProvider } from '@/providers/DatabaseProvider';
@@ -30,14 +31,18 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{flex: 1}}>
-      <SafeAreaProvider>
+      {/* Known insets from the first frame, so nothing renders under the status bar and then jumps. */}
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <GluestackUIProvider mode="dark">
           {hasVault && !preview.preview ? (
-            <DatabaseProvider>
-              <NavigationContainer>
-                <AppShell />
-              </NavigationContainer>
-            </DatabaseProvider>
+            // The model downloads into the vault, so it's asked for once the vault exists.
+            <ModelGate>
+              <DatabaseProvider>
+                <NavigationContainer>
+                  <AppShell />
+                </NavigationContainer>
+              </DatabaseProvider>
+            </ModelGate>
           ) : (
             <OnboardingFlow
               preview={preview.preview}

@@ -13,11 +13,11 @@ export type BehaviorStep = {
   maxTokens: number;
   /** Cheap check on the raw text; no signal = no model call at all. */
   gate: (text: string) => boolean;
-  /** Turn an answer (or, as fallback, the raw text) into behavior data. */
+  /** Turn the model's answer into behavior data. */
   parse: (answer: string) => Parsed;
   describe: (data: Record<string, string>) => string;
-  /** Parse the raw text when the model call fails. Off where text-splitting is too unreliable. */
-  textFallback?: boolean;
+  /** GBNF for the answer's form, so the small model can only pick, not ramble. */
+  grammar?: string;
 };
 
 const WEEKDAYS: Record<string, number> = {sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6};
@@ -30,7 +30,7 @@ export function parseRepeat(answer: string): Parsed {
     ? [1, 2, 3, 4, 5]
     : /\bweekends?\b/.test(lower)
       ? [0, 6]
-      : [...new Set((lower.match(/\b(sun|mon|tue|wed|thu|fri|sat)[a-z]*/g) ?? []).map(d => WEEKDAYS[d.slice(0, 3)]))];
+      : [...new Set((lower.match(/\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tues?|wed|thu(?:rs?)?|fri|sat)s?\b/g) ?? []).map(d => WEEKDAYS[d.slice(0, 3)]))];
   const unit = days.length ? 'week' : inferRepeatUnit(lower);
   return {interval_value: '1', interval_unit: unit, days: encode(unit === 'week' ? days.sort() : [])};
 }
@@ -70,41 +70,13 @@ export function parseWeight(answer: string): Parsed {
 
 export const BEHAVIOR_STEPS: BehaviorStep[] = [
   {
-    behavior: 'Repeatable',
-    step: 'repeat',
-    label: 'repeats',
-    maxTokens: 16,
-    gate: t => /\b(every|daily|weekly|monthly|each|weekdays?|weekends?|routine|habit)\b/i.test(t),
-    parse: parseRepeat,
-    describe: d => (d.days && d.days !== '[]' ? `weekly on ${d.days}` : d.interval_unit === 'day' ? 'daily' : `${d.interval_unit}ly`),
-  },
-  {
-    behavior: 'Remindable',
-    step: 'remind',
-    label: 'remind',
-    maxTokens: 16,
-    gate: t => /\b(remind|ping|alert|notify|heads.?up|before)\b/i.test(t),
-    parse: parseRemind,
-    describe: d => `${d.offsets} min before`,
-  },
-  {
-    behavior: 'Divisible',
-    step: 'steps',
-    label: 'steps',
-    maxTokens: 64,
-    gate: t => /[:,;]|\bthen\b|\bsteps?\b|\n/i.test(t),
-    parse: parseSteps,
-    describe: d => `${JSON.parse(d.steps).length} steps`,
-    textFallback: false,
-  },
-  {
     behavior: 'Memorable',
     step: 'memorable',
     label: 'comes back',
     maxTokens: 4,
     gate: () => true,
     parse: parseWeight,
+    grammar: 'root ::= "often" | "sometimes" | "rarely" | "never"',
     describe: d => ({'3': 'often', '2': 'sometimes', '1': 'rarely', '0': 'never'})[d.weight] ?? 'auto',
-    textFallback: false,
   },
 ];

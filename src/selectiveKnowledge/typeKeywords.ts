@@ -53,14 +53,3 @@ export function keywordScore(type: Scorable, text: string): number {
   const nameHits = tokens(type.name).filter(w => !STOPWORDS.has(w) && hit(w)).length;
   return nameHits * 2 + [...hints].filter(hit).length;
 }
-
-/**
- * The custom type the text clearly points to by keywords: score ≥ 2 and strictly ahead of the next one.
- * Deterministic, so it works without the model and when the model hedges with NONE.
- */
-export function bestTypeByKeywords<T extends Scorable>(types: T[], text: string): T | null {
-  const ranked = types.map(t => ({t, score: keywordScore(t, text)})).sort((a, b) => b.score - a.score);
-  const [first, second] = ranked;
-  if (!first || first.score < 2 || (second && second.score === first.score)) return null;
-  return first.t;
-}

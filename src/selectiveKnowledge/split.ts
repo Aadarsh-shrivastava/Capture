@@ -4,7 +4,7 @@ import {findKnowledge} from './knowledge';
 const MAX_PARTS = 8;
 const words = (s: string) => s.toLowerCase().match(/[a-z0-9']+/g) ?? [];
 
-/** Without a model: only explicit separators split — one thought per line (bullets/numbers stripped). */
+/** One thought per line (bullets/numbers stripped): a list the user typed, or the model's answer. */
 export function splitByLines(text: string): string[] {
   return text
     .split('\n')
@@ -32,15 +32,14 @@ export function parseSplit(answer: string, text: string): string[] | null {
   return faithful && coverage >= 0.7 ? lines : null;
 }
 
-/** Worth asking the model: several sentences or a "btw/also" turn. One short sentence never splits. */
-const mightBeSeveral = (text: string) =>
-  words(text).length >= 8 && (/[.!?;]\s+\S/.test(text) || /\b(btw|by the way|also|another thing|oh and|and then)\b/i.test(text));
+/** Too short to hold two thoughts — not worth a model call. Spoken run-ons have no punctuation, so length is the only signal. */
+const MIN_WORDS_TO_SPLIT = 6;
 
-/** One capture → its separate thoughts (at least one: the text itself). */
-export async function splitThoughts(text: string, complete?: Complete): Promise<string[]> {
+/** One capture → its separate thoughts (at least one: the text itself). A list the user typed is taken as-is; the model splits the rest. */
+export async function splitThoughts(text: string, complete: Complete): Promise<string[]> {
   const lines = splitByLines(text);
   if (isList(lines)) return lines;
-  if (lines.length > 1 || !complete || !mightBeSeveral(text)) return [text];
+  if (lines.length > 1 || words(text).length < MIN_WORDS_TO_SPLIT) return [text];
   try {
     const answer = await complete(
       [

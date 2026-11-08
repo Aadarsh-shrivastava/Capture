@@ -15,10 +15,12 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import { Pressable } from '@/ui/HapticPressable';
 import {type CaptureFlowStep} from '@/capture/captureFlow';
-import {useCaptureAnalysis} from '@/hooks/useCaptureAnalysis';
+import {CAPTURED_DONE_MS, CapturedDone} from '@/capture/CapturedDone';
+import {enqueue} from '@/capture/queue';
+import {splitCapture, useCaptureAnalysis} from '@/hooks/useCaptureAnalysis';
 import {Mascot} from '@/mascot';
+import {useModelStore} from '@/model';
 import {ThoughtTicker} from '@/motion';
-import {saveCaptures} from '@/services/saveCaptures';
 import {designTokens} from '@/ui/designTokens';
 import {useThemeStore} from '@/store/themeStore';
 
@@ -42,22 +44,36 @@ export function CaptureFlowModal({
   const {theme} = useThemeStore();
   const {colors, spacing} = theme;
   const insets = useSafeAreaInsets();
-  const {ready, analyzing, loadModel, analyzeMany, preloadModel} = useCaptureAnalysis();
+  const {ready, loadModel, preloadModel} = useCaptureAnalysis();
 
   const [input, setInput] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<CaptureFlowStep>(step);
   const [steps, setSteps] = useState<string[]>([]);
+  /** Set once queued: shows the "Captured" moment, then the modal closes itself. */
+  const [doneCount, setDoneCount] = useState<number | null>(null);
+  const model = useModelStore();
+  // Only this screen's split step — the model itself may be busy with the queue, which never blocks a capture.
+  const analyzing = currentStep === 'analyzing';
 
   useEffect(() => {
-    if (visible) preloadModel();
+    if (!visible) return;
+    preloadModel();
+    model.check().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- check once per open
   }, [visible, preloadModel]);
+
+  /** Missing model: download (on request only), then load. */
+  async function getModel() {
+    if (model.status === 'ready' || (await model.download())) await loadModel();
+  }
 
   useEffect(() => {
     if (!visible) {
       setInput('');
       setError(null);
       setCurrentStep('text');
+      setDoneCount(null);
       return;
     }
 
@@ -65,7 +81,7 @@ export function CaptureFlowModal({
     setInput(initialText);
   }, [visible, step, initialText]);
 
-  /** Analyze (one item per thought), save straight away, close. Edits happen later from the item itself. */
+  /** Split into thoughts, queue them, show "Captured", close. The queue analyzes and saves in the background. */
   async function handleCapture() {
     const text = input.trim();
     if (!text || analyzing) return;
@@ -73,16 +89,17 @@ export function CaptureFlowModal({
     setCurrentStep('analyzing');
     setSteps([]);
     try {
-      const drafts = await analyzeMany(text, setSteps);
-      await saveCaptures(groupName ? drafts.map(d => ({...d, groupNames: [groupName]})) : drafts);
-      onClose();
+      const parts = await splitCapture(text);
+      await enqueue(parts, groupName);
+      setDoneCount(parts.length);
+      setTimeout(onClose, CAPTURED_DONE_MS);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setCurrentStep('text');
     }
   }
 
-  const headerTitle = currentStep === 'text' ? 'Type capture' : 'Capturing…';
+  const headerTitle = currentStep === 'text' ? 'Type capture' : doneCount !== null ? '' : 'Capturing…';
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
@@ -140,17 +157,26 @@ export function CaptureFlowModal({
               {!ready ? (
                 <Pressable
                   style={[styles.btnSecondary, {borderColor: colors.border}]}
-                  onPress={loadModel}
-                  disabled={analyzing}>
+                  onPress={getModel}
+                  disabled={analyzing || model.status === 'downloading'}>
                   <Text style={[styles.btnSecondaryText, {color: colors.onSurface}]}>
-                    {analyzing ? 'Loading model…' : 'Load AI model (optional)'}
+                    {model.status === 'downloading'
+                      ? `Downloading AI model… ${model.pct}%`
+                      : analyzing
+                        ? 'Loading model…'
+                        : model.status === 'ready'
+                          ? 'Load AI model (optional)'
+                          : 'Download AI model (optional)'}
                   </Text>
                 </Pressable>
               ) : null}
+              {model.error ? <Text style={styles.error}>{model.error}</Text> : null}
             </>
           ) : null}
 
-          {currentStep === 'analyzing' ? (
+          {doneCount !== null ? <CapturedDone count={doneCount} /> : null}
+
+          {currentStep === 'analyzing' && doneCount === null ? (
             <View style={styles.analyzingBox}>
               <Mascot pose="thinking" width={120} />
               <Text style={[styles.analyzingText, {color: colors.onSurfaceVariant}]}>

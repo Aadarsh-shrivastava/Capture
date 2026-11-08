@@ -28,5 +28,7 @@ test('one short thought never calls the model', async () => {
 
 test('a long pasted note stays one item', async () => {
   const note = `${'a long paragraph about something '.repeat(6)}\n${'and another long paragraph '.repeat(6)}`;
-  expect(await splitThoughts(note)).toEqual([note]);
+  const model = jest.fn(async () => 'NONE');
+  expect(await splitThoughts(note, model)).toEqual([note]);
+  expect(model).not.toHaveBeenCalled();
 });

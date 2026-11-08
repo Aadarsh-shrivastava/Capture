@@ -5,16 +5,26 @@ export const SPLIT_KNOWLEDGE: KnowledgeEntry[] = [
     id: 'split.thoughts',
     step: 'split',
     appliesTo: '*',
-    summary: 'Split a brain dump into separate thoughts.',
-    body: `Split the text into separate thoughts, one per line. Copy the user's words; do not add, explain or number.
-A thought is one task, question, idea or note. Sentences about the same thing stay together on one line.
-A journal entry or a note about one topic is ONE line.
+    summary: 'Split a brain dump only where the topics are unrelated.',
+    body: `Split the text into separate items ONLY where the user talks about completely unrelated things.
+Copy the user's words; do not add, explain or number. One item per line.
 
-Example:
-need protein shake before gym. btw what does xyz mean. must apply to jobs, running out of time
+Keep together (ONE line):
+- details of the same task: "go to the gym and do chest day" is one task
+- steps of one plan: "book the hotel and pack the bags for the trip"
+- a story about one day or one feeling
+
+Split (separate lines): things that have nothing to do with each other: "go to the gym, withdraw cash".
+
+Examples:
+go to the gym and do chest day
 →
-need protein shake before gym
-what does xyz mean
-must apply to jobs, running out of time`,
+go to the gym and do chest day
+
+go to the gym and withdraw cash, also what is a hash map
+→
+go to the gym
+withdraw cash
+what is a hash map`,
   },
 ];

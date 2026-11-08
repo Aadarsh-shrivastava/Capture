@@ -1,21 +1,22 @@
-import {typeHasBehavior} from '@/domain/behaviorTypeConfig';
+import {withBehavior} from '@/behaviors/data';
 import {inferDueAtFromText} from '@/capture/captureDateContext';
-import {analyzeCaptureText} from '@/capture/captureHeuristics';
-import {CAPTURE_TYPE_NAMES, type CaptureItemDraft} from '@/capture/captureItemDraft';
+import type {CaptureItemDraft} from '@/capture/captureItemDraft';
+import {getDefaultBehaviorsForType, typeAllowsBehavior, typeHasBehavior} from '@/domain/behaviorTypeConfig';
+import {ITEM_MASCOT_KEYS, ITEM_MASCOTS, isItemMascot} from '@/mascot/itemMascots';
 import type {ItemTypeName} from '@/ui/itemTypeConfig';
 
-import {withBehavior} from '@/behaviors/data';
-import {typeAllowsBehavior} from '@/domain/behaviorTypeConfig';
-
 import {BEHAVIOR_STEPS} from './behaviorSteps';
+import {extractRemind, extractRepeat, extractSteps, firstOccurrence, inventedWords, stripDates} from './extract';
 import {findKnowledge, type KnowledgeStep} from './knowledge';
 import {STOPWORDS} from './stopwords';
-import {bestTypeByKeywords} from './typeKeywords';
 
 type Message = {role: 'system' | 'user'; content: string};
 
 /** Same shape as useLlamaModel().complete, so the agent stays independent of the hook. */
-export type Complete = (messages: Message[], onToken?: undefined, nPredict?: number) => Promise<string>;
+export type Complete = (messages: Message[], onToken?: undefined, nPredict?: number, grammar?: string) => Promise<string>;
+
+/** GBNF that only allows one of these exact answers. */
+export const oneOf = (options: string[]) => `root ::= ${options.map(o => JSON.stringify(o)).join(' | ')}`;
 
 export type GroupHint = {name: string; description?: string | null; keywords?: string[]};
 
@@ -76,10 +77,31 @@ function isEmpty(answer: string): boolean {
   return NONE_RE.test(answer.replace(/\.$/, ''));
 }
 
+const URL_RE = /https?:\/\/[^\s<>"{}|\\^`[\]]+/i;
+
+/** The model gave no usable type: the caller retries later, or saves the raw thought. */
+export class NoTypeError extends Error {}
+
+/** "I need to", "remind me to"… — how people start a task, not part of its title. */
+const LEADING_FILLER = /^(?:(?:i\s+)?(?:need|have|got|want)\s+to|(?:i\s+)?(?:must|should)|remind\s+me\s+to|don'?t\s+forget\s+to|(?:urgent|important)\s*[:,-]?)\s+/i;
+
+const sentenceCase = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
+
+/** Title from the user's own words when the model's can't be used: no dates, no "I need to", first six words. */
+export function titleFromText(text: string): string {
+  const core = stripDates(text).replace(LEADING_FILLER, '').split(/[.!?\n,;:]/)[0];
+  const kept = core.split(/\s+/).slice(0, 6);
+  // Don't end on "the", "in", "and"…
+  while (kept.length > 1 && /^(the|a|an|in|on|at|to|of|for|and|or|with|my|your)$/i.test(kept[kept.length - 1])) kept.pop();
+  return sentenceCase(kept.join(' ')) || sentenceCase(text.slice(0, 60));
+}
+
 /**
- * Multi-step capture: each step reads one small knowledge file and answers one question.
- * The journey (one line per finished step) is fed to the next step instead of a big prompt.
- * Any step that fails or answers badly falls back to the rule-based heuristics for that field.
+ * Capture agent for ONE thought (the dump was already split). Steps, in order:
+ * type → title → description → sticker (model), then date / repeat / reminder / steps / link read from the user's words (code),
+ * then priority and group (model). The model only picks from fixed lists or rewrites the user's own words, and every
+ * rewrite is checked: one that adds words the user never said is thrown away. Each prompt sees only its own
+ * question and the text — earlier answers are logged in the journey, never fed back (the model echoed them).
  */
 export async function runSelectiveAgent(
   text: string,
@@ -92,19 +114,16 @@ export async function runSelectiveAgent(
     onStep?.([...journey]);
   };
 
-  async function ask(step: KnowledgeStep, type: ItemTypeName | undefined, maxTokens: number, extra = '') {
-    const knowledge = findKnowledge(step, type);
-    const progress = journey.length
-      ? `\n\nAlready decided:\n${journey.map(line => `- ${line}`).join('\n')}`
-      : '';
+  async function ask(step: KnowledgeStep, type: ItemTypeName | undefined, maxTokens: number, extra = '', grammar?: string) {
     try {
       const raw = await complete(
         [
-          {role: 'system', content: knowledge.body + extra + progress},
+          {role: 'system', content: findKnowledge(step, type).body + extra},
           {role: 'user', content: text},
         ],
         undefined,
         maxTokens,
+        grammar,
       );
       return cleanAnswer(raw);
     } catch {
@@ -112,71 +131,106 @@ export async function runSelectiveAgent(
     }
   }
 
-  // 1. Type — first the 4 built-ins (small, reliable choice)…
-  const typeAnswer = (await ask('type', undefined, 8)).toLowerCase();
-  const pickedType = CAPTURE_TYPE_NAMES.find(t => typeAnswer.includes(t.toLowerCase()));
-  const builtIn = pickedType ?? analyzeCaptureText(text, undefined, now).typeName;
+  // 1. Type — something to do? → Task. Otherwise: information → Note, thinking out loud → Idea, already happened → Journal.
+  const isTask = await ask('isTask', undefined, 2, '', oneOf(['yes', 'no']));
+  if (!isTask) throw new NoTypeError('No answer to "is it a task"');
+  const builtIn = (isTask === 'yes' ? 'Task' : await ask('kind', undefined, 4, '', oneOf(['Note', 'Idea', 'Journal']))) as ItemTypeName;
+  if (!['Task', 'Note', 'Idea', 'Journal'].includes(builtIn)) throw new NoTypeError(`No type in model answer "${builtIn}"`);
   let typeName: string = builtIn;
 
-  // …then offer the user's own types that share a word with the text (any kind — a link can make
-  // step 1 say "Note" for what is really a doable "Apply"). Each comes with its description and abilities.
+  // …then the user's own types that share a word with the text, picked from a fixed list.
   const candidates = types.filter(t => hintFitsText(t, text));
   if (candidates.length > 0) {
     const list = candidates.map(t => `- ${t.name}: ${describeType(t)}`).join('\n');
-    const custom = matchGroup(await ask('customType', undefined, 12, `\n\nTypes:\n${list}`), candidates, text);
-    // Model hedged (NONE / garbled)? A clear keyword winner still decides.
-    typeName = custom ?? bestTypeByKeywords(candidates, text)?.name ?? typeName;
+    const answer = await ask('customType', undefined, 12, `\n\nTypes:\n${list}`, oneOf([...candidates.map(t => t.name), 'NONE']));
+    typeName = matchGroup(answer, candidates, text) ?? typeName;
   }
-  log(`type: ${typeName}${typeName !== builtIn ? ` (your type, like ${builtIn})` : pickedType ? '' : ' (heuristic)'}`);
+  log(`type: ${typeName}${typeName !== builtIn ? ` (your type, like ${builtIn})` : ''}`);
 
-  // Guides are chosen by behavior, so custom doable types get task-style titles/descriptions.
-  const guideType = typeHasBehavior(typeName, 'Doable') ? 'Task' : typeName;
+  // Guides are chosen by behavior, so custom doable types get task-style titles.
+  const doable = typeHasBehavior(typeName, 'Doable');
+  const guideType = doable ? 'Task' : typeName;
 
-  // Heuristic draft for this type: fallback for every later step + tags, groups, behaviors.
-  const base = analyzeCaptureText(text, {typeName}, now);
+  // 2. Title — a few of the user's words. Dates are stripped (they live in the due date); a title with new words is rejected.
+  const titleAnswer = stripDates(await ask('title', guideType, 16));
+  const titleOk = titleAnswer.length > 0 && titleAnswer.length <= 50 && titleAnswer.split(/\s+/).length <= 6 && inventedWords(titleAnswer, text).length === 0;
+  const title = titleOk ? sentenceCase(titleAnswer.replace(/[.!]+$/, '')) : titleFromText(text);
+  log(`title: ${title}${titleOk ? '' : ' (from your words)'}`);
 
-  // 2. Title
-  const titleAnswer = await ask('title', guideType, 24);
-  const titleOk = titleAnswer && !isEmpty(titleAnswer) && titleAnswer.length <= 60;
-  const title = titleOk ? titleAnswer : base.title;
-  log(`title: ${title}${titleOk ? '' : ' (heuristic)'}`);
+  // 3. Description — the whole thought with its grammar fixed. Adds a word the user never said → their exact words instead.
+  const fixed = await ask('description', undefined, Math.min(160, text.length + 40));
+  const fixedOk = fixed.length > 0 && !isEmpty(fixed) && inventedWords(fixed, text).length === 0;
+  const description = fixedOk ? fixed : sentenceCase(text.trim());
+  // Nothing beyond the title (e.g. "buy groceries"): no description.
+  const content = inventedWords(description, title).length === 0 ? null : description;
+  log(`description: ${content ? content.slice(0, 60) : 'none'}${content && !fixedOk ? ' (your words)' : ''}`);
 
-  // 3. Description — only tasks get a model-written one; other types keep the full text.
-  let content = base.content ?? null;
-  if (typeHasBehavior(typeName, 'Doable')) {
-    const answer = await ask('description', guideType, 48);
-    content = answer && !isEmpty(answer) ? answer : null;
+  // 4. Sticker — one of the 20 poses on the tasks sheet, fixed choice.
+  const stickers = ITEM_MASCOT_KEYS.map(k => `- ${k}: ${ITEM_MASCOTS[k]}`).join('\n');
+  const sticker = await ask('mascot', undefined, 4, `\n\nStickers:\n${stickers}`, oneOf([...ITEM_MASCOT_KEYS]));
+  const mascot = isItemMascot(sticker) ? sticker : null;
+  log(`sticker: ${mascot ?? 'none'}`);
+
+  let draft: CaptureItemDraft = {
+    typeName: typeName as ItemTypeName,
+    title,
+    content,
+    mascot,
+    urgency: null,
+    importance: null,
+    tagNames: [],
+    groupNames: [],
+    optionalBehaviorNames: [],
+    behaviorData: {},
+  };
+
+  if (doable) {
+    // 5. Facts the user said, read from their words: due date, repeat, reminder, steps.
+    const repeat = typeAllowsBehavior(typeName, 'Repeatable') ? extractRepeat(text) : null;
+    let dueAt = inferDueAtFromText(text, now);
+    if (!dueAt && repeat) dueAt = firstOccurrence(repeat, now); // a repeat needs a first day to roll forward from
+    draft.behaviorData = {Doable: {status: 'pending', due_at: dueAt, estimated_minutes: ''}};
+    log(`due: ${dueAt || 'none'}`);
+    const facts: [string, Record<string, string> | null][] = [
+      ['Repeatable', repeat],
+      ['Remindable', extractRemind(text)],
+      ['Divisible', extractSteps(text)],
+    ];
+    for (const [behavior, data] of facts) {
+      if (data && typeAllowsBehavior(typeName, behavior)) {
+        draft = withBehavior(draft, behavior, data);
+        log(`${behavior}: ${JSON.stringify(data)}`);
+      }
+    }
+
+    // 6. Priority — fixed choice.
+    const priority = await ask('priority', typeName, 4, '', oneOf(['urgent', 'important', 'both', 'normal']));
+    draft.urgency = /urgent|both/.test(priority) ? 5 : null;
+    draft.importance = /important|both/.test(priority) ? 5 : null;
+    log(`priority: ${priority || 'normal'}`);
   }
-  log(`description: ${content ? content.slice(0, 60) : 'none'}`);
 
-  // 4. Date/time — model copies the phrase, existing resolver turns it into a date.
-  const behaviorData = {...base.behaviorData};
-  if (behaviorData.Doable) {
-    const phrase = await ask('datetime', typeName, 16);
-    const fromPhrase = phrase && !isEmpty(phrase) ? inferDueAtFromText(phrase, now) : '';
-    const dueAt = fromPhrase || behaviorData.Doable.due_at || '';
-    behaviorData.Doable = {...behaviorData.Doable, due_at: dueAt};
-    log(`due: ${dueAt || 'none'}${phrase && fromPhrase ? ` ("${phrase}")` : ''}`);
+  // A link in the text is kept as-is (copied, not inferred).
+  const url = text.match(URL_RE)?.[0];
+  if (url && typeAllowsBehavior(typeName, 'Visitable')) {
+    draft = withBehavior(draft, 'Visitable', {url, title});
+    if (getDefaultBehaviorsForType(typeName).includes('Visitable')) {
+      draft.optionalBehaviorNames = draft.optionalBehaviorNames?.filter(n => n !== 'Visitable');
+    }
   }
 
-  // 5. Group — only when the user has groups. NONE means no group (no heuristic fallback).
-  let groupNames: string[] = [];
+  // 7. Group — only when the user has groups; fixed choice, NONE allowed.
   if (groups.length > 0) {
     const list = groups.map(g => `- ${g.name}${g.description ? `: ${g.description}` : ''}`).join('\n');
-    const picked = matchGroup(await ask('group', typeName, 12, `\n\nGroups:\n${list}`), groups, text);
-    if (picked) groupNames = [picked];
+    const picked = matchGroup(await ask('group', typeName, 12, `\n\nGroups:\n${list}`, oneOf([...groups.map(g => g.name), 'NONE'])), groups, text);
+    if (picked) draft.groupNames = [picked];
     log(`group: ${picked ?? 'none'}`);
   }
 
-  let draft: CaptureItemDraft = {...base, title, content, behaviorData, groupNames};
-
-  // 6+. One step per optional behavior the type allows (Task → repeat, reminders, steps…).
-  // Each is skipped without a model call when the text has no signal for it.
+  // 8. Model-judged behaviors the type allows (how often a note comes back) — fixed choices only.
   for (const bs of BEHAVIOR_STEPS) {
     if (!typeAllowsBehavior(typeName, bs.behavior) || !bs.gate(text)) continue;
-    const answer = await ask(bs.step, typeName, bs.maxTokens);
-    // A NONE from the model is respected; only a failed call falls back to reading the raw text.
-    const data = answer ? bs.parse(answer) : bs.textFallback === false ? null : bs.parse(text);
+    const data = bs.parse(await ask(bs.step, typeName, bs.maxTokens, '', bs.grammar));
     if (data) {
       draft = withBehavior(draft, bs.behavior, data);
       log(`${bs.label}: ${bs.describe(data)}`);
@@ -184,4 +238,9 @@ export async function runSelectiveAgent(
   }
 
   return {draft, journey};
+}
+
+/** The model failed on this thought too often: keep the exact words as a Note, so nothing is lost. */
+export function rawThought(text: string): CaptureItemDraft {
+  return {typeName: 'Note', title: text.slice(0, 60), content: text, tagNames: [], groupNames: [], optionalBehaviorNames: [], behaviorData: {}};
 }

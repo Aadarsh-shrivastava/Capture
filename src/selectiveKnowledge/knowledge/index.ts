@@ -1,14 +1,15 @@
 import type {ItemTypeName} from '@/ui/itemTypeConfig';
 
-import {DATETIME_KNOWLEDGE} from './datetime';
 import {BEHAVIOR_KNOWLEDGE} from './behaviors';
 import {DESCRIPTION_KNOWLEDGE} from './description';
 import {GROUP_KNOWLEDGE} from './group';
+import {MASCOT_KNOWLEDGE} from './mascot';
+import {PRIORITY_KNOWLEDGE} from './priority';
 import {SPLIT_KNOWLEDGE} from './split';
 import {TITLE_KNOWLEDGE} from './title';
 import {TYPE_KNOWLEDGE} from './type';
 
-export type KnowledgeStep = 'type' | 'customType' | 'typeKeywords' | 'title' | 'description' | 'datetime' | 'group' | 'repeat' | 'remind' | 'steps' | 'split' | 'memorable';
+export type KnowledgeStep = 'isTask' | 'kind' | 'customType' | 'typeKeywords' | 'title' | 'description' | 'priority' | 'group' | 'split' | 'memorable' | 'mascot';
 
 export type KnowledgeEntry = {
   id: string;
@@ -25,10 +26,11 @@ export const KNOWLEDGE_INDEX: KnowledgeEntry[] = [
   ...TYPE_KNOWLEDGE,
   ...TITLE_KNOWLEDGE,
   ...DESCRIPTION_KNOWLEDGE,
-  ...DATETIME_KNOWLEDGE,
+  ...PRIORITY_KNOWLEDGE,
   ...GROUP_KNOWLEDGE,
   ...BEHAVIOR_KNOWLEDGE,
   ...SPLIT_KNOWLEDGE,
+  ...MASCOT_KNOWLEDGE,
 ];
 
 export function findKnowledge(step: KnowledgeStep, type?: ItemTypeName): KnowledgeEntry {

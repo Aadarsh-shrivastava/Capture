@@ -32,7 +32,7 @@ function Title({title, body}: {title: string; body: string}) {
   );
 }
 
-/** First run: create the vault (where all data lives), then a basic profile. */
+/** First run: create the vault (where all data lives), then a basic profile. The model download follows (ModelGate). */
 /** `preview`: replay for dev — the vault step just moves on instead of creating a vault. */
 export function OnboardingFlow({onDone, preview = false}: {onDone: () => void; preview?: boolean}) {
   const insets = useSafeAreaInsets();

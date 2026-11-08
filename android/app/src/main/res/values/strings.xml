@@ -4,8 +4,16 @@
     <string name="widget_subtitle">Tap to add</string>
     <string name="widget_focus_label">Now</string>
     <string name="widget_empty_focus">Nothing in focus</string>
-    <string name="widget_add_task">Press to add task</string>
+    <string name="widget_type">⌨ Type</string>
+    <string name="widget_talk">🎤 Talk</string>
     <string name="widget_description">Quick capture from your home screen</string>
     <string name="widget_input_hint">What do you want to remember?</string>
     <string name="widget_submit">Save</string>
+    <string name="widget_talk_button">Talk</string>
+    <string name="widget_captured">Captured</string>
+    <string name="widget_no_speech">Voice input isn\'t available on this device</string>
+    <string name="tile_label">Capture</string>
+    <string name="capture_notification_channel">Capture shortcut</string>
+    <string name="capture_notification_title">Capture a thought</string>
+    <string name="capture_notification_type">Type</string>
 </resources>

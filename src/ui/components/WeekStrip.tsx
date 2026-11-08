@@ -2,7 +2,7 @@ import moment from 'moment';
 import {Text, View} from 'react-native';
 
 import {Pressable} from '@/ui/HapticPressable';
-import {designTokens, radius} from '@/ui/designTokens';
+import {designTokens} from '@/ui/designTokens';
 
 type WeekStripProps = {
   /** Currently selected day. */
@@ -43,11 +43,14 @@ export function WeekStrip({value, onChange, markedDays = []}: WeekStripProps) {
               {day.format('ddd')}
             </Text>
 
+            {/* Remount on select: Android (new arch) drops borderRadius when a transparent view later gets a colour. */}
             <View
+              key={isSelected ? 'selected' : 'day'}
               style={{
                 width: 34,
                 height: 34,
-                borderRadius: radius.pill,
+                // Exactly half the size: Android (new arch) draws a 999 radius on a small view as a square.
+                borderRadius: 17,
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: isSelected ? designTokens.white : 'transparent',

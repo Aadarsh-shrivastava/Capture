@@ -22,6 +22,10 @@ export const designTokens = {
   chip: 'rgba(255, 255, 255, 0.07)',
   divider: 'rgba(255, 255, 255, 0.07)',
   field: '#1c1c1c',
+
+  /** Soft top-left light over `card` (RN new-arch native gradient; `card` stays as the fallback colour). */
+  cardGradient: 'linear-gradient(160deg, #232323 0%, #171717 55%, #111111 100%)',
+  cardShadow: '0 10px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
 } as const;
 
 /** Corner radii used across the redesigned surfaces. */

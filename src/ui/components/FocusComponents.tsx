@@ -1,77 +1,174 @@
-import {ActivityIndicator, Text, View} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import {useRef, type ReactNode} from 'react';
+import {ActivityIndicator, Animated, PanResponder, Text, useWindowDimensions, View} from 'react-native';
 
+import {Grain} from '@/ui/Grain';
 import {Pressable} from '@/ui/HapticPressable';
 import {formatDueLabel} from '@/domain/focusPriority';
 import type {FocusTask} from '@/models/focusTask';
-import {designTokens} from '@/ui/designTokens';
-import {Mascot, type MascotPose} from '@/mascot';
+import {designTokens, radius} from '@/ui/designTokens';
+import {isItemMascot, ItemMascot, Mascot, type MascotPose} from '@/mascot';
 
-type TaskActionsProps = {
-  onComplete: () => void;
-  onReschedule: () => void;
-  onDefer: () => void;
-  compact?: boolean;
+/** Past this (px), or flicked faster than FLICK, a release commits the swipe instead of snapping back. */
+const SWIPE_DISTANCE = 110;
+const SWIPE_FLICK = 0.6;
+
+type SwipeAction = {label: string; icon: keyof typeof Ionicons.glyphMap; onSwipe: () => void};
+
+type SwipeCardProps = {
+  /** Small caps label, top-left ("NOW", "COME BACK"). */
+  eyebrow: string;
+  /** Top-right (the item's type). */
+  badge?: string;
+  title: string;
+  content?: string | null;
+  meta?: string | null;
+  /** The item's sticker; `fallbackPose` (the user's mascot) when it has none. */
+  mascot?: string | null;
+  fallbackPose: MascotPose;
+  onPress: () => void;
+  onLongPress?: () => void;
+  /** Swiped right: the card stays off-screen (whatever replaces it slides in). */
+  right: SwipeAction;
+  /** Swiped left. `springBack`: the card returns (e.g. behind a sheet that can be cancelled). */
+  left: SwipeAction & {springBack?: boolean};
+  /** Hint under the card, e.g. "← reschedule · done →". */
+  hint: string;
+  /** Extra controls at the bottom (e.g. a small text action). */
+  footer?: ReactNode;
 };
 
-function TextAction({label, onPress, strong}: {label: string; onPress: () => void; strong?: boolean}) {
+function SwipeHint({label, icon, opacity, side}: {label: string; icon: keyof typeof Ionicons.glyphMap; opacity: Animated.AnimatedInterpolation<number>; side: 'left' | 'right'}) {
   return (
-    <Pressable onPress={onPress} hitSlop={10} accessibilityRole="button">
-      <Text
+    <Animated.View style={{position: 'absolute', top: 28, [side]: 28, opacity, flexDirection: 'row', alignItems: 'center', gap: 6}}>
+      <Ionicons name={icon} size={18} color={designTokens.textPrimary} />
+      <Text style={{color: designTokens.textPrimary, fontSize: 14, fontWeight: '600', letterSpacing: 0.5}}>{label}</Text>
+    </Animated.View>
+  );
+}
+
+/** The big card: tap to open, swipe right / left for its two actions. Used for the Now task and for things coming back. */
+export function SwipeCard({eyebrow, badge, title, content, meta, mascot, fallbackPose, onPress, onLongPress, right, left, hint, footer}: SwipeCardProps) {
+  const x = useRef(new Animated.Value(0)).current;
+  const {width} = useWindowDimensions();
+  const latest = useRef({right, left, width});
+  latest.current = {right, left, width};
+
+  const pan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 10 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+      // Once sideways, keep the gesture — don't hand it to the vertical scroll mid-swipe.
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderMove: (_, g) => x.setValue(g.dx),
+      onPanResponderRelease: (_, g) => {
+        if (Math.abs(g.dx) < SWIPE_DISTANCE && Math.abs(g.vx) < SWIPE_FLICK) {
+          Animated.spring(x, {toValue: 0, friction: 6, useNativeDriver: true}).start();
+          return;
+        }
+        const side = Math.sign(g.dx || g.vx);
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        Animated.timing(x, {toValue: side * latest.current.width * 1.5, duration: 220, useNativeDriver: true}).start(() => {
+          if (side > 0) return latest.current.right.onSwipe();
+          latest.current.left.onSwipe();
+          if (latest.current.left.springBack) Animated.spring(x, {toValue: 0, friction: 7, useNativeDriver: true}).start();
+        });
+      },
+      onPanResponderTerminate: () => Animated.spring(x, {toValue: 0, useNativeDriver: true}).start(),
+    }),
+  ).current;
+
+  const rotate = x.interpolate({inputRange: [-width, 0, width], outputRange: ['-12deg', '0deg', '12deg']});
+  const rightHint = x.interpolate({inputRange: [0, SWIPE_DISTANCE], outputRange: [0, 1], extrapolate: 'clamp'});
+  const leftHint = x.interpolate({inputRange: [-SWIPE_DISTANCE, 0], outputRange: [1, 0], extrapolate: 'clamp'});
+  // The corner labels make room for the swipe hints, which appear in the same spot.
+  const headerFade = x.interpolate({inputRange: [-SWIPE_DISTANCE / 2, 0, SWIPE_DISTANCE / 2], outputRange: [0, 1, 0], extrapolate: 'clamp'});
+
+  return (
+    <Animated.View {...pan.panHandlers} style={{transform: [{translateX: x}, {rotate}]}}>
+      <Pressable
+        onPress={onPress}
+        onLongPress={onLongPress}
+        accessibilityHint={`Swipe right to ${right.label.toLowerCase()}, left to ${left.label.toLowerCase()}`}
+        accessibilityActions={[{name: 'right', label: right.label}, {name: 'left', label: left.label}]}
+        onAccessibilityAction={e => (e.nativeEvent.actionName === 'right' ? right.onSwipe() : left.onSwipe())}
         style={{
-          color: strong ? designTokens.textPrimary : designTokens.textTertiary,
-          fontSize: 14,
-          fontWeight: strong ? '600' : '500',
+          padding: 28,
+          borderRadius: radius.xl,
+          borderWidth: 1,
+          borderColor: designTokens.surfaceBorder,
+          backgroundColor: designTokens.card,
+          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
         }}>
-        {label}
-      </Text>
-    </Pressable>
+        {/* The gradient ignores borderRadius (it paints square corners), so it lives in a clipped layer. */}
+        <View style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: radius.xl, overflow: 'hidden', pointerEvents: 'none'}}>
+          <View
+            style={{
+              flex: 1,
+              // Native on the new architecture (RN 0.77) — no gradient dependency.
+              experimental_backgroundImage: 'linear-gradient(165deg, #262626 0%, #171717 45%, #0d0d0d 100%)',
+            }}
+          />
+        </View>
+        <Grain radius={radius.xl} />
+        {/* Swiping right reveals its label on the left edge, and vice versa — the side being uncovered. */}
+        <SwipeHint label={right.label} icon={right.icon} opacity={rightHint} side="left" />
+        <SwipeHint label={left.label} icon={left.icon} opacity={leftHint} side="right" />
+        <Animated.View style={{flexDirection: 'row', justifyContent: 'space-between', opacity: headerFade}}>
+          <Text style={{color: designTokens.textTertiary, fontSize: 12, fontWeight: '600', letterSpacing: 1.5}}>{eyebrow}</Text>
+          {badge ? <Text style={{color: designTokens.textTertiary, fontSize: 12, fontWeight: '600', letterSpacing: 1.5}}>{badge.toUpperCase()}</Text> : null}
+        </Animated.View>
+        <View style={{alignItems: 'center', paddingTop: 16, paddingBottom: 20}}>
+          {isItemMascot(mascot) ? <ItemMascot mascot={mascot} size={120} /> : <Mascot pose={fallbackPose} width={120} />}
+        </View>
+        <Text style={{color: designTokens.textPrimary, fontSize: 32, fontWeight: '700', lineHeight: 38}}>
+          {title}
+        </Text>
+        {content ? (
+          <Text numberOfLines={3} style={{color: designTokens.textSecondary, fontSize: 15, lineHeight: 21, marginTop: 10}}>
+            {content}
+          </Text>
+        ) : null}
+        {meta ? (
+          <Text style={{color: designTokens.textTertiary, fontSize: 13, marginTop: 14}}>{meta}</Text>
+        ) : null}
+        <Text style={{textAlign: 'center', color: designTokens.textTertiary, fontSize: 12, marginTop: 28, opacity: 0.7}}>
+          {hint}
+        </Text>
+        {footer}
+      </Pressable>
+    </Animated.View>
   );
 }
 
-/** Text-only actions: Reschedule · Later on the left, Complete on the right. */
-function TaskActions({onComplete, onReschedule, onDefer, compact}: TaskActionsProps) {
-  return (
-    <View style={{flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: compact ? 14 : 20}}>
-      <TextAction label="Reschedule" onPress={onReschedule} />
-      <TextAction label="Later" onPress={onDefer} />
-      <View style={{flex: 1}} />
-      <TextAction label="Complete" onPress={onComplete} strong />
-    </View>
-  );
-}
-
-type DoNowCardProps = {
+type NowCardProps = {
   task: FocusTask;
   onPress: () => void;
   onLongPress?: () => void;
+  /** Swiped right. The card stays off-screen; the next task replaces it. */
   onComplete: () => void;
+  /** Swiped left. The card springs back behind the date sheet, so cancelling shows it again. */
   onReschedule: () => void;
-  onDefer: () => void;
 };
 
-export function DoNowCard({task, onPress, onLongPress, onComplete, onReschedule, onDefer}: DoNowCardProps) {
-  const dueLabel = formatDueLabel(task.dueAt);
-
+/** Card for the one task to do now: swipe right to complete, left to reschedule, tap to open. */
+export function NowCard({task, onPress, onLongPress, onComplete, onReschedule}: NowCardProps) {
+  const meta = [formatDueLabel(task.dueAt), task.estimatedMinutes ? `${task.estimatedMinutes} min` : null].filter(Boolean).join('  ·  ');
   return (
-    <Pressable
+    <SwipeCard
+      eyebrow="NOW"
+      badge={task.typeName}
+      title={task.title}
+      content={task.content}
+      meta={meta}
+      mascot={task.mascot}
+      fallbackPose="pointing"
       onPress={onPress}
       onLongPress={onLongPress}
-      style={{
-        backgroundColor: designTokens.surfaceRaised,
-        borderWidth: 1,
-        borderColor: designTokens.surfaceBorder,
-        borderRadius: 14,
-        padding: 22,
-        marginBottom: 8,
-      }}>
-      <Text style={{color: designTokens.textPrimary, fontSize: 24, fontWeight: '700', lineHeight: 30}}>
-        {task.title}
-      </Text>
-      {dueLabel ? (
-        <Text style={{color: designTokens.textSecondary, fontSize: 14, marginTop: 10}}>{dueLabel}</Text>
-      ) : null}
-      <TaskActions compact onComplete={onComplete} onReschedule={onReschedule} onDefer={onDefer} />
-    </Pressable>
+      right={{label: 'DONE', icon: 'checkmark', onSwipe: onComplete}}
+      left={{label: 'RESCHEDULE', icon: 'calendar-outline', onSwipe: onReschedule, springBack: true}}
+      hint="← reschedule · done →"
+    />
   );
 }
 
@@ -96,6 +193,7 @@ export function NextTaskRow({task, onPress, onLongPress}: NextTaskRowProps) {
         borderBottomWidth: 1,
         borderBottomColor: designTokens.surfaceBorder,
       }}>
+      {isItemMascot(task.mascot) ? <ItemMascot mascot={task.mascot} size={36} /> : null}
       <View style={{flex: 1}}>
         <Text style={{color: designTokens.textSecondary, fontSize: 16, fontWeight: '500'}}>{task.title}</Text>
         {dueLabel ? (
@@ -126,6 +224,17 @@ export function FocusEmptyState({allDone = false}: {allDone?: boolean}) {
       <Text style={{color: designTokens.textTertiary, fontSize: 14, textAlign: 'center', lineHeight: 20}}>
         {message.body}
       </Text>
+    </View>
+  );
+}
+
+/** Nothing to do until the next timed task: the mascot, relaxed, and when that is. */
+export function FreeStretch({until}: {until: string}) {
+  return (
+    <View style={{paddingVertical: 28, alignItems: 'center', gap: 6}}>
+      <Mascot pose="cool" width={110} />
+      <Text style={{color: designTokens.textSecondary, fontSize: 16, fontWeight: '500'}}>Free until {until}</Text>
+      <Text style={{color: designTokens.textTertiary, fontSize: 14}}>Nothing to do before then.</Text>
     </View>
   );
 }

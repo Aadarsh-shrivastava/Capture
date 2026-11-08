@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BottomTabBar } from '@/components/BottomTabBar/BottomTabBar';
 import { GroupPage, GroupsListScreen } from '@/groups';
 import { EditItemTypeScreen, ItemTypesScreen } from '@/itemTypes';
+import { AppearanceScreen } from '@/screens/AppearanceScreen/AppearanceScreen';
 import { SearchScreen } from '@/search';
 import { CreateItemScreen } from '@/screens/CreateItemScreen/CreateItemScreen';
 import { FocusScreen } from '@/screens/FocusScreen/FocusScreen';
@@ -12,7 +13,6 @@ import { ItemsScreen } from '@/screens/ItemsScreen/ItemsScreen';
 import { ListScreen } from '@/screens/ListScreen/ListScreen';
 import { ProfileScreen } from '@/profile';
 import { SettingsScreen } from '@/screens/SettingsScreen/SettingsScreen';
-import { TimelineScreen } from '@/screens/TimelineScreen/TimelineScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -36,12 +36,12 @@ export function RootNavigator() {
       <Stack.Screen name="CreateItem" component={CreateItemScreen} />
       <Stack.Screen name="LibraryList" component={ListScreen} />
       <Stack.Screen name="Groups" component={GroupsListScreen} />
-      <Stack.Screen name="Timeline" component={TimelineScreen} />
       <Stack.Screen name="ItemDetail" component={ItemDetailScreen} />
       <Stack.Screen name="GroupDetail" component={GroupPage} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="ItemTypes" component={ItemTypesScreen} />
+      <Stack.Screen name="Appearance" component={AppearanceScreen} />
       <Stack.Screen name="EditItemType" component={EditItemTypeScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>

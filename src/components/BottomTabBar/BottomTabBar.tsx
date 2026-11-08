@@ -3,8 +3,10 @@ import type {BottomTabBarProps} from '@react-navigation/bottom-tabs';
 import {Text, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
+import {Grain} from '@/ui/Grain';
 import {Pressable} from '@/ui/HapticPressable';
 import {useCaptureStore} from '@/store/captureStore';
+import {useAppearance} from '@/store/appearanceStore';
 import {designTokens} from '@/ui/designTokens';
 import {useThemeStore} from '@/store/themeStore';
 
@@ -84,9 +86,40 @@ function CaptureButton() {
   );
 }
 
+/** Tab bar turned off (Settings): only a small quiet "+ Add" at the bottom right. */
+function FloatingCaptureButton() {
+  const openQuickAdd = useCaptureStore((state) => state.openQuickAdd);
+  const insets = useSafeAreaInsets();
+  return (
+    <View pointerEvents="box-none" style={{position: 'absolute', right: 20, bottom: Math.max(insets.bottom, 16) + 8}}>
+      <Pressable
+        onPress={openQuickAdd}
+        accessibilityRole="button"
+        accessibilityLabel="Capture"
+        accessibilityHint="Voice, type, or create manually"
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 4,
+          paddingHorizontal: 16,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: designTokens.surfaceRaised,
+          borderWidth: 1,
+          borderColor: designTokens.surfaceBorder,
+        }}>
+        <Ionicons name="add" size={20} color={designTokens.textPrimary} />
+        <Text style={{color: designTokens.textPrimary, fontSize: 15, fontWeight: '600'}}>Add</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 export function BottomTabBar({state, navigation}: BottomTabBarProps) {
   const {theme} = useThemeStore();
   const insets = useSafeAreaInsets();
+  const visible = useAppearance((s) => s.tabBar);
+  if (!visible) return <FloatingCaptureButton />;
 
   function renderTab(config: TabConfig) {
     const routeIndex = state.routes.findIndex((route: {name: string}) => route.name === config.name);
@@ -110,10 +143,14 @@ export function BottomTabBar({state, navigation}: BottomTabBarProps) {
     <View
       style={{
         backgroundColor: theme.colors.surfaceContainer,
+        experimental_backgroundImage: `linear-gradient(180deg, ${theme.colors.surfaceContainer} 0%, ${designTokens.black} 100%)`,
+        boxShadow: '0 -8px 24px rgba(0, 0, 0, 0.4)',
         borderTopWidth: 1,
         borderTopColor: designTokens.surfaceBorder,
-        paddingBottom: insets.bottom,
+        // Android can report a 0 inset (no edge-to-edge); keep the capture button off the curved screen edge.
+        paddingBottom: Math.max(insets.bottom, 12),
       }}>
+      <Grain />
       <View
         style={{
           flexDirection: 'row',

@@ -2,7 +2,7 @@ import {Ionicons} from '@expo/vector-icons';
 import type {ReactNode} from 'react';
 import {View} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {LargeHeader} from '@/components/LargeHeader/LargeHeader';
 import {useThemeStore} from '@/store/themeStore';
@@ -25,13 +25,13 @@ export function TabScreenShell({title, children, action, secondaryAction, titleN
   const {theme} = useThemeStore();
   const navigation = useNavigation();
   const pushed = navigation.getState()?.type === 'stack';
+  // Inset from the provider, not SafeAreaView: that one measures after the first frame, so pushed screens jumped down.
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView
-      style={{flex: 1, backgroundColor: theme.colors.background}}
-      edges={['top']}>
+    <View style={{flex: 1, backgroundColor: theme.colors.background, paddingTop: insets.top}}>
       <LargeHeader title={title} action={action} secondaryAction={secondaryAction} titleNode={titleNode} onBack={pushed ? navigation.goBack : undefined} />
       <View style={{flex: 1}}>{children}</View>
-    </SafeAreaView>
+    </View>
   );
 }

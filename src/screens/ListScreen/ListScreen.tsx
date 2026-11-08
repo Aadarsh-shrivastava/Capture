@@ -36,7 +36,8 @@ export function ListScreen() {
   const [sort, setSort] = useState<TaskSort>('due');
   const [filter, setFilter] = useState<TaskFilter>('all');
   const [sortOpen, setSortOpen] = useState(false);
-  const [taskStates, setTaskStates] = useState<Map<number, TaskState>>(new Map());
+  // null until loaded, so a task list renders once in its final order instead of reshuffling mid-slide.
+  const [taskStates, setTaskStates] = useState<Map<number, TaskState> | null>(null);
   const version = useDataVersionStore((state) => state.version);
   const isTaskList = Boolean(params.type) && typeHasBehavior(params.type!, 'Doable');
 
@@ -66,7 +67,8 @@ export function ListScreen() {
     }
   }, [types.length, params.type, activeType, router]);
 
-  const typeConfig = activeType ? getItemTypeConfig(activeType.name) : null;
+  const typeConfig = params.type ? getItemTypeConfig(params.type) : null;
+  const ready = activeType !== null && (!isTaskList || taskStates !== null);
 
   const filteredItems = useMemo(() => {
     if (!activeType) return [];
@@ -82,21 +84,19 @@ export function ListScreen() {
       );
     }
 
-    if (isTaskList) result = filterTasks(result, filter, taskStates);
-    return sortForList(result, isTaskList, sort, taskStates);
+    const states = taskStates ?? new Map<number, TaskState>();
+    if (isTaskList) result = filterTasks(result, filter, states);
+    return sortForList(result, isTaskList, sort, states);
   }, [items, activeType, search, sort, filter, taskStates, isTaskList]);
 
   const emptyMessage = search.trim()
     ? 'No matching items.'
     : `No ${(typeConfig?.plural ?? activeType?.name ?? 'items').toLowerCase()} yet.`;
 
-  if (!activeType) {
-    return null;
-  }
-
+  // Shell renders right away so the header slides in with the screen; the body fills in once data is loaded.
   return (
-    <ScreenShell title={typeConfig?.plural ?? activeType.name} leading="back">
-      <ScrollView
+    <ScreenShell title={typeConfig?.plural ?? params.type ?? ''} leading="back">
+      {ready ? <ScrollView
         contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -139,7 +139,7 @@ export function ListScreen() {
             {filteredItems.map((item) => (
               <Selectable key={item.id} item={item} onOpen={() => router.push(`/item/${item.id}`)}>
                 {(select) => {
-                  const task = isTaskList ? taskStates.get(item.id) : undefined;
+                  const task = isTaskList ? taskStates?.get(item.id) : undefined;
                   const done = task?.status === 'completed';
                   return (
                     <View style={{ opacity: done ? 0.45 : 1 }}>
@@ -147,6 +147,7 @@ export function ListScreen() {
                         title={item.title}
                         typeName={item.typeName}
                         createdAt={item.createdAt}
+                        mascot={item.mascot}
                         meta={done ? 'Done' : task?.dueAt ? formatDueDateLabel(task.dueAt) : isTaskList ? 'No due date' : null}
                         {...select}
                       />
@@ -157,7 +158,7 @@ export function ListScreen() {
             ))}
           </View>
         )}
-      </ScrollView>
+      </ScrollView> : null}
 
       <ListOptionsSheet
         visible={sortOpen}

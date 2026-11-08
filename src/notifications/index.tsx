@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import {useRouter} from 'expo-router';
 import {useEffect} from 'react';
-import {AppState} from 'react-native';
+import {AppState, Platform} from 'react-native';
 
 import {parseNumbers} from '@/behaviors';
 import {behaviorDataRepository} from '@/repositories/behaviorDataRepository';
@@ -14,9 +14,10 @@ import {nextReviewAt} from '@/weeklyReview';
 
 import {overdueCount, remindersFor, summariesFor, type Reminder} from './rules';
 import {clearAll, ensurePermission, replaceAll, sendNow, setBadge, type PlannedNotification} from './scheduler';
-import {useReminderSettings} from './settings';
+import {useCaptureNotificationSetting, useReminderSettings} from './settings';
+import {setCaptureNotification} from '@/native/homeWidgetCapture';
 
-export {useReminderSettings} from './settings';
+export {useCaptureNotificationSetting, useReminderSettings} from './settings';
 
 const JOB_INTERVAL_MS = 10 * 60 * 1000;
 
@@ -30,6 +31,17 @@ function plan(reminders: Reminder[], summaries: ReturnType<typeof summariesFor>)
     })),
     ...summaries.map(s => ({at: s.at, ...summaryMessage(s.tasks)})),
   ];
+}
+
+/**
+ * Turn the pinned capture notification (Android) / Live Activity (iOS) on or off. Android asks for notification
+ * permission first (false when denied); iOS Live Activities need none.
+ */
+export async function setCaptureNotificationEnabled(enabled: boolean): Promise<boolean> {
+  if (enabled && Platform.OS === 'android' && !(await ensurePermission())) return false;
+  useCaptureNotificationSetting.getState().setEnabled(enabled);
+  await setCaptureNotification(enabled);
+  return true;
 }
 
 /** The job: read tasks, keep the OS reminder + morning summary schedule in sync. */

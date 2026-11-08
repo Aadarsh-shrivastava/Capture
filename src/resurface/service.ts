@@ -1,9 +1,5 @@
-import moment from 'moment';
 
-import {itemApi} from '@/api/itemApi';
-import {analyzeCaptureText} from '@/capture/captureHeuristics';
 import {getDatabase} from '@/db/database';
-import {createItemFromCaptureDraft} from '@/services/captureItemService';
 import {updateBehaviorData} from '@/taskActions';
 import {showUndo} from '@/undo';
 
@@ -15,7 +11,7 @@ import {nextState, rank, type Memo, type ResurfaceAction} from './schedule';
 export async function loadMemos(): Promise<Memo[]> {
   const db = await getDatabase();
   const rows = await db.getAllAsync<Omit<Memo, 'hasLink'> & {hasLink: number}>(
-    `SELECT i.id AS itemId, t.name AS typeName, i.title, i.content, i.created_at AS createdAt,
+    `SELECT i.id AS itemId, t.name AS typeName, i.title, i.content, i.created_at AS createdAt, i.mascot,
             m.weight, m.review_at AS reviewAt, m.interval_days AS intervalDays, m.times_shown AS timesShown,
             v.item_id IS NOT NULL AS hasLink
      FROM memorable_items m
@@ -33,19 +29,11 @@ const stateOf = (m: Memo): Record<string, string> => ({
   times_shown: String(m.timesShown),
 });
 
-/** Record what the user did with a suggestion. "Do it" also creates a task for today (one Undo reverts both). */
+/** Record what the user did with a come-back ("Don't bring this back" can be undone). */
 export async function act(memo: Memo, action: ResurfaceAction): Promise<void> {
   await updateBehaviorData(memo.itemId, 'Memorable', nextState(memo, action));
   const undo = () => updateBehaviorData(memo.itemId, 'Memorable', stateOf(memo));
-  if (action === 'doIt') {
-    const draft = analyzeCaptureText(memo.title, {typeName: 'Task'});
-    const doable = {...(draft.behaviorData?.Doable ?? {}), status: 'pending', due_at: moment().format('YYYY-MM-DD')};
-    const task = await createItemFromCaptureDraft({...draft, title: memo.title, behaviorData: {...draft.behaviorData, Doable: doable}});
-    showUndo(`"${memo.title}" added to today`, async () => {
-      await itemApi.deleteItem(task.id);
-      await undo();
-    }, 'happy');
-  } else if (action === 'done') {
+  if (action === 'done') {
     showUndo(`"${memo.title}" won't come back`, undo);
   }
 }

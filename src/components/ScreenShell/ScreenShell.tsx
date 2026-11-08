@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/components/ScreenHeader/ScreenHeader';
 import { useThemeStore } from '@/store/themeStore';
@@ -20,11 +21,13 @@ export function ScreenShell({
   onBack,
 }: ScreenShellProps) {
   const { theme } = useThemeStore();
+  // Inset from the provider, not SafeAreaView: that one measures after the first frame, so pushed screens jumped down.
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }} edges={['top']}>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background, paddingTop: insets.top }}>
       <ScreenHeader title={title} right={right} leading={leading} onBack={onBack} />
       {children}
-    </SafeAreaView>
+    </View>
   );
 }

@@ -1,61 +1,40 @@
 import moment from 'moment';
 import {useCallback, useMemo, useState} from 'react';
-import {Alert, ScrollView, Text, View} from 'react-native';
+import {Alert, Platform, RefreshControl, ScrollView, Text, View} from 'react-native';
 import {useFocusEffect, useRouter} from 'expo-router';
 
 import {DateSheet} from '@/components/sheets/DateSheet';
 import {TabScreenShell} from '@/components/TabScreenShell/TabScreenShell';
-import {isTaskOverdue} from '@/domain/focusPriority';
 import {useFocusData} from '@/hooks/useFocusData';
 import {useCaptureStore} from '@/store/captureStore';
 import {useLingeringDone} from '@/hooks/useLingeringDone';
 import {Appear, SlideOut} from '@/motion';
 import {GhostRow, useRepeatPreview} from '@/recurrence';
 import {Suggestions} from '@/resurface';
-import {UpcomingView, useCurrentView, ViewPicker} from '@/views';
+import {UpcomingView, useCurrentView, useViewStore, ViewPicker} from '@/views';
 import {DayProgress, useDayProgress} from '@/progress';
+import {useAppearance} from '@/store/appearanceStore';
 import type {FocusTask} from '@/models/focusTask';
 import {
   FocusEmptyState,
+  FreeStretch,
   FocusLoadingState,
-  DoNowCard,
+  NowCard,
   NextTaskRow,
 } from '@/ui/components/FocusComponents';
 import {Selectable} from '@/selection';
-import {completeTask, postponeTask, rescheduleTask} from '@/taskActions';
-import {SectionHeader} from '@/ui/components/SectionHeader';
+import {completeTask, rescheduleTask} from '@/taskActions';
 import {SwipeRow} from '@/ui/components/SwipeRow';
 import {CollapsibleSection} from '@/ui/components/CollapsibleSection';
-import {splitFocusDay} from '@/domain/focusSections';
-import {WeekStrip} from '@/ui/components/WeekStrip';
+import {dueMoment, splitFocusDay, tasksForDay} from '@/domain/focusSections';
 import {designTokens} from '@/ui/designTokens';
 
 /** How far past the top you pull before letting go opens capture. */
 const PULL_TO_CAPTURE = 80;
 
-function dueMoment(task: FocusTask) {
-  if (!task.dueAt?.trim()) return null;
-  const parsed = moment(task.dueAt, moment.ISO_8601, false);
-  return parsed.isValid() ? parsed : null;
-}
-
-/** Tasks shown for a day: everything due that day, plus undated and overdue work on today. */
-function tasksForDay(tasks: FocusTask[], day: moment.Moment) {
-  const isToday = day.isSame(moment(), 'day');
-
-  return tasks.filter(task => {
-    const due = dueMoment(task);
-    if (!due) return isToday;
-    if (due.isSame(day, 'day')) return true;
-    return isToday && isTaskOverdue(task);
-  });
-}
-
 export function FocusScreen() {
   const router = useRouter();
   const {tasks, loading, error, refresh} = useFocusData();
-  const [selectedDate, setSelectedDate] = useState(() => new Date());
-  const [dateSheetOpen, setDateSheetOpen] = useState(false);
   const [rescheduling, setRescheduling] = useState<FocusTask | null>(null);
 
   useFocusEffect(
@@ -64,13 +43,20 @@ export function FocusScreen() {
     }, [refresh]),
   );
 
-  const selected = useMemo(() => moment(selectedDate), [selectedDate]);
   const openTextCapture = useCaptureStore(state => state.openTextCapture);
-  // Week / Month live in src/views and replace this screen's body.
+  // Week / Month live in src/views and replace this screen's body; Today / Tomorrow / Custom date pick the day shown here.
   const view = useCurrentView();
+  const customDay = useViewStore(state => state.day);
+  const selectedDate = useMemo(() => {
+    if (view.key === 'tomorrow') return moment().add(1, 'day').startOf('day').toDate();
+    if (view.key === 'custom') return moment(customDay, 'YYYY-MM-DD').toDate();
+    return new Date();
+  }, [view.key, customDay]);
+  const selected = useMemo(() => moment(selectedDate), [selectedDate]);
   const {linger, withLingering, isLingering} = useLingeringDone();
   const isToday = selected.isSame(moment(), 'day');
   const progress = useDayProgress(selectedDate);
+  const showProgress = useAppearance(state => state.progressBar);
   // Repeating tasks also appear as ghosts (dimmed, not tappable) on the future days they'll land on.
   const repeatPreview = useRepeatPreview(
     tasks,
@@ -87,22 +73,13 @@ export function FocusScreen() {
     [tasks, selected, withLingering],
   );
   const {now, next, later} = useMemo(() => splitFocusDay(dayTasks), [dayTasks]);
-  // A free stretch: Now is a timed task still 45+ minutes off — room for one "come back" suggestion.
-  const freeNow = Boolean(now && dueMoment(now)?.isAfter(moment().add(45, 'minutes')) && now.dueAt?.includes('T'));
+  // A free stretch: today has tasks, but none to do yet (the next one starts later) — room for a suggestion.
+  const freeUntil = isToday && !now && next[0] ? dueMoment(next[0]) : null;
   /** Other days: same order (timed first), no sections. */
   const dayList = useMemo(
-    () => (now ? [now, ...next, ...later] : []),
+    // `now` is null when nothing is actionable yet (e.g. all timed, later) — the day still has tasks.
+    () => [...(now ? [now] : []), ...next, ...later],
     [now, next, later],
-  );
-
-  const markedDays = useMemo(
-    () => [
-      ...tasks
-        .map(task => dueMoment(task)?.format('YYYY-MM-DD'))
-        .filter((value): value is string => Boolean(value)),
-      ...repeatPreview.keys(),
-    ],
-    [tasks, repeatPreview],
   );
 
   function openTask(task: FocusTask) {
@@ -123,22 +100,12 @@ export function FocusScreen() {
 
   function openReschedule(task: FocusTask) {
     setRescheduling(task);
-    setDateSheetOpen(true);
   }
 
   /** `swiped`: the swipe already moved the row away, so no second slide-out. */
   function complete(task: FocusTask, swiped = false) {
     if (!swiped) linger(task);
     completeTask(task.id, task.title).catch(err =>
-      Alert.alert(
-        'Unable to update task',
-        err instanceof Error ? err.message : 'Try again',
-      ),
-    );
-  }
-
-  function postpone(task: FocusTask) {
-    postponeTask(task.id, task.title).catch(err =>
       Alert.alert(
         'Unable to update task',
         err instanceof Error ? err.message : 'Try again',
@@ -176,30 +143,16 @@ export function FocusScreen() {
     );
   }
 
-  function closeDateSheet() {
-    setDateSheetOpen(false);
-    setRescheduling(null);
-  }
-
   return (
     <TabScreenShell
       title={view.label}
       titleNode={<ViewPicker />}
-      action={
-        view.key === 'today'
-          ? {
-              icon: 'calendar-outline',
-              label: 'Pick a day',
-              onPress: () => setDateSheetOpen(true),
-            }
-          : undefined
-      }
       secondaryAction={{
         icon: 'search',
         label: 'Search',
         onPress: () => router.push('/search'),
       }}>
-      {view.key !== 'today' ? (
+      {view.days > 1 ? (
         <UpcomingView days={view.days} />
       ) : (
         <ScrollView
@@ -208,7 +161,10 @@ export function FocusScreen() {
             paddingTop: 20,
             paddingBottom: 40,
           }}
-          // ponytail: uses iOS overscroll bounce; Android has none, add a RefreshControl there if needed.
+          // iOS: overscroll bounce past the threshold. Android has no bounce, so its native pull gesture opens capture.
+          refreshControl={
+            Platform.OS === 'android' ? <RefreshControl refreshing={false} onRefresh={() => openTextCapture()} /> : undefined
+          }
           onScrollEndDrag={e =>
             e.nativeEvent.contentOffset.y < -PULL_TO_CAPTURE &&
             openTextCapture()
@@ -226,12 +182,23 @@ export function FocusScreen() {
             }}>
             Pull to capture
           </Text>
-          <WeekStrip
-            value={selectedDate}
-            onChange={setSelectedDate}
-            markedDays={markedDays}
-          />
-          <DayProgress day={selectedDate} />
+          {showProgress ? <DayProgress day={selectedDate} /> : null}
+
+          {!loading && isToday && now ? (
+            // The next task fades in once the done one has swiped away.
+            <Appear key={now.id} style={{marginTop: 20}}>
+              <Selectable item={now} onOpen={() => openTask(now)}>
+                {select => (
+                  <NowCard
+                    task={now}
+                    {...select}
+                    onComplete={() => complete(now, true)}
+                    onReschedule={() => openReschedule(now)}
+                  />
+                )}
+              </Selectable>
+            </Appear>
+          ) : null}
 
           {error ? (
             <Text
@@ -260,24 +227,16 @@ export function FocusScreen() {
             </View>
           ) : null}
 
-          {!loading && isToday && now ? (
-            <>
-              <SectionHeader label="Now" />
-              <SlideOut key={now.id} out={isLingering(now.id)}>
-                <Selectable item={now} onOpen={() => openTask(now)}>
-                  {select => (
-                    <DoNowCard
-                      task={now}
-                      {...select}
-                      onComplete={() => complete(now)}
-                      onReschedule={() => openReschedule(now)}
-                      onDefer={() => postpone(now)}
-                    />
-                  )}
-                </Selectable>
-              </SlideOut>
-              {freeNow ? <Suggestions count={1} /> : null}
-            </>
+          {!loading && freeUntil ? (
+            // A come-back fills the free stretch; with none (or hidden), the mascot says you're free.
+            <Suggestions
+              before={
+                <Text style={{color: designTokens.textSecondary, fontSize: 15, marginBottom: 12}}>
+                  Free until {freeUntil.format('h:mm A')}
+                </Text>
+              }
+              fallback={<FreeStretch until={freeUntil.format('h:mm A')} />}
+            />
           ) : null}
 
           {!loading && isToday && next.length > 0 ? (
@@ -298,17 +257,12 @@ export function FocusScreen() {
       )}
 
       <DateSheet
-        visible={dateSheetOpen}
-        onClose={closeDateSheet}
-        withTime={rescheduling !== null}
+        visible={rescheduling !== null}
+        onClose={() => setRescheduling(null)}
+        withTime
         onSelect={date => {
-          if (rescheduling) {
-            const task = rescheduling;
-            runAction(() => rescheduleTask(task.id, date));
-          } else {
-            setSelectedDate(moment(date, 'YYYY-MM-DD').toDate());
-          }
-          closeDateSheet();
+          const task = rescheduling;
+          if (task) runAction(() => rescheduleTask(task.id, date));
         }}
       />
     </TabScreenShell>

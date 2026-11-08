@@ -26,3 +26,15 @@ test('only untimed tasks: first is now, rest later', () => {
   expect(next).toHaveLength(1);
   expect(later).toEqual([]);
 });
+
+test('a task later today is not Now: it waits in Next and Now stays empty', () => {
+  const {now, next} = splitFocusDay([task(1, at(18))], morning);
+  expect(now).toBeNull();
+  expect(next.map(t => t.id)).toEqual([1]);
+});
+
+test('an untimed task takes Now ahead of a later timed one', () => {
+  const {now, next} = splitFocusDay([task(1, at(18)), task(2, null)], morning);
+  expect(now?.id).toBe(2);
+  expect(next.map(t => t.id)).toEqual([1]);
+});

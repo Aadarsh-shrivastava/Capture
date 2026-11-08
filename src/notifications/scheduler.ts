@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import {Platform} from 'react-native';
 
 /** Reminder notifications carry Done / Snooze buttons. */
 export const REMINDER_CATEGORY = 'task-reminder';
@@ -90,5 +91,8 @@ export async function clearAll(): Promise<void> {
 }
 
 export function setBadge(count: number): Promise<boolean> {
+  // expo-notifications on Android clears a 0 badge with NotificationManager.cancelAll(), wiping every shown
+  // notification (reminders, the pinned capture one). Android badges follow notifications anyway.
+  if (Platform.OS === 'android' && count === 0) return Promise.resolve(true);
   return Notifications.setBadgeCountAsync(count);
 }

@@ -4,7 +4,7 @@
  * Each Open grows the gap (spaced repetition), so things you keep visiting fade out slowly.
  */
 
-export type ResurfaceAction = 'open' | 'later' | 'doIt' | 'done';
+export type ResurfaceAction = 'open' | 'later' | 'done';
 
 export type Memo = {
   itemId: number;
@@ -13,6 +13,8 @@ export type Memo = {
   content: string | null;
   createdAt: string;
   hasLink: boolean;
+  /** Sticker key, if the item has one. */
+  mascot?: string | null;
   weight: number | null;
   reviewAt: string | null;
   intervalDays: number | null;
@@ -62,7 +64,7 @@ export function rank(memos: Memo[], now = Date.now(), count = 3): Memo[] {
 export function nextState(m: Memo, action: ResurfaceAction, now = Date.now()): Record<string, string> {
   const w = weightOf(m);
   const base = {weight: m.weight == null ? '' : String(m.weight), last_reviewed_at: new Date(now).toISOString(), times_shown: String(m.timesShown + 1)};
-  if (action === 'doIt' || action === 'done' || w === 0) return {...base, weight: '0', review_at: '', interval_days: ''};
+  if (action === 'done' || w === 0) return {...base, weight: '0', review_at: '', interval_days: ''};
   const gap = action === 'open' ? gapOf(m, w) * GROWTH[w] : gapOf(m, w);
   const wait = action === 'open' ? gap : 1;
   return {...base, review_at: new Date(now + wait * DAY).toISOString(), interval_days: String(Math.round(gap * 10) / 10)};

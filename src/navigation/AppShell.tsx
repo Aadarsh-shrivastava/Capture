@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
+import { QueueStrip } from '@/capture/QueueStrip';
 import { AppDrawer } from '@/components/AppDrawer/AppDrawer';
 import { CaptureFlowHost } from '@/components/CaptureFlowHost/CaptureFlowHost';
 import { CaptureModal } from '@/components/CaptureModal/CaptureModal';
@@ -26,6 +27,7 @@ export function AppShell() {
       <CaptureVoiceHost />
       <HomeWidgetHandler />
       <TaskReminders />
+      <QueueStrip />
       <UndoToast />
       <TypeCheckSheet />
       <DailyReviewSheet />

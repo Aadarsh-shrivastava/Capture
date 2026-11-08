@@ -1,47 +1,60 @@
 import {useRouter} from 'expo-router';
-import {Alert, ScrollView, useWindowDimensions} from 'react-native';
+import {useEffect, useState, type ReactNode} from 'react';
+import {Alert} from 'react-native';
 
 import {Appear} from '@/motion';
 
+import {canShow} from './budget';
+import {useBudgetStore} from './budgetStore';
 import {act} from './service';
 import {SuggestionCard} from './SuggestionCard';
 import {useSuggestions} from './useSuggestions';
 
-const GAP = 12;
-const GUTTER = 20;
+/** How many due come-backs to pick from at random. */
+const POOL = 20;
 
-/** Ideas, questions and links due to come back, as swipeable cards. Renders nothing when none are due. */
-export function Suggestions({count = 3}: {count?: number}) {
+/**
+ * `before`: shown above the card when there is one; `fallback`: shown instead when there isn't.
+ * One come-back at a time, on the swipe card — only when one is due and today's budget allows
+ * (budget.ts: a few per day, none for a few hours after hiding). Renders nothing otherwise.
+ */
+export function Suggestions({before, fallback = null}: {before?: ReactNode; fallback?: ReactNode} = {}) {
   const router = useRouter();
-  const memos = useSuggestions(count);
-  const {width} = useWindowDimensions();
-  if (memos.length === 0) return null;
+  const due = useSuggestions(POOL);
+  const budget = useBudgetStore(state => state.budget);
+  const markSeen = useBudgetStore(state => state.seen);
+  const hide = useBudgetStore(state => state.hide);
+  const allowed = due.filter(m => canShow(budget, m.itemId));
 
-  // One card fills the row; several peek so it's clear you can swipe.
-  const cardWidth = memos.length === 1 ? width - GUTTER * 2 : width - GUTTER * 2 - 28;
+  // A random pick that stays put until it's no longer allowed (acted on, hidden, or out of budget).
+  const [pickedId, setPickedId] = useState<number | null>(null);
+  const memo = allowed.find(m => m.itemId === pickedId) ?? null;
+  useEffect(() => {
+    if (memo || allowed.length === 0) return;
+    setPickedId(allowed[Math.floor(Math.random() * allowed.length)].itemId);
+  }, [memo, allowed]);
+  useEffect(() => {
+    if (memo) markSeen(memo.itemId);
+  }, [memo, markSeen]);
+
+  if (!memo) return <>{fallback}</>;
   const run = (p: Promise<void>) => p.catch(e => Alert.alert('Could not update', e instanceof Error ? e.message : 'Try again'));
 
   return (
-    <Appear from="up" style={{marginHorizontal: -GUTTER, marginTop: 8}}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        decelerationRate="fast"
-        snapToInterval={cardWidth + GAP}
-        contentContainerStyle={{paddingHorizontal: GUTTER, gap: GAP}}>
-        {memos.map(memo => (
-          <SuggestionCard
-            key={memo.itemId}
-            memo={memo}
-            width={cardWidth}
-            onOpen={() => {
-              run(act(memo, 'open'));
-              router.push(`/item/${memo.itemId}`);
-            }}
-            onAct={action => run(act(memo, action))}
-          />
-        ))}
-      </ScrollView>
+    // Keyed by item: after a swipe, the next one slides in fresh.
+    <Appear key={memo.itemId} from="up" style={{marginTop: 20}}>
+      {before}
+      <SuggestionCard
+        memo={memo}
+        onOpen={() => {
+          run(act(memo, 'open'));
+          router.push(`/item/${memo.itemId}`);
+        }}
+        // Steps back a day, so a different one comes up next.
+        onNext={() => run(act(memo, 'later'))}
+        onHide={hide}
+        onDone={() => run(act(memo, 'done'))}
+      />
     </Appear>
   );
 }

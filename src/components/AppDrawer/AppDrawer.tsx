@@ -17,7 +17,6 @@ const DRAWER_WIDTH = Math.min(Dimensions.get('window').width * 0.52, 320);
 const MENU_ITEMS = [
   ...(GROUPS_ENABLED ? [{label: 'Groups', icon: 'folder-outline' as const, href: '/(tabs)/groups'}] : []),
   {label: 'Library', icon: 'layers-outline' as const, href: '/(tabs)/library'},
-  {label: 'Timeline', icon: 'time-outline' as const, href: '/(tabs)/timeline'},
   {label: 'Settings', icon: 'settings-outline' as const, href: '/settings'},
 ];
 

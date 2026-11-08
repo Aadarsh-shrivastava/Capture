@@ -41,5 +41,4 @@ test('open grows the gap; later waits a day; done turns it off', () => {
   expect(later.interval_days).toBe('7');
 
   expect(nextState(memo({}), 'done', now).weight).toBe('0');
-  expect(nextState(memo({}), 'doIt', now).weight).toBe('0');
 });

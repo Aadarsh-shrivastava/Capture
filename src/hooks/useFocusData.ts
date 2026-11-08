@@ -23,9 +23,10 @@ export function useFocusData() {
     }
   }, []);
 
+  // Load on mount and after every save (Week/Month views mount without a focus refresh).
   const version = useDataVersionStore(state => state.version);
   useEffect(() => {
-    if (version > 0) refresh();
+    refresh();
   }, [version, refresh]);
 
   return {tasks, loading, error, refresh};

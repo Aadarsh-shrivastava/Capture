@@ -49,5 +49,17 @@ target 'Capture' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # fmt 11.0.2 (pinned by RN 0.77) fails under newer Apple clang ("call to consteval function ...
+    # is not a constant expression"). fmt has no override macro, so force consteval off in its header.
+    fmt_base = File.join(installer.sandbox.root, 'fmt/include/fmt/base.h')
+    if File.exist?(fmt_base)
+      src = File.read(fmt_base)
+      patched = src.sub('#if !defined(__cpp_lib_is_constant_evaluated)', '#if 1 // patched: consteval off')
+      if patched != src
+        File.chmod(0644, fmt_base)
+        File.write(fmt_base, patched)
+      end
+    end
   end
 end

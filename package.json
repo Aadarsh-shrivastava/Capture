@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "postinstall": "node node_modules/llama.rn/install/download-native-artifacts.js && node scripts/patch-llama-android.js",
+    "postinstall": "node node_modules/llama.rn/install/download-native-artifacts.js && node scripts/patch-llama-android.js && node scripts/patch-rn-cli-simulator.js",
     "android": "react-native run-android --port 8082",
     "ios": "react-native run-ios --port 8082",
     "lint": "eslint .",

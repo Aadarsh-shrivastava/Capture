@@ -7,6 +7,7 @@ type Row = {
   title: string;
   content: string | null;
   importance: number | null;
+  mascot?: string | null;
   urgency: number | null;
   status: string;
   created_at: string;
@@ -38,6 +39,7 @@ export const searchRepository = {
       title: r.title,
       content: r.content,
       importance: r.importance,
+    mascot: r.mascot ?? null,
       urgency: r.urgency,
       status: r.status,
       createdAt: r.created_at,

@@ -8,16 +8,3 @@ export type FocusTask = ItemWithType & {
   estimatedMinutes: number | null;
 };
 
-export type FocusActivityEvent = {
-  id: string;
-  label: string;
-  typeName: string;
-  timestamp: string;
-};
-
-export type FocusQueue = {
-  overdue: FocusTask[];
-  doNow: FocusTask | null;
-  next: FocusTask[];
-  later: FocusTask[];
-};

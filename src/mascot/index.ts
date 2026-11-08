@@ -5,3 +5,5 @@ export {Mascot} from './Mascot';
 export {MascotFace} from './MascotFace';
 export {MascotMessage} from './MascotMessage';
 export {useMascotStore} from './store';
+export {ItemMascot} from './ItemMascot';
+export {isItemMascot, ITEM_MASCOT_KEYS, ITEM_MASCOTS, type ItemMascot as ItemMascotKey} from './itemMascots';

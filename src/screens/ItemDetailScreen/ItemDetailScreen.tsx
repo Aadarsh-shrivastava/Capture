@@ -8,7 +8,7 @@ import { Pressable } from '@/ui/HapticPressable';
 import { itemApi } from '@/api/itemApi';
 import { OptionsSheet } from '@/components/sheets/OptionsSheet';
 import { ChecklistView, parseNumbers } from '@/behaviors';
-import { Mascot } from '@/mascot';
+import { isItemMascot, ItemMascot, Mascot } from '@/mascot';
 import { isRepeatUnit, repeatLabel } from '@/recurrence';
 import { completeTask, deleteItem, setTaskStatus } from '@/taskActions';
 import { ScreenShell } from '@/components/ScreenShell/ScreenShell';
@@ -125,19 +125,21 @@ export function ItemDetailScreen() {
           paddingBottom: spacing.stackLg,
         }}
       >
-        <Text
-          style={{
-            color: designTokens.textPrimary,
-            fontSize: 28,
-            fontWeight: '600',
-            letterSpacing: -0.4,
-            lineHeight: 34,
-            marginTop: 4,
-            marginBottom: 8,
-          }}
-        >
-          {item.title}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4, marginBottom: 8 }}>
+          {isItemMascot(item.mascot) ? <ItemMascot mascot={item.mascot} size={44} /> : null}
+          <Text
+            style={{
+              flex: 1,
+              color: designTokens.textPrimary,
+              fontSize: 28,
+              fontWeight: '600',
+              letterSpacing: -0.4,
+              lineHeight: 34,
+            }}
+          >
+            {item.title}
+          </Text>
+        </View>
 
         <Text style={{ color: designTokens.textTertiary, fontSize: 13, marginBottom: 16 }}>
           {formatRelativeDay(item.createdAt)}

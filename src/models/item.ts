@@ -8,6 +8,8 @@ export type Item = {
   status: string;
   createdAt: string;
   updatedAt: string;
+  /** Sticker key (src/mascot/itemMascots.ts), or null. */
+  mascot?: string | null;
 };
 
 export type ItemWithType = Item & {

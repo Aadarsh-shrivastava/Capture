@@ -109,6 +109,7 @@ export const groupRepository = {
       title: string;
       content: string | null;
       importance: number | null;
+  mascot?: string | null;
       urgency: number | null;
       status: string;
       created_at: string;
@@ -131,6 +132,7 @@ export const groupRepository = {
       title: row.title,
       content: row.content,
       importance: row.importance,
+    mascot: row.mascot ?? null,
       urgency: row.urgency,
       status: row.status ?? 'active',
       createdAt: row.created_at,

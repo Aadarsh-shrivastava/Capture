@@ -10,6 +10,7 @@ export function toSavePayload(full: ItemFull, doable?: Record<string, string>): 
     typeId: full.typeId,
     title: full.title,
     content: full.content,
+    mascot: full.mascot,
     importance: full.importance,
     urgency: full.urgency,
     status: full.status,

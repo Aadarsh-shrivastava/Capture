@@ -69,8 +69,8 @@ export const itemSaveRepository = {
 
     await db.withTransactionAsync(async () => {
       const result = await db.runAsync(
-        `INSERT INTO items (type_id, title, content, importance, urgency, status, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO items (type_id, title, content, importance, urgency, status, created_at, updated_at, mascot)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         payload.typeId,
         payload.title.trim(),
         payload.content?.trim() || null,
@@ -78,7 +78,8 @@ export const itemSaveRepository = {
         payload.urgency ?? null,
         payload.status ?? 'active',
         now,
-        now
+        now,
+        payload.mascot ?? null
       );
       itemId = Number(result.lastInsertRowId);
 
@@ -119,7 +120,8 @@ export const itemSaveRepository = {
     await db.withTransactionAsync(async () => {
       await db.runAsync(
         `UPDATE items
-         SET type_id = ?, title = ?, content = ?, importance = ?, urgency = ?, status = ?, updated_at = ?
+         SET type_id = ?, title = ?, content = ?, importance = ?, urgency = ?, status = ?, updated_at = ?,
+             mascot = COALESCE(?, mascot)
          WHERE id = ?`,
         payload.typeId,
         payload.title.trim(),
@@ -128,6 +130,7 @@ export const itemSaveRepository = {
         payload.urgency ?? null,
         payload.status ?? 'active',
         now,
+        payload.mascot ?? null,
         itemId
       );
 
@@ -184,6 +187,7 @@ export const itemSaveRepository = {
       status: item.status,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
+      mascot: item.mascot ?? null,
       defaultBehaviorIds: defaults.map((b) => b.id),
       optionalBehaviorIds: optional.map((b) => b.id),
       effectiveBehaviors: effective.map((b) => ({ id: b.id, name: b.name })),

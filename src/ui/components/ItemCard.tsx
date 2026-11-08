@@ -1,6 +1,8 @@
 import {Text, View} from 'react-native';
 
+import {Grain} from '@/ui/Grain';
 import {Pressable} from '@/ui/HapticPressable';
+import {isItemMascot, ItemMascot} from '@/mascot';
 import {IconTile} from '@/ui/components/Primitives';
 import {designTokens, radius} from '@/ui/designTokens';
 import {formatRelativeDay} from '@/ui/formatDateTime';
@@ -10,6 +12,8 @@ type ItemCardProps = {
   title: string;
   typeName: string;
   createdAt: string;
+  /** Sticker key; shown instead of the type icon when set. */
+  mascot?: string | null;
   /** Extra meta shown after the date, e.g. a due label. */
   meta?: string | null;
   onPress?: () => void;
@@ -17,7 +21,7 @@ type ItemCardProps = {
 };
 
 /** Rounded card row for item lists — icon tile, title, meta line. */
-export function ItemCard({title, typeName, createdAt, meta, onPress, onLongPress}: ItemCardProps) {
+export function ItemCard({title, typeName, createdAt, mascot, meta, onPress, onLongPress}: ItemCardProps) {
   const config = getItemTypeConfig(typeName);
   const metaLine = [config.label, meta || formatRelativeDay(createdAt)].filter(Boolean).join(' · ');
 
@@ -34,7 +38,7 @@ export function ItemCard({title, typeName, createdAt, meta, onPress, onLongPress
         borderRadius: radius.lg,
         backgroundColor: pressed ? designTokens.cardPressed : designTokens.card,
       })}>
-      <IconTile icon={config.icon} size={40} />
+      {isItemMascot(mascot) ? <ItemMascot mascot={mascot} size={40} /> : <IconTile icon={config.icon} size={40} />}
 
       <View style={{flex: 1}}>
         <Text
@@ -78,7 +82,10 @@ export function TypeGridCard({typeName, count, onPress}: TypeGridCardProps) {
         justifyContent: 'center',
         gap: 8,
         backgroundColor: pressed ? designTokens.cardPressed : designTokens.card,
+        experimental_backgroundImage: pressed ? undefined : designTokens.cardGradient,
+        boxShadow: designTokens.cardShadow,
       })}>
+      <Grain radius={radius.lg} />
       <IconTile icon={config.icon} size={36} />
       <View style={{alignItems: 'center', gap: 2}}>
         <Text numberOfLines={1} style={{color: designTokens.white, fontSize: 15, fontWeight: '700'}}>

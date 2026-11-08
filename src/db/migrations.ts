@@ -176,6 +176,20 @@ const MIGRATIONS: Record<number, string[]> = {
     `INSERT OR IGNORE INTO memorable_items (item_id)
      SELECT i.id FROM items i JOIN item_types t ON t.id = i.type_id WHERE t.name = 'Idea';`,
   ],
+  // Say and forget: captured thoughts wait here until the model has turned them into items.
+  8: [
+    `CREATE TABLE IF NOT EXISTS capture_queue (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      text TEXT NOT NULL,
+      group_name TEXT,
+      created_at TEXT NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0
+    );`,
+  ],
+  // Thoughts from outside the app (widget, lock screen, Siri) are stored whole; the worker splits them.
+  9: [`ALTER TABLE capture_queue ADD COLUMN needs_split INTEGER NOT NULL DEFAULT 0;`],
+  // Which sticker an item shows (src/mascot/itemMascots.ts); picked by the capture model.
+  10: [`ALTER TABLE items ADD COLUMN mascot TEXT;`],
 };
 
 async function getCurrentVersion(db: SQLiteDatabase): Promise<number> {

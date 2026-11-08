@@ -9,6 +9,7 @@ type ItemRow = {
   title: string;
   content: string | null;
   importance: number | null;
+  mascot?: string | null;
   urgency: number | null;
   status: string;
   created_at: string;
@@ -44,6 +45,7 @@ function mapItem(row: ItemRow): Item {
     title: row.title,
     content: row.content,
     importance: row.importance,
+    mascot: row.mascot ?? null,
     urgency: row.urgency,
     status: row.status ?? 'active',
     createdAt: row.created_at,

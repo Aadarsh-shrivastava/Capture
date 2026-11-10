@@ -14,14 +14,34 @@ import {STOPWORDS} from './stopwords';
 
 const words = (s: string): string[] => s.toLowerCase().match(/[a-z0-9]+/g) ?? [];
 
+/** Filler words a rewrite may add — but never a date or time word: "tomorrow" added to a description is a made-up fact. */
+const DATE_WORDS = new Set(['today', 'tomorrow', 'tonight', 'week', 'weeks', 'month', 'months', 'day', 'days', 'time']);
+const FILLER = new Set([...STOPWORDS].filter(w => !DATE_WORDS.has(w)));
+
+/** One letter added, dropped or changed ("haad" → "had"): a spelling fix, not a new word. */
+function oneEditApart(a: string, b: string): boolean {
+  if (Math.abs(a.length - b.length) > 1 || a === b) return a === b;
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  const [ra, rb] = [a.slice(i), b.slice(i)];
+  return ra.slice(1) === rb.slice(1) || ra.slice(1) === rb || ra === rb.slice(1);
+}
+
 /**
- * Words in `output` the user never said: not in the source (same 4-letter stem counts, "leaking" ~ "leaky"),
- * not filler. Used to reject a model's title/description that adds facts.
+ * Words in `output` the user never said: not in the source (same 4-letter stem counts, "leaking" ~ "leaky";
+ * a one-letter spelling fix counts), not filler. Used to reject a model's title/description that adds facts.
  */
 export function inventedWords(output: string, source: string): string[] {
   const src = words(source);
   const stems = new Set(src.map(w => w.slice(0, 4)));
-  return [...new Set(words(output))].filter(w => w.length >= 3 && !STOPWORDS.has(w) && !src.includes(w) && !stems.has(w.slice(0, 4)));
+  return [...new Set(words(output))].filter(
+    w =>
+      w.length >= 3 &&
+      !FILLER.has(w) &&
+      !src.includes(w) &&
+      !stems.has(w.slice(0, 4)) &&
+      !(w.length >= 3 && src.some(s => s.length >= 3 && oneEditApart(w, s))),
+  );
 }
 
 const DAY_NAMES = '(?:sun|mon|tues|wednes|thurs|fri|satur)day';
@@ -81,4 +101,26 @@ export function firstOccurrence(repeat: Record<string, string>, now: Date): stri
   const days: number[] = JSON.parse(repeat.days || '[]');
   const ahead = days.length ? Math.min(...days.map(d => (d - now.getDay() + 7) % 7)) : 0;
   return moment(now).add(ahead, 'days').format('YYYY-MM-DD');
+}
+
+/** "felt", "had fun", "today was", "we went"… — telling what happened (but "had to" is an obligation, not the past). */
+const DAY_WORDS = /\b(?:i|we)\s+(?:felt|was|were|ha+d(?!\s+to\b)|went|met|enjoyed|loved|saw)\b|\btoday was\b|\bfelt\b/i; // ha+d: "haad" typed fast
+/** Thinking out loud. */
+const IDEA_WORDS = /^\s*idea\b|\bwhat if\b|\bmaybe\b|\bimagine\b|\bi wonder\b|\bwouldn'?t it be\b|\bcould we\b/i;
+/** A fact to keep: "X's number is…", "the wifi password is…", "… is the capital of…". */
+const FACT_WORDS = /\b(?:number|password|code|address|size|capital|birthday|email|phone|pin)\b[^.?!]*\b(?:is|are)\b|\b(?:is|are)\s+the\s+(?:capital|address)\b/i;
+
+export type Kind = 'todo' | 'day' | 'idea' | 'fact';
+
+/**
+ * What the user's own words already say it is — certain, no model needed. In this order: telling about their day;
+ * a date, time, reminder or repeat (something to do); thinking out loud (an idea); a fact. Nothing clear → null,
+ * and the model judges.
+ */
+export function kindFromWords(text: string, now: Date, dueAt: string): Kind | null {
+  if (DAY_WORDS.test(text)) return 'day';
+  if (dueAt || extractRemind(text) || extractRepeat(text)) return 'todo';
+  if (IDEA_WORDS.test(text)) return 'idea';
+  if (FACT_WORDS.test(text)) return 'fact';
+  return null;
 }

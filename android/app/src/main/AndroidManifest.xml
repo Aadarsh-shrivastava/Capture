@@ -40,6 +40,17 @@
             <data android:scheme="capture" android:host="quick" />
             <data android:scheme="capture" android:host="open" />
         </intent-filter>
+      </activity>
+
+      <!-- Share menu: "Save to Capture" pops up over the sharing app; the app itself isn't opened. -->
+      <activity
+        android:name=".widget.ShareCaptureActivity"
+        android:exported="true"
+        android:excludeFromRecents="true"
+        android:label="@string/share_title"
+        android:taskAffinity=""
+        android:theme="@style/WidgetCaptureTheme"
+        android:windowSoftInputMode="stateHidden|adjustResize">
         <intent-filter>
             <action android:name="android.intent.action.SEND" />
             <category android:name="android.intent.category.DEFAULT" />

@@ -23,7 +23,14 @@ export function scoreCase(c: CaptureCase, draft: CaptureItemDraft): FieldResult[
     out.push({field, ok, expected: JSON.stringify(expected), got: JSON.stringify(got)});
   const data = draft.behaviorData ?? {};
 
-  add('type', draft.typeName === c.type, c.type, draft.typeName);
+  // Everything is a thought: an Idea is a plain thought (Note) that comes back.
+  const kind = c.type === 'Idea' ? 'Note' : c.type;
+  add('kind (to do / your day / thought)', draft.typeName === kind, kind, draft.typeName);
+  const comesBack = c.comesBack ?? (c.type === 'Idea' ? true : undefined);
+  if (comesBack !== undefined) {
+    const got = (draft.optionalBehaviorNames ?? []).includes('Memorable');
+    add('comes back', got === comesBack, comesBack, got);
+  }
 
   if (c.title) add('title', c.title.every(w => draft.title.toLowerCase().includes(w.toLowerCase())), c.title, draft.title);
   const titleInvented = inventedWords(draft.title, c.text);

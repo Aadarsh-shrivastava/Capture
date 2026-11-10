@@ -40,6 +40,7 @@ function parsePath(href: string): NavTarget {
     return { screen: 'MainTabs', params: { screen: tab, params } };
   }
   if (path === '/library') return { screen: 'MainTabs', params: { screen: 'library', params } };
+  if (path === '/thoughts') return { screen: 'MainTabs', params: { screen: 'thoughts', params } };
   if (path === '/library/list' || path === '/list') return { screen: 'LibraryList', params };
   if (path === '/groups') return { screen: 'Groups', params };
   if (path === '/create-item') return { screen: 'CreateItem', params };

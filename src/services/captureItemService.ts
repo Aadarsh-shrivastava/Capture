@@ -76,6 +76,7 @@ export async function resolveCaptureDraft(draft: CaptureItemDraft): Promise<Save
     title: title || 'Untitled',
     content,
     mascot: draft.mascot ?? null,
+    unsure: draft.unsure ?? false,
     // Priority/urgency only belong to doable items.
     importance: typeHasBehavior(draft.typeName, 'Doable') ? (draft.importance ?? null) : null,
     urgency: typeHasBehavior(draft.typeName, 'Doable') ? (draft.urgency ?? null) : null,

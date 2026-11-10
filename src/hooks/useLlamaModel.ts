@@ -27,11 +27,13 @@ let context: LlamaContext | null = null;
 let loading: Promise<boolean> | null = null;
 let idleTimer: ReturnType<typeof setTimeout> | undefined;
 
-const useLlamaStore = create<{status: string; loadPct: number; ready: boolean; busy: boolean}>(() => ({
+/** `loadFailed`: the file is there but won't load (e.g. a broken download) — thoughts wait until it's replaced. */
+export const useLlamaStore = create<{status: string; loadPct: number; ready: boolean; busy: boolean; loadFailed: boolean}>(() => ({
   status: 'Model not loaded',
   loadPct: 0,
   ready: false,
   busy: false,
+  loadFailed: false,
 }));
 const setState = useLlamaStore.setState;
 
@@ -65,11 +67,11 @@ export function ensureLoaded(): Promise<boolean> {
         {model: modelPath(), n_ctx: 2048, n_gpu_layers: Platform.OS === 'ios' ? 99 : 0, use_mlock: true},
         p => setState({loadPct: Math.round(p * 100)}),
       );
-      setState({ready: true, status: `Ready · GPU: ${context.gpu ? 'yes' : 'no'}`});
+      setState({ready: true, loadFailed: false, status: `Ready · GPU: ${context.gpu ? 'yes' : 'no'}`});
       touch();
       return true;
     } catch (e) {
-      setState({ready: false, status: e instanceof Error ? e.message : String(e)});
+      setState({ready: false, loadFailed: true, status: e instanceof Error ? e.message : String(e)});
       return false;
     } finally {
       loading = null;

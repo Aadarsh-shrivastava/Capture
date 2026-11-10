@@ -69,8 +69,8 @@ export const itemSaveRepository = {
 
     await db.withTransactionAsync(async () => {
       const result = await db.runAsync(
-        `INSERT INTO items (type_id, title, content, importance, urgency, status, created_at, updated_at, mascot)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO items (type_id, title, content, importance, urgency, status, created_at, updated_at, mascot, unsure)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         payload.typeId,
         payload.title.trim(),
         payload.content?.trim() || null,
@@ -79,7 +79,8 @@ export const itemSaveRepository = {
         payload.status ?? 'active',
         now,
         now,
-        payload.mascot ?? null
+        payload.mascot ?? null,
+        payload.unsure ? 1 : 0
       );
       itemId = Number(result.lastInsertRowId);
 

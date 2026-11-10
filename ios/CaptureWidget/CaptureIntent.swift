@@ -7,11 +7,16 @@ enum PendingCaptures {
   static let defaults = UserDefaults(suiteName: "group.org.reactjs.native.example.Capture")
   static let key = "pending_prompts"
 
-  static func add(_ text: String) {
+  /// `shared`: from the share sheet — kept whole, never split into thoughts. `kind`: the user's pick
+  /// (todo / read / remember / keep), so the model doesn't have to guess what it is.
+  static func add(_ text: String, shared: Bool = false, kind: String? = nil) {
     let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return }
     // With the capture time, so "tomorrow" means the day after it was said, not after the app next opens.
-    let json = try? JSONSerialization.data(withJSONObject: ["text": trimmed, "at": Date().timeIntervalSince1970 * 1000])
+    var fields: [String: Any] = ["text": trimmed, "at": Date().timeIntervalSince1970 * 1000]
+    if shared { fields["shared"] = true }
+    if let kind { fields["kind"] = kind }
+    let json = try? JSONSerialization.data(withJSONObject: fields)
     let entry = json.flatMap { String(data: $0, encoding: .utf8) } ?? trimmed
     defaults?.set((defaults?.stringArray(forKey: key) ?? []) + [entry], forKey: key)
   }

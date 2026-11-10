@@ -9,7 +9,6 @@ import {ScreenShell} from '@/components/ScreenShell/ScreenShell';
 import type {CaptureItemDraft} from '@/capture/captureItemDraft';
 import type {Group} from '@/models/group';
 import {draftFromItemFull, saveItemDraft} from '@/services/captureItemService';
-import {learnFromCorrection} from '@/typeCheck';
 import {hasRequiredItemText} from '@/ui/components/ItemTextFields';
 import {ItemForm} from '@/ui/components/ItemForm';
 import {PrimaryButton} from '@/ui/components/Primitives';
@@ -39,7 +38,6 @@ export function CreateItemScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** Type when the edit opened — changing it is a correction the new type learns from. */
-  const [savedType, setSavedType] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -49,7 +47,6 @@ export function CreateItemScreen() {
       if (isEditing && itemId != null) {
         const full = await itemApi.getItemFull(itemId);
         setDraft(draftFromItemFull(full, loadedGroups));
-        setSavedType(full.typeName);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load form');
@@ -72,7 +69,6 @@ export function CreateItemScreen() {
       setSaving(true);
       setError(null);
       await saveItemDraft(draft, isEditing && itemId != null ? itemId : undefined);
-      if (savedType && draft.typeName !== savedType) learnFromCorrection(draft.typeName, `${draft.title} ${draft.content ?? ''}`);
       router.back();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to save item');

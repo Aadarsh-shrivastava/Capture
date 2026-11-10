@@ -15,6 +15,8 @@ import {DrawerProfile} from './components/DrawerProfile';
 const DRAWER_WIDTH = Math.min(Dimensions.get('window').width * 0.52, 320);
 
 const MENU_ITEMS = [
+  {label: 'Focus', icon: 'radio-button-on-outline' as const, href: '/focus'},
+  {label: 'Thoughts', icon: 'chatbubble-ellipses-outline' as const, href: '/thoughts'},
   ...(GROUPS_ENABLED ? [{label: 'Groups', icon: 'folder-outline' as const, href: '/(tabs)/groups'}] : []),
   {label: 'Library', icon: 'layers-outline' as const, href: '/(tabs)/library'},
   {label: 'Settings', icon: 'settings-outline' as const, href: '/settings'},

@@ -1,24 +1,8 @@
 import {encode} from '@/behaviors/data';
 import {inferRepeatUnit} from '@/recurrence/utils';
 
-import type {KnowledgeStep} from './knowledge';
-
 /** Data for one behavior (string fields, lists JSON-encoded), or null = not detected. */
 type Parsed = Record<string, string> | null;
-
-export type BehaviorStep = {
-  behavior: string;
-  step: KnowledgeStep;
-  label: string;
-  maxTokens: number;
-  /** Cheap check on the raw text; no signal = no model call at all. */
-  gate: (text: string) => boolean;
-  /** Turn the model's answer into behavior data. */
-  parse: (answer: string) => Parsed;
-  describe: (data: Record<string, string>) => string;
-  /** GBNF for the answer's form, so the small model can only pick, not ramble. */
-  grammar?: string;
-};
 
 const WEEKDAYS: Record<string, number> = {sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6};
 const isNone = (a: string) => !a.trim() || /^none\b/i.test(a.trim());
@@ -58,25 +42,3 @@ export function parseSteps(answer: string): Parsed {
     .filter(s => s.length > 1 && s.length < 60);
   return parts.length >= 2 ? {steps: encode(parts.slice(0, 8).map(text => ({text: text[0].toUpperCase() + text.slice(1), done: false})))} : null;
 }
-
-/** Behavior steps the agent can run. Add a behavior = a knowledge entry + one item here. */
-const WEIGHT_WORDS: Record<string, string> = {often: '3', sometimes: '2', rarely: '1', never: '0'};
-
-/** "often" → {weight: '3'} … "never" → {weight: '0'}; anything else = no opinion (Auto stays). */
-export function parseWeight(answer: string): Parsed {
-  const word = answer.toLowerCase().match(/\b(often|sometimes|rarely|never)\b/)?.[1];
-  return word ? {weight: WEIGHT_WORDS[word]} : null;
-}
-
-export const BEHAVIOR_STEPS: BehaviorStep[] = [
-  {
-    behavior: 'Memorable',
-    step: 'memorable',
-    label: 'comes back',
-    maxTokens: 4,
-    gate: () => true,
-    parse: parseWeight,
-    grammar: 'root ::= "often" | "sometimes" | "rarely" | "never"',
-    describe: d => ({'3': 'often', '2': 'sometimes', '1': 'rarely', '0': 'never'})[d.weight] ?? 'auto',
-  },
-];

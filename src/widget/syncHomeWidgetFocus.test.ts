@@ -26,4 +26,11 @@ test('native capture entries: JSON with time, or a plain legacy string', () => {
   expect(parsePendingEntry('{"text":" gym tomorrow ","at":1000}')).toEqual({text: 'gym tomorrow', at: new Date(1000)});
   expect(parsePendingEntry('call mom').text).toBe('call mom');
   expect(parsePendingEntry('42').text).toBe('42');
+  // From the share sheet: kept whole, with the user's pick.
+  expect(parsePendingEntry('{"text":"read this https://x.io","at":1000,"shared":true,"kind":"read"}')).toEqual({
+    text: 'read this https://x.io',
+    at: new Date(1000),
+    split: false,
+    kind: 'read',
+  });
 });

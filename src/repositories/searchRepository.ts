@@ -8,6 +8,7 @@ type Row = {
   content: string | null;
   importance: number | null;
   mascot?: string | null;
+  unsure?: number;
   urgency: number | null;
   status: string;
   created_at: string;
@@ -40,6 +41,7 @@ export const searchRepository = {
       content: r.content,
       importance: r.importance,
     mascot: r.mascot ?? null,
+    unsure: Boolean(r.unsure),
       urgency: r.urgency,
       status: r.status,
       createdAt: r.created_at,

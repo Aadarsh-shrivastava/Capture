@@ -14,6 +14,7 @@ import {Suggestions} from '@/resurface';
 import {UpcomingView, useCurrentView, useViewStore, ViewPicker} from '@/views';
 import {DayProgress, useDayProgress} from '@/progress';
 import {useAppearance} from '@/store/appearanceStore';
+import {QuickCheck} from '@/capture/QuickCheck';
 import type {FocusTask} from '@/models/focusTask';
 import {
   FocusEmptyState,
@@ -68,8 +69,10 @@ export function FocusScreen() {
     [isToday, repeatPreview, selected],
   );
   // Real tasks only — ghosts never hide the empty state (and its mascot).
+  // Guessed to-dos wait in "Is this something to do?" until answered — they never take over Now.
+  const unsureTasks = useMemo(() => tasks.filter(t => t.unsure), [tasks]);
   const dayTasks = useMemo(
-    () => tasksForDay(withLingering(tasks), selected),
+    () => tasksForDay(withLingering(tasks.filter(t => !t.unsure)), selected),
     [tasks, selected, withLingering],
   );
   const {now, next, later} = useMemo(() => splitFocusDay(dayTasks), [dayTasks]);
@@ -159,7 +162,7 @@ export function FocusScreen() {
           contentContainerStyle={{
             paddingHorizontal: 20,
             paddingTop: 20,
-            paddingBottom: 40,
+            paddingBottom: 120, // clear of the bottom bar or input
           }}
           // iOS: overscroll bounce past the threshold. Android has no bounce, so its native pull gesture opens capture.
           refreshControl={
@@ -183,6 +186,7 @@ export function FocusScreen() {
             Pull to capture
           </Text>
           {showProgress ? <DayProgress day={selectedDate} /> : null}
+          {isToday ? <QuickCheck items={unsureTasks} /> : null}
 
           {!loading && isToday && now ? (
             // The next task fades in once the done one has swiped away.

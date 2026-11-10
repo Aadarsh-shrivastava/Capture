@@ -10,6 +10,7 @@ type ItemRow = {
   content: string | null;
   importance: number | null;
   mascot?: string | null;
+  unsure?: number;
   urgency: number | null;
   status: string;
   created_at: string;
@@ -46,6 +47,7 @@ function mapItem(row: ItemRow): Item {
     content: row.content,
     importance: row.importance,
     mascot: row.mascot ?? null,
+    unsure: Boolean(row.unsure),
     urgency: row.urgency,
     status: row.status ?? 'active',
     createdAt: row.created_at,
@@ -165,6 +167,12 @@ export const itemRepository = {
     );
 
     return rows.map(mapItemWithType);
+  },
+
+  /** The user answered "to do or thought?" — stop asking. */
+  async clearUnsure(id: number): Promise<void> {
+    const db = await getDatabase();
+    await db.runAsync('UPDATE items SET unsure = 0 WHERE id = ?', id);
   },
 
   async update(id: number, input: UpdateItemInput): Promise<Item> {

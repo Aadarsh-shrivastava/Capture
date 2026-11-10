@@ -7,6 +7,8 @@ export type CaptureItemDraft = {
   content?: string | null;
   /** Sticker key (src/mascot/itemMascots.ts). */
   mascot?: string | null;
+  /** The model guessed "something to do" without the user's words saying so: ask before trusting it. */
+  unsure?: boolean;
   importance?: number | null;
   urgency?: number | null;
   tagNames?: string[];

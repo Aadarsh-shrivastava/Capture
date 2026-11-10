@@ -1,4 +1,4 @@
-import {parseRemind, parseRepeat, parseSteps, parseWeight} from './behaviorSteps';
+import {parseRemind, parseRepeat, parseSteps} from './behaviorSteps';
 
 test('repeat answers', () => {
   expect(parseRepeat('weekly on mon,wed,fri')).toEqual({interval_value: '1', interval_unit: 'week', days: '[1,3,5]'});
@@ -19,10 +19,4 @@ test('steps answers', () => {
   expect(JSON.parse(parseSteps('pack for trip: passport, charger, and sunscreen')!.steps)).toHaveLength(3);
   expect(parseSteps('NONE')).toBeNull();
   expect(parseSteps('Call mom')).toBeNull();
-});
-
-test('come back weight', () => {
-  expect(parseWeight('Often.')).toEqual({weight: '3'});
-  expect(parseWeight('never')).toEqual({weight: '0'});
-  expect(parseWeight('maybe')).toBeNull();
 });

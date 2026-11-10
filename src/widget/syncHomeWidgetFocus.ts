@@ -10,7 +10,7 @@ import {formatDueDateLabel, hasTimeComponent} from '@/ui/formatDateTime';
 
 /** What Focus would show at `at`: Now if there is one, else the next task later that day. */
 function entryAt(tasks: FocusTask[], at: moment.Moment): WidgetEntry {
-  const {now, next} = splitFocusDay(tasksForDay(tasks, at, at), at.valueOf());
+  const {now, next} = splitFocusDay(tasksForDay(tasks.filter(t => !t.unsure), at, at), at.valueOf()); // guessed to-dos wait for an answer
   const task = now ?? next[0];
   if (!task) return {at: at.valueOf(), title: null, subtitle: null};
 

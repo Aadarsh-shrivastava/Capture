@@ -10,6 +10,8 @@ export type Item = {
   updatedAt: string;
   /** Sticker key (src/mascot/itemMascots.ts), or null. */
   mascot?: string | null;
+  /** Saved as a to-do on the model's guess alone; Focus asks the user. */
+  unsure?: boolean;
 };
 
 export type ItemWithType = Item & {

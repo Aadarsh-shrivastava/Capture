@@ -8,6 +8,7 @@ type FocusTaskRow = {
   content: string | null;
   importance: number | null;
   mascot?: string | null;
+  unsure?: number;
   urgency: number | null;
   status: string;
   created_at: string;
@@ -27,6 +28,7 @@ function mapFocusTask(row: FocusTaskRow): FocusTask {
     content: row.content,
     importance: row.importance,
     mascot: row.mascot ?? null,
+    unsure: Boolean(row.unsure),
     urgency: row.urgency,
     status: row.status ?? 'active',
     createdAt: row.created_at,

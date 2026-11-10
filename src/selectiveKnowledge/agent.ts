@@ -5,8 +5,7 @@ import {getDefaultBehaviorsForType, typeAllowsBehavior, typeHasBehavior} from '@
 import {ITEM_MASCOT_KEYS, ITEM_MASCOTS, isItemMascot} from '@/mascot/itemMascots';
 import type {ItemTypeName} from '@/ui/itemTypeConfig';
 
-import {BEHAVIOR_STEPS} from './behaviorSteps';
-import {extractRemind, extractRepeat, extractSteps, firstOccurrence, inventedWords, stripDates} from './extract';
+import {extractRemind, extractRepeat, extractSteps, firstOccurrence, inventedWords, kindFromWords, stripDates} from './extract';
 import {findKnowledge, type KnowledgeStep} from './knowledge';
 import {STOPWORDS} from './stopwords';
 
@@ -20,15 +19,13 @@ export const oneOf = (options: string[]) => `root ::= ${options.map(o => JSON.st
 
 export type GroupHint = {name: string; description?: string | null; keywords?: string[]};
 
-/** A user-made item type the agent can choose (behaviors decide what happens next). */
-export type TypeHint = {name: string; description?: string | null; defaults: string[]; optional: string[]; keywords?: string[]};
 
 export type AgentOptions = {
   now?: Date;
   onStep?: (journey: string[]) => void;
   groups?: GroupHint[];
-  /** Custom (non-built-in) types. */
-  types?: TypeHint[];
+  /** The user said what it is (when sharing): to do / read later / remember / just keep. Overrides any judging. */
+  kind?: 'todo' | 'read' | 'remember' | 'keep';
 };
 
 const words = (s: string) => s.toLowerCase().match(/[a-z0-9]+/g) ?? [];
@@ -55,17 +52,6 @@ export function matchGroup(answer: string, groups: GroupHint[], text: string): s
   return group && hintFitsText(group, text) ? group.name : null;
 }
 
-/** "job applications · can be completed, has a link" — what the model reads for a custom type. */
-function describeType(t: TypeHint): string {
-  const abilities = [
-    t.defaults.includes('Doable') ? 'can be completed (has a due date)' : '',
-    t.defaults.includes('Notable') ? 'mainly text/notes' : '',
-    t.optional.includes('Visitable') || t.defaults.includes('Visitable') ? 'can hold a link' : '',
-  ].filter(Boolean);
-  const examples = (t.keywords ?? []).slice(0, 8).join(', ');
-  return [t.description || t.name, examples && `e.g. ${examples}`, abilities.join(', ')].filter(Boolean).join(' · ');
-}
-
 const NONE_RE = /^(none|n\/a|null|nothing)?$/i;
 
 function cleanAnswer(raw: string): string {
@@ -83,7 +69,7 @@ const URL_RE = /https?:\/\/[^\s<>"{}|\\^`[\]]+/i;
 export class NoTypeError extends Error {}
 
 /** "I need to", "remind me to"… — how people start a task, not part of its title. */
-const LEADING_FILLER = /^(?:(?:i\s+)?(?:need|have|got|want)\s+to|(?:i\s+)?(?:must|should)|remind\s+me\s+to|don'?t\s+forget\s+to|(?:urgent|important)\s*[:,-]?)\s+/i;
+const LEADING_FILLER = /^(?:(?:i\s+)?(?:need|have|got|want)\s+to|(?:i\s+)?(?:must|should)|remind\s+me\s+to|don'?t\s+forget\s+to|(?:urgent|important|idea|note)\s*[:,-]?)\s+/i;
 
 const sentenceCase = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
@@ -106,7 +92,7 @@ export function titleFromText(text: string): string {
 export async function runSelectiveAgent(
   text: string,
   complete: Complete,
-  {now = new Date(), onStep, groups = [], types = []}: AgentOptions = {},
+  {now = new Date(), onStep, groups = [], kind}: AgentOptions = {},
 ): Promise<{draft: CaptureItemDraft; journey: string[]}> {
   const journey: string[] = [];
   const log = (line: string) => {
@@ -131,24 +117,27 @@ export async function runSelectiveAgent(
     }
   }
 
-  // 1. Type — something to do? → Task. Otherwise: information → Note, thinking out loud → Idea, already happened → Journal.
-  const isTask = await ask('isTask', undefined, 2, '', oneOf(['yes', 'no']));
-  if (!isTask) throw new NoTypeError('No answer to "is it a task"');
-  const builtIn = (isTask === 'yes' ? 'Task' : await ask('kind', undefined, 4, '', oneOf(['Note', 'Idea', 'Journal']))) as ItemTypeName;
-  if (!['Task', 'Note', 'Idea', 'Journal'].includes(builtIn)) throw new NoTypeError(`No type in model answer "${builtIn}"`);
-  let typeName: string = builtIn;
-
-  // …then the user's own types that share a word with the text, picked from a fixed list.
-  const candidates = types.filter(t => hintFitsText(t, text));
-  if (candidates.length > 0) {
-    const list = candidates.map(t => `- ${t.name}: ${describeType(t)}`).join('\n');
-    const answer = await ask('customType', undefined, 12, `\n\nTypes:\n${list}`, oneOf([...candidates.map(t => t.name), 'NONE']));
-    typeName = matchGroup(answer, candidates, text) ?? typeName;
+  // 1. What kind of thought: something to do → Task (Focus); about the user's own day → Journal; else a plain
+  //    thought, which may come back later (Memorable). Clear signals in the user's words decide without the model
+  //    (a date or reminder, "felt…", "what if…", "X's number is…"). Otherwise the model judges with yes/no, and a
+  //    to-do it only guessed is marked unsure, so the user is asked before it can take over Focus.
+  async function judge(step: KnowledgeStep): Promise<boolean> {
+    const answer = await ask(step, undefined, 2, '', oneOf(['yes', 'no']));
+    if (!answer) throw new NoTypeError(`No answer to "${step}"`);
+    return answer === 'yes';
   }
-  log(`type: ${typeName}${typeName !== builtIn ? ` (your type, like ${builtIn})` : ''}`);
+  const saidDue = inferDueAtFromText(text, now);
+  // Your pick when sharing beats everything: "read later" is a to-do once you said when, else a thought that comes back.
+  const picked = kind === 'todo' || (kind === 'read' && saidDue) ? 'todo' : kind === 'read' || kind === 'remember' ? 'idea' : kind === 'keep' ? 'fact' : null;
+  const said = picked ?? kindFromWords(text, now, saidDue);
+  const toDo = said ? said === 'todo' : await judge('isTask');
+  const aboutDay = said ? said === 'day' : !toDo && (await judge('isDay'));
+  const comesBack = said === 'idea' || (said !== 'fact' && !toDo && !aboutDay && (await judge('comesBack')));
+  const unsure = toDo && !said;
+  const typeName: string = toDo ? 'Task' : aboutDay ? 'Journal' : 'Note';
+  log(`thought: ${toDo ? 'something to do' : aboutDay ? 'about your day' : 'a thought'}${comesBack ? ', comes back' : ''}${said ? ` (your words: ${said})` : unsure ? ' (unsure — ask)' : ''}`);
 
-  // Guides are chosen by behavior, so custom doable types get task-style titles.
-  const doable = typeHasBehavior(typeName, 'Doable');
+  const doable = toDo;
   const guideType = doable ? 'Task' : typeName;
 
   // 2. Title — a few of the user's words. Dates are stripped (they live in the due date); a title with new words is rejected.
@@ -176,6 +165,7 @@ export async function runSelectiveAgent(
     title,
     content,
     mascot,
+    unsure,
     urgency: null,
     importance: null,
     tagNames: [],
@@ -187,7 +177,7 @@ export async function runSelectiveAgent(
   if (doable) {
     // 5. Facts the user said, read from their words: due date, repeat, reminder, steps.
     const repeat = typeAllowsBehavior(typeName, 'Repeatable') ? extractRepeat(text) : null;
-    let dueAt = inferDueAtFromText(text, now);
+    let dueAt = saidDue;
     if (!dueAt && repeat) dueAt = firstOccurrence(repeat, now); // a repeat needs a first day to roll forward from
     draft.behaviorData = {Doable: {status: 'pending', due_at: dueAt, estimated_minutes: ''}};
     log(`due: ${dueAt || 'none'}`);
@@ -227,15 +217,8 @@ export async function runSelectiveAgent(
     log(`group: ${picked ?? 'none'}`);
   }
 
-  // 8. Model-judged behaviors the type allows (how often a note comes back) — fixed choices only.
-  for (const bs of BEHAVIOR_STEPS) {
-    if (!typeAllowsBehavior(typeName, bs.behavior) || !bs.gate(text)) continue;
-    const data = bs.parse(await ask(bs.step, typeName, bs.maxTokens, '', bs.grammar));
-    if (data) {
-      draft = withBehavior(draft, bs.behavior, data);
-      log(`${bs.label}: ${bs.describe(data)}`);
-    }
-  }
+  // Comes back later on the come-back card (how often: decided by kind, see resurface/schedule.ts).
+  if (comesBack && typeAllowsBehavior(typeName, 'Memorable')) draft = withBehavior(draft, 'Memorable', {});
 
   return {draft, journey};
 }

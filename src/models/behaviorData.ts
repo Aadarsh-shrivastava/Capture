@@ -65,6 +65,8 @@ export type SaveItemPayload = {
   content?: string | null;
   /** Sticker key; undefined/null keeps the item's current one. */
   mascot?: string | null;
+  /** Set on create only (see Item.unsure). */
+  unsure?: boolean;
   importance?: number | null;
   urgency?: number | null;
   status?: string;

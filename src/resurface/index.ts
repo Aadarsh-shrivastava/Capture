@@ -2,4 +2,4 @@
 export {act, makeAllDue} from './service';
 export {autoWeight, rank, type Memo, type ResurfaceAction} from './schedule';
 export {Suggestions} from './Suggestions';
-export {useSuggestions} from './useSuggestions';
+export {useComingBackIds, useSuggestions} from './useSuggestions';

@@ -11,6 +11,9 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		344AAF933963C39A8F272AEC /* CaptureWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D2501EE12B1DD0DEA2C13903 /* CaptureWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		447746CA0B736FCC3B79D3A4 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 288E5147A8D7BE010521BA26 /* WidgetKit.framework */; };
+		5A4E00000000000000000002 /* CaptureShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5A4E00000000000000000001 /* CaptureShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		5A4E00000000000000000004 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A4E00000000000000000003 /* ShareViewController.swift */; };
+		5A4E00000000000000000005 /* CaptureIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0FFEE0000000000000000A1 /* CaptureIntent.swift */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		87D9F479D834F67F69F9E1DE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A502386A48B068B1001C24F6 /* Assets.xcassets */; };
@@ -28,6 +31,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		5A4E0000000000000000000D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5A4E00000000000000000009;
+			remoteInfo = CaptureShare;
+		};
 		6FBF5617012F762A6A7F2D30 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
@@ -45,6 +55,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				344AAF933963C39A8F272AEC /* CaptureWidget.appex in Embed Foundation Extensions */,
+				5A4E00000000000000000002 /* CaptureShare.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -61,6 +72,10 @@
 		3AD19392DDF7F22CFAE180E0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		3B4392A12AC88292D35C810B /* Pods-Capture.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Capture.debug.xcconfig"; path = "Target Support Files/Pods-Capture/Pods-Capture.debug.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-Capture.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Capture.release.xcconfig"; path = "Target Support Files/Pods-Capture/Pods-Capture.release.xcconfig"; sourceTree = "<group>"; };
+		5A4E00000000000000000001 /* CaptureShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CaptureShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		5A4E00000000000000000003 /* ShareViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		5A4E00000000000000000006 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5A4E00000000000000000007 /* CaptureShare.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = CaptureShare.entitlements; sourceTree = "<group>"; };
 		5CDF5F53533F8FAA794CDC94 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/SwiftUI.framework; sourceTree = DEVELOPER_DIR; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-Capture.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Capture.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		665B0CE3376DC6E9F623EBD7 /* CaptureWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CaptureWidget.swift; sourceTree = "<group>"; };
@@ -84,6 +99,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				0C80B921A6F3F58F76C31292 /* libPods-Capture.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5A4E0000000000000000000B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -133,6 +155,17 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		5A4E00000000000000000008 /* CaptureShare */ = {
+			isa = PBXGroup;
+			children = (
+				5A4E00000000000000000003 /* ShareViewController.swift */,
+				5A4E00000000000000000006 /* Info.plist */,
+				5A4E00000000000000000007 /* CaptureShare.entitlements */,
+			);
+			name = CaptureShare;
+			path = CaptureShare;
+			sourceTree = "<group>";
+		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -150,6 +183,7 @@
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
 				0A825B86FABDB64B22C7B748 /* ExpoModulesProviders */,
 				F3CB986B8CB3C4855BBFAD5F /* CaptureWidget */,
+				5A4E00000000000000000008 /* CaptureShare */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -161,6 +195,7 @@
 			children = (
 				13B07F961A680F5B00A75B9A /* Capture.app */,
 				D2501EE12B1DD0DEA2C13903 /* CaptureWidget.appex */,
+				5A4E00000000000000000001 /* CaptureShare.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -227,6 +262,7 @@
 			);
 			dependencies = (
 				6DA996F47018837AAE30B619 /* PBXTargetDependency */,
+				5A4E0000000000000000000E /* PBXTargetDependency */,
 			);
 			name = Capture;
 			productName = Capture;
@@ -248,6 +284,23 @@
 			name = CaptureWidget;
 			productName = CaptureWidget;
 			productReference = D2501EE12B1DD0DEA2C13903 /* CaptureWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		5A4E00000000000000000009 /* CaptureShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5A4E00000000000000000011 /* Build configuration list for PBXNativeTarget "CaptureShare" */;
+			buildPhases = (
+				5A4E0000000000000000000A /* Sources */,
+				5A4E0000000000000000000B /* Frameworks */,
+				5A4E0000000000000000000C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CaptureShare;
+			productName = CaptureShare;
+			productReference = 5A4E00000000000000000001 /* CaptureShare.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -278,6 +331,7 @@
 			targets = (
 				13B07F861A680F5B00A75B9A /* Capture */,
 				3B7E6B9BB1B58D4BADAA5BD3 /* CaptureWidget */,
+				5A4E00000000000000000009 /* CaptureShare */,
 			);
 		};
 /* End PBXProject section */
@@ -290,6 +344,13 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				90F57C5B9045B201A642D20E /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5A4E0000000000000000000C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -411,6 +472,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5A4E0000000000000000000A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5A4E00000000000000000004 /* ShareViewController.swift in Sources */,
+				5A4E00000000000000000005 /* CaptureIntent.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		60916C40F6AFD7F336D2BBC7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -424,6 +494,12 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		5A4E0000000000000000000E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = CaptureShare;
+			target = 5A4E00000000000000000009 /* CaptureShare */;
+			targetProxy = 5A4E0000000000000000000D /* PBXContainerItemProxy */;
+		};
 		6DA996F47018837AAE30B619 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = CaptureWidget;
@@ -488,6 +564,57 @@
 				PRODUCT_NAME = Capture;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		5A4E0000000000000000000F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = CaptureShare/CaptureShare.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CaptureShare/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.Capture.CaptureShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5A4E00000000000000000010 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = CaptureShare/CaptureShare.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CaptureShare/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.Capture.CaptureShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
@@ -704,6 +831,15 @@
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
 				13B07F951A680F5B00A75B9A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5A4E00000000000000000011 /* Build configuration list for PBXNativeTarget "CaptureShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5A4E00000000000000000010 /* Release */,
+				5A4E0000000000000000000F /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

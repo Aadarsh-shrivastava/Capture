@@ -1,51 +1,23 @@
 import {create} from 'zustand';
 
-import type {CaptureFlowRequest} from '@/capture/captureFlow';
+/** Something asked the input bar to start typing or listening (widget, Siri link, pull-to-capture, a group). */
+export type ComposerRequest = {id: number; mode: 'type' | 'voice'; text?: string; groupName?: string};
 
 type CaptureState = {
-  /** Legacy overlay — kept for CaptureModal compatibility */
-  isOpen: boolean;
-  open: () => void;
-  close: () => void;
-
-  /** Quick-add sheet (long press on the capture button) */
-  quickAddOpen: boolean;
-  openQuickAdd: () => void;
-  closeQuickAdd: () => void;
-
-  /** Voice capture sheet */
-  voiceCaptureOpen: boolean;
-  openVoiceCapture: () => void;
-  closeVoiceCapture: () => void;
-
-  /** Unified capture flow modal (text / review) */
-  flowVisible: boolean;
-  flowRequest: CaptureFlowRequest | null;
+  request: ComposerRequest | null;
+  /** Focus the input bar, optionally with text already in it (and the group the thought belongs to). */
   openTextCapture: (initialText?: string, groupName?: string) => void;
-  closeFlow: () => void;
+  /** Start listening in the input bar. */
+  openVoiceCapture: () => void;
+  clearRequest: () => void;
 };
 
-export const useCaptureStore = create<CaptureState>((set) => ({
-  isOpen: false,
-  open: () => set({isOpen: true}),
-  close: () => set({isOpen: false}),
+let nextId = 1;
 
-  quickAddOpen: false,
-  openQuickAdd: () => set({quickAddOpen: true}),
-  closeQuickAdd: () => set({quickAddOpen: false}),
-
-  voiceCaptureOpen: false,
-  openVoiceCapture: () => set({voiceCaptureOpen: true}),
-  closeVoiceCapture: () => set({voiceCaptureOpen: false}),
-
-  flowVisible: false,
-  flowRequest: null,
-
-  openTextCapture: (initialText = '', groupName) =>
-    set({
-      flowVisible: true,
-      flowRequest: {step: 'text', initialText, groupName},
-    }),
-
-  closeFlow: () => set({flowVisible: false, flowRequest: null}),
+/** There are no capture screens: every way in just points the input bar at typing or listening. */
+export const useCaptureStore = create<CaptureState>(set => ({
+  request: null,
+  openTextCapture: (text = '', groupName) => set({request: {id: nextId++, mode: 'type', text, groupName}}),
+  openVoiceCapture: () => set({request: {id: nextId++, mode: 'voice'}}),
+  clearRequest: () => set({request: null}),
 }));

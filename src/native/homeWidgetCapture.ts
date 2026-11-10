@@ -17,13 +17,26 @@ type HomeWidgetCaptureNative = {
 
 const Native: HomeWidgetCaptureNative | undefined = NativeModules.HomeWidgetCapture;
 
-export type PendingCapture = {text: string; at: Date};
+const SHARE_KINDS = ['todo', 'read', 'remember', 'keep'] as const;
 
-/** Native entries are {"text","at"} JSON; a plain string is from before capture times were stored. */
+/** A thought from outside the app. Shared ones stay whole (no splitting) and may carry the user's pick of what it is. */
+export type PendingCapture = {text: string; at: Date; split?: boolean; kind?: (typeof SHARE_KINDS)[number]};
+
+/**
+ * Native entries are {"text","at"} JSON, plus {"shared":true,"kind"} from the share sheet; a plain string is from
+ * before capture times were stored.
+ */
 export function parsePendingEntry(raw: string): PendingCapture {
   try {
-    const {text, at} = JSON.parse(raw);
-    if (typeof text === 'string') return {text: text.trim(), at: typeof at === 'number' ? new Date(at) : new Date()};
+    const {text, at, shared, kind} = JSON.parse(raw);
+    if (typeof text === 'string') {
+      return {
+        text: text.trim(),
+        at: typeof at === 'number' ? new Date(at) : new Date(),
+        ...(shared ? {split: false} : {}),
+        ...(SHARE_KINDS.includes(kind) ? {kind} : {}),
+      };
+    }
   } catch {}
   return {text: raw.trim(), at: new Date()};
 }

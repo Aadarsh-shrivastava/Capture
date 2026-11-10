@@ -22,6 +22,8 @@ export type CaptureCase = {
   steps?: number;
   priority?: 'urgent' | 'important' | 'normal';
   url?: string;
+  /** Should it come back later? (Ideas: yes by default.) */
+  comesBack?: boolean;
 };
 
 export const CAPTURE_CASES: CaptureCase[] = [
@@ -68,10 +70,10 @@ export const CAPTURE_CASES: CaptureCase[] = [
   {text: 'set up the new laptop then install vscode then copy my dotfiles', type: 'Task', title: ['laptop'], steps: 3},
 
   // Notes
-  {text: 'the wifi password at the office is bluefox42', type: 'Note', title: ['wifi']},
+  {text: 'the wifi password at the office is bluefox42', type: 'Note', title: ['wifi'], comesBack: false},
   {text: 'vector databases store embeddings for similarity search', type: 'Note', title: ['vector']},
-  {text: 'https://example.com/react-tips great article on react performance', type: 'Note', url: 'https://example.com/react-tips'},
-  {text: "Rahul's shoe size is 10", type: 'Note', title: ['rahul']},
+  {text: 'https://example.com/react-tips great article on react performance', type: 'Note', url: 'https://example.com/react-tips', comesBack: true},
+  {text: "Rahul's shoe size is 10", type: 'Note', title: ['rahul'], comesBack: false},
 
   // Ideas
   {text: 'idea: an app that turns voice notes into tasks', type: 'Idea', title: ['voice']},

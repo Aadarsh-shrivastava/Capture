@@ -1,6 +1,5 @@
 import type {ItemTypeName} from '@/ui/itemTypeConfig';
 
-import {BEHAVIOR_KNOWLEDGE} from './behaviors';
 import {DESCRIPTION_KNOWLEDGE} from './description';
 import {GROUP_KNOWLEDGE} from './group';
 import {MASCOT_KNOWLEDGE} from './mascot';
@@ -9,7 +8,7 @@ import {SPLIT_KNOWLEDGE} from './split';
 import {TITLE_KNOWLEDGE} from './title';
 import {TYPE_KNOWLEDGE} from './type';
 
-export type KnowledgeStep = 'isTask' | 'kind' | 'customType' | 'typeKeywords' | 'title' | 'description' | 'priority' | 'group' | 'split' | 'memorable' | 'mascot';
+export type KnowledgeStep = 'isTask' | 'isDay' | 'comesBack' | 'title' | 'description' | 'priority' | 'group' | 'split' | 'mascot';
 
 export type KnowledgeEntry = {
   id: string;
@@ -28,7 +27,6 @@ export const KNOWLEDGE_INDEX: KnowledgeEntry[] = [
   ...DESCRIPTION_KNOWLEDGE,
   ...PRIORITY_KNOWLEDGE,
   ...GROUP_KNOWLEDGE,
-  ...BEHAVIOR_KNOWLEDGE,
   ...SPLIT_KNOWLEDGE,
   ...MASCOT_KNOWLEDGE,
 ];

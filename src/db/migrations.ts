@@ -190,6 +190,10 @@ const MIGRATIONS: Record<number, string[]> = {
   9: [`ALTER TABLE capture_queue ADD COLUMN needs_split INTEGER NOT NULL DEFAULT 0;`],
   // Which sticker an item shows (src/mascot/itemMascots.ts); picked by the capture model.
   10: [`ALTER TABLE items ADD COLUMN mascot TEXT;`],
+  // The model guessed "to do" without the user's words saying so: Focus asks before trusting it.
+  11: [`ALTER TABLE items ADD COLUMN unsure INTEGER NOT NULL DEFAULT 0;`],
+  // What the user said it is when sharing (to do / read later / remember / just keep) — the model doesn't guess it.
+  12: [`ALTER TABLE capture_queue ADD COLUMN kind TEXT;`],
 };
 
 async function getCurrentVersion(db: SQLiteDatabase): Promise<number> {

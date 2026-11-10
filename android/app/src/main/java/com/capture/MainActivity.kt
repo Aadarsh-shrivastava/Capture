@@ -1,12 +1,10 @@
 package com.capture
-import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import androidx.core.view.WindowCompat
 import expo.modules.ReactActivityDelegateWrapper
 
-import com.capture.widget.WidgetCaptureStorage
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -32,25 +30,7 @@ class MainActivity : ReactActivity() {
       isAppearanceLightStatusBars = false
       isAppearanceLightNavigationBars = false
     }
+    // Shared text goes to the "Save to Capture" pop-up (widget/ShareCaptureActivity), not here.
     super.onCreate(savedInstanceState)
-    handleIncomingIntent(intent)
-  }
-
-  override fun onNewIntent(intent: Intent?) {
-    super.onNewIntent(intent)
-    setIntent(intent)
-    handleIncomingIntent(intent)
-  }
-
-  private fun handleIncomingIntent(intent: Intent?) {
-    if (intent == null) return
-
-    if (intent.action == Intent.ACTION_SEND && intent.type == "text/plain") {
-      intent.getStringExtra(Intent.EXTRA_TEXT)?.let { text ->
-        if (text.isNotBlank()) {
-          WidgetCaptureStorage.save(this, text)
-        }
-      }
-    }
   }
 }

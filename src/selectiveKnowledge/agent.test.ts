@@ -1,4 +1,4 @@
-import {NoTypeError, rawThought, runSelectiveAgent, type Complete} from './agent';
+import {NoTypeError, rawThought, runSelectiveAgent, titleFromText, type Complete} from './agent';
 
 const now = new Date(2026, 9, 31, 10, 0); // Sat 31 Oct 2026, 10:00 local
 const text = 'I need to go to gym tomorrow, at 6 pm, and hit those leg muscles';
@@ -8,34 +8,33 @@ function fakeModel(answers: Record<string, string>): Complete {
   return async messages => {
     const system = messages[0].content;
     if (system.startsWith('Is this something the user still has to DO')) return answers.type === 'Task' ? 'yes' : 'no';
-    if (system.startsWith('This is not a task')) return answers.type;
+    if (system.startsWith("Is the user telling about their own day")) return answers.type === 'Journal' ? 'yes' : 'no';
+    if (system.startsWith('Should this come back')) return answers.comesBack ?? 'no';
     if (system.startsWith('Write a short title')) return answers.title;
     if (system.startsWith("Rewrite the user's text")) return answers.description ?? '';
     if (system.startsWith('How pressing')) return answers.priority ?? 'normal';
     if (system.startsWith('Does this item clearly belong')) return answers.group ?? 'NONE';
-    if (system.startsWith('The user has their own item types')) return answers.customType ?? 'NONE';
-    if (system.startsWith('How often should this come back')) return answers.memorable ?? 'sometimes';
     if (system.startsWith('Pick the sticker')) return answers.mascot ?? 'done';
     throw new Error('unknown step');
   };
 }
 const gymAnswers = {type: 'Task', title: 'Go to gym', description: 'I need to go to the gym tomorrow at 6 pm and hit those leg muscles.'};
 
-test('a task: model picks type, title, description; the date is read from the words', async () => {
+test('a task: model judges it, writes title and description; the date is read from the words', async () => {
   const {draft, journey} = await runSelectiveAgent(text, fakeModel(gymAnswers), {now});
   expect(draft.typeName).toBe('Task');
   expect(draft.title).toBe('Go to gym');
   expect(draft.content).toBe('I need to go to the gym tomorrow at 6 pm and hit those leg muscles.');
   expect(new Date(draft.behaviorData!.Doable.due_at).getTime()).toBe(new Date(2026, 10, 1, 18, 0).getTime());
   expect(draft.behaviorData!.Doable.due_at).not.toMatch(/Z$/); // stored with local offset, not UTC
-  expect(journey[0]).toBe('type: Task');
+  expect(journey[0]).toBe('thought: something to do (your words: todo)'); // a date said = to do, no model needed
 });
 
 test('no type from the model is an error (retried later)', async () => {
   const broken: Complete = async () => {
     throw new Error('model crashed');
   };
-  await expect(runSelectiveAgent(text, broken, {now})).rejects.toBeInstanceOf(NoTypeError);
+  await expect(runSelectiveAgent('withdraw cash', broken, {now})).rejects.toBeInstanceOf(NoTypeError);
 });
 
 test('a title or description with words the user never said is replaced by their own words', async () => {
@@ -100,55 +99,53 @@ test('no group when the model forces one that does not fit the text', async () =
   expect(draft.groupNames).toEqual([]);
 });
 
-test('narrows to a custom type of the same kind, guarded by the text', async () => {
-  const types = [
-    {name: 'Apply', description: 'job applications', defaults: ['Doable'], optional: ['Visitable']},
-    {name: 'Recipe', description: 'cooking', defaults: ['Notable'], optional: []},
-  ];
-  const answers = {type: 'Task', title: 'Apply to Acme', description: 'NONE', datetime: 'NONE', customType: 'Apply'};
-  const {draft, journey} = await runSelectiveAgent('apply for the acme job application by friday', fakeModel(answers), {now, types});
-  expect(draft.typeName).toBe('Apply');
-  expect(journey[0]).toContain('your type, like Task');
-
-  // Model insists on Apply but the text has nothing to do with it → stays Task.
-  const other = await runSelectiveAgent('buy milk today', fakeModel({...answers, customType: 'Apply'}), {now, types});
-  expect(other.draft.typeName).toBe('Task');
-
-  // A link makes step 1 say Note; Apply (doable) must still be offered and chosen.
-  const withLink = await runSelectiveAgent('apply for job in google at www.google.com', fakeModel({...answers, type: 'Note'}), {now, types});
-  expect(withLink.draft.typeName).toBe('Apply');
-});
-
-test('keywords let a type match without sharing words with its name or description', async () => {
-  const types = [{name: 'Apply', description: 'job applications', defaults: ['Doable'], optional: [], keywords: ['cv', 'resume', 'recruiter']}];
-  const answers = {type: 'Task', title: 'Send CV to Acme', description: 'NONE', datetime: 'NONE', customType: 'Apply'};
-  const {draft} = await runSelectiveAgent('send my cv to acme', fakeModel(answers), {now, types});
-  expect(draft.typeName).toBe('Apply');
-});
-
-test('a hedging model keeps the built-in type; a wrapped answer still counts', async () => {
-  const types = [{name: 'Apply', description: 'job applications', defaults: ['Doable'], optional: [], keywords: ['cv', 'resume', 'amazon']}];
-  const answers = {type: 'Task', title: 'Send CV', description: 'NONE', datetime: 'NONE', customType: 'NONE'};
-  const {draft} = await runSelectiveAgent('send my cv to amazon', fakeModel(answers), {now, types});
-  expect(draft.typeName).toBe('Task');
-  const wrapped = await runSelectiveAgent('send my cv', fakeModel({...answers, customType: 'Type: **Apply**'}), {now, types});
-  expect(wrapped.draft.typeName).toBe('Apply');
-});
-
-test('not something to do: the second pick decides information / idea / journal', async () => {
-  const model: Complete = async messages => {
-    const system = messages[0].content;
-    if (system.startsWith('Is this something the user still has to DO')) return 'no';
-    if (system.startsWith('This is not a task')) return 'Note';
-    return '';
-  };
-  const {draft} = await runSelectiveAgent('delhi is the capital of india', model, {now});
-  expect(draft.typeName).toBe('Note');
-});
-
 test('sticker: one of the fixed list, or none', async () => {
   const picked = await runSelectiveAgent('gym tomorrow at 7am', fakeModel({type: 'Task', title: 'Gym', mascot: 'workout'}), {now});
   expect(picked.draft.mascot).toBe('workout');
   const unknown = await runSelectiveAgent('gym tomorrow at 7am', fakeModel({type: 'Task', title: 'Gym', mascot: 'dragon'}), {now});
   expect(unknown.draft.mascot).toBeNull();
+});
+
+test('everything is a thought: the judgments decide the label and what is attached', async () => {
+  const todo = await runSelectiveAgent('pick up the laundry', fakeModel({type: 'Task', title: 'Pick up laundry'}), {now});
+  expect(todo.draft.typeName).toBe('Task');
+  const day = await runSelectiveAgent('lunch with mom was lovely', fakeModel({type: 'Journal', title: 'Lunch with mom'}), {now});
+  expect(day.draft.typeName).toBe('Journal');
+  const idea = await runSelectiveAgent('what if cars could fly', fakeModel({type: 'Note', title: 'Flying cars', comesBack: 'yes'}), {now});
+  expect([idea.draft.typeName, idea.draft.optionalBehaviorNames]).toEqual(['Note', ['Memorable']]);
+  const fact = await runSelectiveAgent('my locker code is 4471', fakeModel({type: 'Note', title: 'Locker code'}), {now});
+  expect([fact.draft.typeName, fact.draft.optionalBehaviorNames]).toEqual(['Note', []]);
+});
+
+test('a task is never asked about its day or coming back (one model call for the kind)', async () => {
+  const asked: string[] = [];
+  const model: Complete = async messages => {
+    asked.push(messages[0].content.slice(0, 12));
+    return messages[0].content.startsWith('Is this something') ? 'yes' : '';
+  };
+  await runSelectiveAgent('gym tomorrow', model, {now});
+  expect(asked.filter(q => q.startsWith('Is the user') || q.startsWith('Should this'))).toEqual([]);
+});
+
+test('a to-do the model only guessed is marked unsure; one your words make clear is not', async () => {
+  const guessed = await runSelectiveAgent('withdraw cash', fakeModel({type: 'Task', title: 'Withdraw cash'}), {now});
+  expect([guessed.draft.typeName, guessed.draft.unsure]).toEqual(['Task', true]);
+  const said = await runSelectiveAgent('withdraw cash tomorrow at 10', fakeModel({type: 'Note', title: 'Withdraw cash'}), {now});
+  expect([said.draft.typeName, said.draft.unsure]).toEqual(['Task', false]);
+  const fact = await runSelectiveAgent('Jatins number is 9893731864', fakeModel({type: 'Task', title: 'Jatins number'}), {now});
+  expect(fact.draft.typeName).toBe('Note'); // the model said task; the words say fact
+});
+
+test('the fallback title drops a leading "idea:"', () => {
+  expect(titleFromText('idea: an app that turns voice notes into tasks')).toBe('An app that turns voice notes');
+});
+
+test('your pick when sharing decides, not the model', async () => {
+  const model = fakeModel({type: 'Task', title: 'React tips', comesBack: 'no'});
+  const read = await runSelectiveAgent('great article https://example.com/react-tips', model, {now, kind: 'read'});
+  expect([read.draft.typeName, read.draft.optionalBehaviorNames]).toEqual(['Note', expect.arrayContaining(['Memorable', 'Visitable'])]);
+  const readTomorrow = await runSelectiveAgent('tomorrow great article https://example.com/react-tips', model, {now, kind: 'read'});
+  expect(readTomorrow.draft.typeName).toBe('Task'); // said when → a to-do
+  const keep = await runSelectiveAgent('wifi is orange77', fakeModel({type: 'Task', title: 'Wifi'}), {now, kind: 'keep'});
+  expect([keep.draft.typeName, keep.draft.optionalBehaviorNames]).toEqual(['Note', []]);
 });

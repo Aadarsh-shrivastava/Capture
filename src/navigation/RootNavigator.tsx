@@ -13,6 +13,7 @@ import { ItemsScreen } from '@/screens/ItemsScreen/ItemsScreen';
 import { ListScreen } from '@/screens/ListScreen/ListScreen';
 import { ProfileScreen } from '@/profile';
 import { SettingsScreen } from '@/screens/SettingsScreen/SettingsScreen';
+import { ThoughtsScreen } from '@/screens/ThoughtsScreen/ThoughtsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -20,10 +21,12 @@ const Stack = createNativeStackNavigator();
 function MainTabs() {
   return (
     <Tab.Navigator
+      // Focus is home: what to do right now. Thoughts holds everything you've said.
       tabBar={(props) => <BottomTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
       <Tab.Screen name="index" component={FocusScreen} options={{ title: 'Focus' }} />
+      <Tab.Screen name="thoughts" component={ThoughtsScreen} options={{ title: 'Thoughts' }} />
       <Tab.Screen name="library" component={ItemsScreen} options={{ title: 'Library' }} />
     </Tab.Navigator>
   );

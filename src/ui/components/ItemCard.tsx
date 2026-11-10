@@ -12,6 +12,8 @@ type ItemCardProps = {
   title: string;
   typeName: string;
   createdAt: string;
+  /** Replaces the type's name in the meta line (e.g. "To do"). */
+  label?: string;
   /** Sticker key; shown instead of the type icon when set. */
   mascot?: string | null;
   /** Extra meta shown after the date, e.g. a due label. */
@@ -21,9 +23,9 @@ type ItemCardProps = {
 };
 
 /** Rounded card row for item lists — icon tile, title, meta line. */
-export function ItemCard({title, typeName, createdAt, mascot, meta, onPress, onLongPress}: ItemCardProps) {
+export function ItemCard({title, typeName, createdAt, label, mascot, meta, onPress, onLongPress}: ItemCardProps) {
   const config = getItemTypeConfig(typeName);
-  const metaLine = [config.label, meta || formatRelativeDay(createdAt)].filter(Boolean).join(' · ');
+  const metaLine = [label ?? config.label, meta || formatRelativeDay(createdAt)].filter(Boolean).join(' · ');
 
   return (
     <Pressable

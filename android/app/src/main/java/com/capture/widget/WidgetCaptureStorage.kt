@@ -12,15 +12,21 @@ object WidgetCaptureStorage {
 
   private const val KEY_QUEUE = "pending_prompts"
 
-  /** Append a thought (widget, lock screen tile, share sheet). The app takes them all on next open. */
+  /**
+   * Append a thought (widget, lock screen tile, share sheet). The app takes them all on next open.
+   * `shared`: from the share sheet — kept whole, never split. `kind`: the user's pick (todo / read / remember / keep).
+   */
   @Synchronized
-  fun save(context: Context, text: String) {
+  fun save(context: Context, text: String, shared: Boolean = false, kind: String? = null) {
     val trimmed = text.trim()
     if (trimmed.isEmpty()) return
     val prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
     val queue = JSONArray(prefs.getString(KEY_QUEUE, "[]"))
     // With the capture time, so "tomorrow" means the day after it was said, not after the app next opens.
-    queue.put(JSONObject().put("text", trimmed).put("at", System.currentTimeMillis()).toString())
+    val entry = JSONObject().put("text", trimmed).put("at", System.currentTimeMillis())
+    if (shared) entry.put("shared", true)
+    if (kind != null) entry.put("kind", kind)
+    queue.put(entry.toString())
     // commit, not apply: the popup finishes right after, and a thought must not be lost.
     prefs.edit().putString(KEY_QUEUE, queue.toString()).commit()
   }

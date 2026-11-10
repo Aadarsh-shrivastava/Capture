@@ -8,7 +8,7 @@ import {saveCaptures} from '@/services/saveCaptures';
 
 import {drain, enqueue} from './queue';
 
-type QueueRow = {id: number; text: string; group_name: string | null; created_at: string; attempts: number; needs_split: number};
+type QueueRow = {id: number; text: string; group_name: string | null; created_at: string; attempts: number; needs_split: number; kind: string | null};
 
 let rows: QueueRow[] = [];
 let nextId = 1;
@@ -16,8 +16,8 @@ let nextId = 1;
 const mockDb = {
   async runAsync(sql: string, ...args: unknown[]) {
     if (sql.startsWith('INSERT INTO capture_queue')) {
-      const [text, group_name, created_at, needs_split = 0] = args as [string, string | null, string, number?];
-      rows.push({id: nextId++, text, group_name, created_at, attempts: 0, needs_split});
+      const [text, group_name, created_at, needs_split = 0, kind = null] = args as [string, string | null, string, number?, string?];
+      rows.push({id: nextId++, text, group_name, created_at, attempts: 0, needs_split, kind});
     } else if (sql.startsWith('UPDATE capture_queue SET attempts')) {
       const row = rows.find(r => r.id === args[0]);
       if (row) row.attempts += 1;
@@ -144,4 +144,12 @@ test('relative dates use the time the thought was captured, not when it is proce
   await enqueue([{text: 'gym tomorrow', at: said}]);
   await settle();
   expect((analyzeText as jest.Mock).mock.calls[0][2]).toEqual(said);
+});
+
+test('a shared item is kept whole and carries your pick to the agent', async () => {
+  const article = 'read this weekend\ngreat article. it has many sentences, and also commas https://x.io';
+  await enqueue([{text: article, at: new Date(2026, 10, 9), split: false, kind: 'read'}]);
+  await settle();
+  expect(splitCapture).not.toHaveBeenCalled();
+  expect((analyzeText as jest.Mock).mock.calls[0]).toEqual([article, undefined, new Date(2026, 10, 9), 'read']);
 });

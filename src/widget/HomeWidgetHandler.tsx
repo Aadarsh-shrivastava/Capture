@@ -1,40 +1,42 @@
 import {useEffect, useRef} from 'react';
 import {Alert, AppState, Linking} from 'react-native';
 
-import {
-  consumePendingWidgetPrompt,
-  subscribeWidgetCapture,
-} from '@/native/homeWidgetCapture';
+import {enqueue, type QueuedThought} from '@/capture/queue';
+import {clearPendingWidgetPrompts, peekPendingWidgetPrompts, setCaptureNotification} from '@/native/homeWidgetCapture';
+import {useCaptureNotificationSetting} from '@/notifications';
 import {useDatabaseReady} from '@/providers/DatabaseProvider';
-import {quickCaptureFromText} from '@/services/quickCaptureService';
+import {useCaptureStore} from '@/store/captureStore';
 
-import {extractTextFromCaptureUrl} from './parseCaptureDeepLink';
+import {extractCaptureMode, extractTextFromCaptureUrl} from './parseCaptureDeepLink';
 import {refreshHomeWidgetFocusSnapshot} from './syncHomeWidgetFocus';
 
-let inFlight = false;
-
-async function processPrompt(text: string) {
-  if (inFlight) {
-    return;
-  }
-  inFlight = true;
+/** Straight into the capture queue (stored first; the worker splits and analyzes in the background). */
+async function capture(texts: QueuedThought[]): Promise<boolean> {
   try {
-    await quickCaptureFromText(text);
+    await enqueue(texts, undefined, true);
+    return true;
   } catch (err) {
-    Alert.alert(
-      'Could not save',
-      err instanceof Error ? err.message : 'Try again',
-    );
-  } finally {
-    inFlight = false;
-    refreshHomeWidgetFocusSnapshot().catch(() => {});
+    Alert.alert('Could not save', err instanceof Error ? err.message : 'Try again');
+    return false;
   }
 }
 
-async function drainNativeQueue() {
-  const pending = await consumePendingWidgetPrompt();
-  if (pending) {
-    await processPrompt(pending);
+let taking = false;
+
+/**
+ * Thoughts captured while the app was closed: widget popup and lock screen tile (Android), Siri and the control (iOS).
+ * Cleared from native storage only after they're in the DB — a crash in between can duplicate a thought, never lose it.
+ */
+async function takeNativePending() {
+  if (taking) return; // launch and "became active" can fire together; one read at a time, or both would save the same thoughts
+  taking = true;
+  try {
+    const {captures, count} = await peekPendingWidgetPrompts();
+    if (count && (captures.length === 0 || (await capture(captures)))) await clearPendingWidgetPrompts(count);
+  } catch {
+    // Left in native storage; taken on the next open.
+  } finally {
+    taking = false;
   }
 }
 
@@ -47,28 +49,30 @@ export function HomeWidgetHandler() {
       return;
     }
 
-    drainNativeQueue();
+    takeNativePending();
     refreshHomeWidgetFocusSnapshot().catch(() => {});
+    // Re-post after a reboot or a swipe-away (Android 14+ lets users dismiss ongoing notifications).
+    if (useCaptureNotificationSetting.getState().enabled) setCaptureNotification(true).catch(() => {});
 
     const appSub = AppState.addEventListener('change', next => {
       if (appState.current.match(/inactive|background/) && next === 'active') {
-        drainNativeQueue();
+        takeNativePending();
         refreshHomeWidgetFocusSnapshot().catch(() => {});
       }
       appState.current = next;
-    });
-
-    const widgetSub = subscribeWidgetCapture(() => {
-      drainNativeQueue();
     });
 
     const handleUrl = (url: string | null) => {
       if (!url) {
         return;
       }
+      // Widget Type / Talk buttons (iOS) open capture straight away.
+      const mode = extractCaptureMode(url);
+      if (mode === 'voice') return useCaptureStore.getState().openVoiceCapture();
+      if (mode === 'type') return useCaptureStore.getState().openTextCapture();
       const text = extractTextFromCaptureUrl(url);
       if (text) {
-        processPrompt(text);
+        capture([text]);
       }
     };
 
@@ -77,7 +81,6 @@ export function HomeWidgetHandler() {
 
     return () => {
       appSub.remove();
-      widgetSub?.remove();
       linkSub.remove();
     };
   }, [dbReady]);

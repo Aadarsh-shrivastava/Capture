@@ -1,51 +1,69 @@
-import {NativeEventEmitter, NativeModules, Platform} from 'react-native';
+import {NativeModules} from 'react-native';
 
 type HomeWidgetCaptureNative = {
-  getPendingPrompt: () => Promise<string | null>;
-  clearPendingPrompt: () => Promise<void>;
+  /** Every thought captured outside the app (widget popup, lock screen, Siri), oldest first. Left in place until cleared. */
+  peekPendingPrompts: () => Promise<string[]>;
+  /** Remove the first `count` — call only once they're saved. */
+  clearPendingPrompts: (count: number) => Promise<void>;
   setFocusTaskDisplay?: (
-    title: string | null,
-    subtitle: string | null,
+    /** JSON WidgetEntry[], oldest first: the widget shows the latest entry whose `at` has passed. */
+    timeline: string,
+    /** Mascot character key (male / female) for the widget's picture. */
+    mascot: string,
   ) => Promise<void>;
+  /** Android: pinned Type / Talk notification. iOS: the Dynamic Island / lock screen Live Activity. */
+  setCaptureNotification?: (enabled: boolean) => Promise<void>;
 };
 
 const Native: HomeWidgetCaptureNative | undefined = NativeModules.HomeWidgetCapture;
 
-export const HOME_WIDGET_CAPTURE_EVENT = 'HomeWidgetCaptureSubmit';
+const SHARE_KINDS = ['todo', 'read', 'remember', 'keep'] as const;
 
-export async function consumePendingWidgetPrompt(): Promise<string | null> {
-  if (!Native?.getPendingPrompt) {
-    return null;
-  }
+/** A thought from outside the app. Shared ones stay whole (no splitting) and may carry the user's pick of what it is. */
+export type PendingCapture = {text: string; at: Date; split?: boolean; kind?: (typeof SHARE_KINDS)[number]};
 
-  const text = await Native.getPendingPrompt();
-  if (!text?.trim()) {
-    return null;
-  }
-
-  await Native.clearPendingPrompt();
-  return text.trim();
+/**
+ * Native entries are {"text","at"} JSON, plus {"shared":true,"kind"} from the share sheet; a plain string is from
+ * before capture times were stored.
+ */
+export function parsePendingEntry(raw: string): PendingCapture {
+  try {
+    const {text, at, shared, kind} = JSON.parse(raw);
+    if (typeof text === 'string') {
+      return {
+        text: text.trim(),
+        at: typeof at === 'number' ? new Date(at) : new Date(),
+        ...(shared ? {split: false} : {}),
+        ...(SHARE_KINDS.includes(kind) ? {kind} : {}),
+      };
+    }
+  } catch {}
+  return {text: raw.trim(), at: new Date()};
 }
 
-export function subscribeWidgetCapture(listener: () => void) {
-  if (!Native) {
-    return null;
+/** Waiting thoughts plus how many native entries they came from (pass that to clearPendingWidgetPrompts). */
+export async function peekPendingWidgetPrompts(): Promise<{captures: PendingCapture[]; count: number}> {
+  if (!Native?.peekPendingPrompts) {
+    return {captures: [], count: 0};
   }
-
-  const emitter = new NativeEventEmitter(NativeModules.HomeWidgetCapture);
-  return emitter.addListener(HOME_WIDGET_CAPTURE_EVENT, listener);
+  const raw = await Native.peekPendingPrompts();
+  return {captures: raw.map(parsePendingEntry).filter(c => c.text), count: raw.length};
 }
 
-export function isHomeWidgetCaptureSupported(): boolean {
-  return Platform.OS === 'android' || Boolean(Native?.getPendingPrompt);
+export async function clearPendingWidgetPrompts(count: number): Promise<void> {
+  await Native?.clearPendingPrompts?.(count);
 }
 
-export async function setHomeWidgetFocusDisplay(
-  title: string | null,
-  subtitle: string | null,
-): Promise<void> {
+/** What the widget shows from `at` (epoch ms) on. */
+export type WidgetEntry = {at: number; title: string | null; subtitle: string | null};
+
+export async function setHomeWidgetFocusDisplay(timeline: WidgetEntry[], mascot: string): Promise<void> {
   if (!Native?.setFocusTaskDisplay) {
     return;
   }
-  await Native.setFocusTaskDisplay(title, subtitle);
+  await Native.setFocusTaskDisplay(JSON.stringify(timeline), mascot);
+}
+
+export async function setCaptureNotification(enabled: boolean): Promise<void> {
+  await Native?.setCaptureNotification?.(enabled);
 }

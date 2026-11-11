@@ -1,22 +1,24 @@
-import {Dimensions, StyleSheet, View} from 'react-native';
+import {useEffect, useRef, useState} from 'react';
+import {Animated, Dimensions, StyleSheet, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Pressable} from '@/ui/HapticPressable';
 import {OverlayContainer} from '@/lib/OverlayContainer';
 
 import {Box} from '@/components/ui/box';
+import {GROUPS_ENABLED} from '@/groups';
 import {useDrawerStore} from '@/store/drawerStore';
 import {useThemeStore} from '@/store/themeStore';
 
-import {DrawerGradient} from './components/DrawerGradient';
 import {DrawerMenuItem} from './components/DrawerMenuItem';
 import {DrawerProfile} from './components/DrawerProfile';
 
 const DRAWER_WIDTH = Math.min(Dimensions.get('window').width * 0.52, 320);
 
 const MENU_ITEMS = [
-  {label: 'Groups', icon: 'folder-outline' as const, href: '/(tabs)/groups'},
+  {label: 'Focus', icon: 'radio-button-on-outline' as const, href: '/focus'},
+  {label: 'Thoughts', icon: 'chatbubble-ellipses-outline' as const, href: '/thoughts'},
+  ...(GROUPS_ENABLED ? [{label: 'Groups', icon: 'folder-outline' as const, href: '/(tabs)/groups'}] : []),
   {label: 'Library', icon: 'layers-outline' as const, href: '/(tabs)/library'},
-  {label: 'Timeline', icon: 'time-outline' as const, href: '/(tabs)/timeline'},
   {label: 'Settings', icon: 'settings-outline' as const, href: '/settings'},
 ];
 
@@ -24,41 +26,42 @@ export function AppDrawer() {
   const isOpen = useDrawerStore(state => state.isOpen);
   const close = useDrawerStore(state => state.close);
   const {theme} = useThemeStore();
-  const {colors, spacing, rounded} = theme;
+  const {colors, spacing} = theme;
   const insets = useSafeAreaInsets();
+  // Stay mounted while sliding out; slide + backdrop fade run on the native thread.
+  const [mounted, setMounted] = useState(isOpen);
+  const progress = useRef(new Animated.Value(0)).current;
 
-  const drawerBorder = 'rgba(255, 255, 255, 0.14)';
+  useEffect(() => {
+    if (isOpen) setMounted(true);
+    const anim = Animated.timing(progress, {toValue: isOpen ? 1 : 0, duration: 240, useNativeDriver: true});
+    anim.start(({finished}) => {
+      if (finished && !isOpen) setMounted(false);
+    });
+    return () => anim.stop();
+  }, [isOpen, progress]);
 
-  if (!isOpen) return null;
+  if (!mounted) return null;
 
   return (
     <OverlayContainer>
-      <View style={StyleSheet.absoluteFill}>
-        <Pressable
-          onPress={close}
-          style={[
-            StyleSheet.absoluteFill,
-            {backgroundColor: 'rgba(0, 0, 0, 0.55)'},
-          ]}
-        />
+      <View style={StyleSheet.absoluteFill} pointerEvents={isOpen ? 'auto' : 'none'}>
+        <Animated.View style={[StyleSheet.absoluteFill, {opacity: progress}]}>
+          <Pressable onPress={close} pressScale={false} style={[StyleSheet.absoluteFill, {backgroundColor: 'rgba(0, 0, 0, 0.55)'}]} />
+        </Animated.View>
 
-        <View
+        <Animated.View
           style={{
+            transform: [{translateX: progress.interpolate({inputRange: [0, 1], outputRange: [-DRAWER_WIDTH, 0]})}],
             position: 'absolute',
             top: 0,
             left: 0,
             bottom: 0,
             width: DRAWER_WIDTH,
-            overflow: 'hidden',
-            borderTopRightRadius: rounded.xl,
-            borderBottomRightRadius: rounded.xl,
-            borderTopWidth: 1,
+            backgroundColor: colors.surfaceContainerLow,
             borderRightWidth: 1,
-            borderBottomWidth: 1,
-            borderColor: drawerBorder,
+            borderRightColor: colors.border,
           }}>
-          <DrawerGradient />
-
           <Box
             style={{
               flex: 1,
@@ -80,7 +83,7 @@ export function AppDrawer() {
               <DrawerMenuItem key={item.href} {...item} />
             ))}
           </Box>
-        </View>
+        </Animated.View>
       </View>
     </OverlayContainer>
   );

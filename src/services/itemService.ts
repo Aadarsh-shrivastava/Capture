@@ -1,3 +1,4 @@
+import moment from 'moment';
 import { AppError } from '@/lib/errors';
 import type { SaveItemPayload, ItemFull } from '@/models/behaviorData';
 import type { ItemWithType } from '@/models/item';
@@ -46,7 +47,7 @@ export const itemService = {
   },
 
   async getItemsForToday(): Promise<ItemWithType[]> {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = moment().format('YYYY-MM-DD');
     return itemRepository.findCreatedOnDate(today);
   },
 

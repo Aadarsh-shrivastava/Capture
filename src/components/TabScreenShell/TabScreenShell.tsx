@@ -1,7 +1,8 @@
 import {Ionicons} from '@expo/vector-icons';
 import type {ReactNode} from 'react';
 import {View} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import {useNavigation} from '@react-navigation/native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {LargeHeader} from '@/components/LargeHeader/LargeHeader';
 import {useThemeStore} from '@/store/themeStore';
@@ -9,22 +10,28 @@ import {useThemeStore} from '@/store/themeStore';
 type TabScreenShellProps = {
   title: string;
   children: ReactNode;
-  action?: {
-    icon: keyof typeof Ionicons.glyphMap;
-    label: string;
-    onPress: () => void;
-  };
+  action?: HeaderAction;
+  secondaryAction?: HeaderAction;
+  titleNode?: ReactNode;
 };
 
-export function TabScreenShell({title, children, action}: TabScreenShellProps) {
+type HeaderAction = {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+};
+
+export function TabScreenShell({title, children, action, secondaryAction, titleNode}: TabScreenShellProps) {
   const {theme} = useThemeStore();
+  const navigation = useNavigation();
+  const pushed = navigation.canGoBack();
+  // Inset from the provider, not SafeAreaView: that one measures after the first frame, so pushed screens jumped down.
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView
-      style={{flex: 1, backgroundColor: theme.colors.background}}
-      edges={['top']}>
-      <LargeHeader title={title} action={action} />
+    <View style={{flex: 1, backgroundColor: theme.colors.background, paddingTop: insets.top}}>
+      <LargeHeader title={title} action={action} secondaryAction={secondaryAction} titleNode={titleNode} onBack={pushed ? navigation.goBack : undefined} />
       <View style={{flex: 1}}>{children}</View>
-    </SafeAreaView>
+    </View>
   );
 }

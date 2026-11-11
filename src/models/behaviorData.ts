@@ -50,6 +50,7 @@ export type ItemFull = {
   status: string;
   createdAt: string;
   updatedAt: string;
+  mascot?: string | null;
   defaultBehaviorIds: number[];
   optionalBehaviorIds: number[];
   effectiveBehaviors: { id: number; name: string }[];
@@ -62,6 +63,10 @@ export type SaveItemPayload = {
   typeId: number;
   title: string;
   content?: string | null;
+  /** Sticker key; undefined/null keeps the item's current one. */
+  mascot?: string | null;
+  /** Set on create only (see Item.unsure). */
+  unsure?: boolean;
   importance?: number | null;
   urgency?: number | null;
   status?: string;

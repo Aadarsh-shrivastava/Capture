@@ -1,9 +1,10 @@
 import {behaviorApi, itemApi, typeApi} from '@/api/itemApi';
 import {groupApi} from '@/api/groupApi';
-import {parseCaptureJson, type CaptureItemDraft} from '@/capture/captureItemDraft';
+import type {CaptureItemDraft} from '@/capture/captureItemDraft';
 import {extractShortSubject} from '@/capture/captureTitle';
 import {isTextPrimaryType, type ItemTypeName} from '@/ui/itemTypeConfig';
 import {
+  typeHasBehavior,
   filterValidOptionalBehaviors,
   getDefaultBehaviorsForType,
 } from '@/domain/behaviorTypeConfig';
@@ -74,19 +75,16 @@ export async function resolveCaptureDraft(draft: CaptureItemDraft): Promise<Save
     typeId: itemType.id,
     title: title || 'Untitled',
     content,
-    importance: draft.importance ?? null,
-    urgency: draft.urgency ?? null,
+    mascot: draft.mascot ?? null,
+    unsure: draft.unsure ?? false,
+    // Priority/urgency only belong to doable items.
+    importance: typeHasBehavior(draft.typeName, 'Doable') ? (draft.importance ?? null) : null,
+    urgency: typeHasBehavior(draft.typeName, 'Doable') ? (draft.urgency ?? null) : null,
     optionalBehaviorIds,
     behaviorData,
     groupIds,
     tagNames: draft.tagNames ?? [],
   };
-}
-
-export async function createItemFromCaptureJson(rawJson: string) {
-  const draft = parseCaptureJson(rawJson);
-  const payload = await resolveCaptureDraft(draft);
-  return itemApi.saveItem(payload);
 }
 
 export async function createItemFromCaptureDraft(draft: CaptureItemDraft) {
@@ -104,6 +102,7 @@ export function draftFromItemFull(full: ItemFull, groups: Group[]): CaptureItemD
     typeName: full.typeName as ItemTypeName,
     title: full.title,
     content: full.content,
+    mascot: full.mascot ?? null,
     importance: full.importance,
     urgency: full.urgency,
     tagNames: full.tagNames,

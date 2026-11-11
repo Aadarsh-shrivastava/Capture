@@ -16,12 +16,36 @@ function extractDomain(url: string): string | null {
   }
 }
 
+/** Behaviors with fields but no dedicated table live as JSON in item_behavior_data. */
+function isJsonBehavior(name: string): boolean {
+  const def = getBehaviorDefinition(name);
+  return Boolean(def && !def.tableName && def.fields.length > 0);
+}
+
+function hasData(name: string): boolean {
+  return Boolean(getBehaviorDefinition(name)?.tableName) || isJsonBehavior(name);
+}
+
 export const behaviorDataRepository = {
   async upsertForBehavior(behaviorName: string, itemId: number, data: Record<string, string>) {
     const def = getBehaviorDefinition(behaviorName);
-    if (!def?.tableName) return;
-
+    if (!def) return;
     const db = await getDatabase();
+
+    if (isJsonBehavior(behaviorName)) {
+      // Keep only defined fields so stray keys never pile up.
+      const clean = Object.fromEntries(def.fields.map((f) => [f.name, data[f.name] ?? '']));
+      await db.runAsync(
+        `INSERT INTO item_behavior_data (item_id, behavior, data, updated_at) VALUES (?, ?, ?, ?)
+         ON CONFLICT(item_id, behavior) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`,
+        itemId,
+        behaviorName,
+        JSON.stringify(clean),
+        new Date().toISOString()
+      );
+      return;
+    }
+    if (!def.tableName) return;
 
     switch (behaviorName) {
       case 'Doable':
@@ -42,14 +66,20 @@ export const behaviorDataRepository = {
         break;
       case 'Memorable':
         await db.runAsync(
-          `INSERT INTO memorable_items (item_id, review_at, last_reviewed_at)
-           VALUES (?, ?, ?)
+          `INSERT INTO memorable_items (item_id, review_at, last_reviewed_at, weight, interval_days, times_shown)
+           VALUES (?, ?, ?, ?, ?, ?)
            ON CONFLICT(item_id) DO UPDATE SET
              review_at = excluded.review_at,
-             last_reviewed_at = excluded.last_reviewed_at`,
+             last_reviewed_at = excluded.last_reviewed_at,
+             weight = excluded.weight,
+             interval_days = excluded.interval_days,
+             times_shown = excluded.times_shown`,
           itemId,
           data.review_at?.trim() || null,
-          data.last_reviewed_at?.trim() || null
+          data.last_reviewed_at?.trim() || null,
+          parseNumber(data.weight),
+          parseNumber(data.interval_days),
+          parseNumber(data.times_shown) ?? 0
         );
         break;
       case 'Visitable': {
@@ -71,24 +101,6 @@ export const behaviorDataRepository = {
         );
         break;
       }
-      case 'Repeatable':
-        await db.runAsync(
-          `INSERT INTO repeatable_items (item_id, interval_value, interval_unit, next_occurrence_at, start_at, end_at)
-           VALUES (?, ?, ?, ?, ?, ?)
-           ON CONFLICT(item_id) DO UPDATE SET
-             interval_value = excluded.interval_value,
-             interval_unit = excluded.interval_unit,
-             next_occurrence_at = excluded.next_occurrence_at,
-             start_at = excluded.start_at,
-             end_at = excluded.end_at`,
-          itemId,
-          parseNumber(data.interval_value) ?? 1,
-          data.interval_unit || 'week',
-          data.next_occurrence_at?.trim() || null,
-          data.start_at?.trim() || null,
-          data.end_at?.trim() || null
-        );
-        break;
       case 'Trackable':
         await db.runAsync(
           `INSERT INTO trackable_items (item_id, current_value, target_value, unit)
@@ -124,14 +136,26 @@ export const behaviorDataRepository = {
 
   async deleteForBehavior(behaviorName: string, itemId: number) {
     const def = getBehaviorDefinition(behaviorName);
-    if (!def?.tableName) return;
-
     const db = await getDatabase();
+    if (isJsonBehavior(behaviorName)) {
+      await db.runAsync('DELETE FROM item_behavior_data WHERE item_id = ? AND behavior = ?', itemId, behaviorName);
+      return;
+    }
+    if (!def?.tableName) return;
     await db.runAsync(`DELETE FROM ${def.tableName} WHERE item_id = ?`, itemId);
   },
 
   async getForBehavior(behaviorName: string, itemId: number): Promise<Record<string, string>> {
     const db = await getDatabase();
+
+    if (isJsonBehavior(behaviorName)) {
+      const row = await db.getFirstAsync<{ data: string }>(
+        'SELECT data FROM item_behavior_data WHERE item_id = ? AND behavior = ?',
+        itemId,
+        behaviorName
+      );
+      return { ...getDefaultFieldValues(behaviorName), ...(row ? (JSON.parse(row.data) as Record<string, string>) : {}) };
+    }
 
     switch (behaviorName) {
       case 'Doable': {
@@ -153,11 +177,17 @@ export const behaviorDataRepository = {
         const row = await db.getFirstAsync<{
           review_at: string | null;
           last_reviewed_at: string | null;
+          weight: number | null;
+          interval_days: number | null;
+          times_shown: number;
         }>('SELECT * FROM memorable_items WHERE item_id = ?', itemId);
         if (!row) return {};
         return {
           review_at: row.review_at ?? '',
           last_reviewed_at: row.last_reviewed_at ?? '',
+          weight: row.weight?.toString() ?? '',
+          interval_days: row.interval_days?.toString() ?? '',
+          times_shown: String(row.times_shown ?? 0),
         };
       }
       case 'Visitable': {
@@ -173,23 +203,6 @@ export const behaviorDataRepository = {
           title: row.title ?? '',
           domain: row.domain ?? '',
           last_visited_at: row.last_visited_at ?? '',
-        };
-      }
-      case 'Repeatable': {
-        const row = await db.getFirstAsync<{
-          interval_value: number;
-          interval_unit: string;
-          next_occurrence_at: string | null;
-          start_at: string | null;
-          end_at: string | null;
-        }>('SELECT * FROM repeatable_items WHERE item_id = ?', itemId);
-        if (!row) return { interval_value: '1', interval_unit: 'week' };
-        return {
-          interval_value: row.interval_value.toString(),
-          interval_unit: row.interval_unit,
-          next_occurrence_at: row.next_occurrence_at ?? '',
-          start_at: row.start_at ?? '',
-          end_at: row.end_at ?? '',
         };
       }
       case 'Trackable': {
@@ -226,7 +239,7 @@ export const behaviorDataRepository = {
   async loadAllForBehaviors(behaviorNames: string[], itemId: number): Promise<BehaviorDataMap> {
     const result: BehaviorDataMap = {};
     for (const name of behaviorNames) {
-      if (getBehaviorDefinition(name)?.tableName) {
+      if (hasData(name)) {
         result[name] = await this.getForBehavior(name, itemId);
       }
     }
@@ -235,10 +248,27 @@ export const behaviorDataRepository = {
 
   async upsertAllForBehaviors(behaviorNames: string[], itemId: number, data: BehaviorDataMap) {
     for (const name of behaviorNames) {
-      if (getBehaviorDefinition(name)?.tableName) {
+      if (hasData(name)) {
         await this.upsertForBehavior(name, itemId, data[name] ?? {});
       }
     }
+  },
+
+  /** All rows of one JSON behavior: item id → data (for jobs like reminders). */
+  /** Ids of items that hold a link (Visitable lives in its own table). */
+  async linkedItemIds(): Promise<Set<number>> {
+    const db = await getDatabase();
+    const rows = await db.getAllAsync<{ item_id: number }>('SELECT item_id FROM visitable_items');
+    return new Set(rows.map((r) => r.item_id));
+  },
+
+  async allForBehavior(behaviorName: string): Promise<Map<number, Record<string, string>>> {
+    const db = await getDatabase();
+    const rows = await db.getAllAsync<{ item_id: number; data: string }>(
+      'SELECT item_id, data FROM item_behavior_data WHERE behavior = ?',
+      behaviorName
+    );
+    return new Map(rows.map((r) => [r.item_id, JSON.parse(r.data) as Record<string, string>]));
   },
 
   async deleteAllForBehaviors(behaviorNames: string[], itemId: number) {

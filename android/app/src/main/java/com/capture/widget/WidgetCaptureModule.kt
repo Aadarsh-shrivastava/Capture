@@ -1,10 +1,10 @@
 package com.capture.widget
 
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.modules.core.DeviceEventManagerModule
 
 class WidgetCaptureModule(private val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
@@ -12,43 +12,29 @@ class WidgetCaptureModule(private val reactContext: ReactApplicationContext) :
   override fun getName(): String = "HomeWidgetCapture"
 
   @ReactMethod
-  fun getPendingPrompt(promise: Promise) {
-    promise.resolve(WidgetCaptureStorage.getPending(reactContext))
+  fun peekPendingPrompts(promise: Promise) {
+    val array = Arguments.createArray()
+    WidgetCaptureStorage.peekAll(reactContext).forEach { array.pushString(it) }
+    promise.resolve(array)
   }
 
   @ReactMethod
-  fun clearPendingPrompt(promise: Promise) {
-    WidgetCaptureStorage.clear(reactContext)
+  fun clearPendingPrompts(count: Double, promise: Promise) {
+    WidgetCaptureStorage.clear(reactContext, count.toInt())
     promise.resolve(null)
   }
 
   @ReactMethod
-  fun setFocusTaskDisplay(title: String?, subtitle: String?, promise: Promise) {
-    WidgetCaptureStorage.saveFocusTask(reactContext, title, subtitle)
+  fun setFocusTaskDisplay(timeline: String, mascot: String?, promise: Promise) {
+    WidgetCaptureStorage.saveFocusTimeline(reactContext, timeline)
+    WidgetCaptureStorage.saveMascot(reactContext, mascot)
     CaptureWidgetRenderer.updateAll(reactContext)
     promise.resolve(null)
   }
 
   @ReactMethod
-  fun addListener(eventName: String) {
-    // Required for NativeEventEmitter on Android.
-  }
-
-  @ReactMethod
-  fun removeListeners(count: Int) {
-    // Required for NativeEventEmitter on Android.
-  }
-
-  companion object {
-    const val SUBMIT_EVENT = "HomeWidgetCaptureSubmit"
-
-    fun emitSubmit(reactContext: ReactApplicationContext) {
-      if (!reactContext.hasActiveReactInstance()) {
-        return
-      }
-      reactContext
-        .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-        .emit(SUBMIT_EVENT, null)
-    }
+  fun setCaptureNotification(enabled: Boolean, promise: Promise) {
+    if (enabled) CaptureNotification.show(reactContext) else CaptureNotification.hide(reactContext)
+    promise.resolve(null)
   }
 }

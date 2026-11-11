@@ -1,47 +1,46 @@
 import {useCallback} from 'react';
 
-import {buildCaptureSystemPrompt} from '@/capture/buildCaptureSystemPrompt';
-import {analyzeCaptureText} from '@/capture/captureHeuristics';
-import {parseCaptureJson, type CaptureItemDraft} from '@/capture/captureItemDraft';
-import {normalizeCaptureDraftTitle} from '@/capture/captureTitle';
-import {useLlamaModel} from '@/hooks/useLlamaModel';
+import type {CaptureItemDraft} from '@/capture/captureItemDraft';
+import type {ShareKind} from '@/capture/queue';
+import {GROUPS_ENABLED, groupsService} from '@/groups';
+import {complete, ensureLoaded, useLlamaModel} from '@/hooks/useLlamaModel';
+import {runSelectiveAgent} from '@/selectiveKnowledge/agent';
+import {splitThoughts} from '@/selectiveKnowledge/split';
 
-/** Shared capture analysis pipeline — Qwen LLM with heuristics fallback. */
+/** The model isn't downloaded or won't load: captures wait in the queue until it is. */
+export class ModelUnavailableError extends Error {}
+
+async function requireModel(): Promise<void> {
+  // Loads on demand if downloaded (it may have been released after idling).
+  if (!(await ensureLoaded())) throw new ModelUnavailableError('AI model not available');
+}
+
+/**
+ * One thought → one draft, decided by the on-device model; plain function so the capture queue can run it off-screen.
+ * `now`: when it was captured — relative dates ("tomorrow") resolve against it.
+ */
+export async function analyzeText(text: string, onStep?: (steps: string[]) => void, now = new Date(), kind?: ShareKind): Promise<CaptureItemDraft> {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    throw new Error('No text to analyze');
+  }
+  await requireModel();
+
+  const groups = GROUPS_ENABLED ? await groupsService.getActiveGroups().catch(() => []) : [];
+  const {draft, journey} = await runSelectiveAgent(trimmed, complete, {now, onStep, groups, kind});
+  if (__DEV__) console.log('[selective-knowledge]', journey.join(' → '));
+  return draft;
+}
+
+/** A brain dump → one part per thought ("protein shake… btw what is xyz…" → 2). Only this step runs before "Captured". */
+export async function splitCapture(text: string): Promise<string[]> {
+  await requireModel();
+  return splitThoughts(text.trim(), complete);
+}
+
+/** Model state for the capture screens. */
 export function useCaptureAnalysis() {
-  const {ready, busy, loadModel, complete} = useLlamaModel();
-
-  const analyzeText = useCallback(
-    async (text: string): Promise<CaptureItemDraft> => {
-      const trimmed = text.trim();
-      if (!trimmed) {
-        throw new Error('No text to analyze');
-      }
-
-      const now = new Date();
-
-      if (ready) {
-        try {
-          const systemPrompt = buildCaptureSystemPrompt(now);
-          const raw = await complete(
-            [
-              {role: 'system', content: systemPrompt},
-              {role: 'user', content: trimmed},
-            ],
-            undefined,
-            768,
-          );
-          const draft = parseCaptureJson(raw);
-          const {title, content} = normalizeCaptureDraftTitle(draft, trimmed);
-          return {...draft, title, content};
-        } catch {
-          return analyzeCaptureText(trimmed, undefined, now);
-        }
-      }
-
-      return analyzeCaptureText(trimmed, undefined, now);
-    },
-    [ready, complete],
-  );
+  const {ready, busy, loadModel} = useLlamaModel();
 
   const preloadModel = useCallback(() => {
     if (!ready && !busy) {
@@ -54,7 +53,6 @@ export function useCaptureAnalysis() {
     busy,
     analyzing: busy,
     loadModel,
-    analyzeText,
     preloadModel,
   };
 }

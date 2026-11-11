@@ -1,100 +1,92 @@
-import { Ionicons } from '@expo/vector-icons';
-import { ScrollView, Text, View } from 'react-native';
-import { Pressable } from '@/ui/HapticPressable';
+import { useState } from 'react';
+import { Alert, Platform, ScrollView, Switch } from 'react-native';
+import { useRouter } from 'expo-router';
+
 import { ScreenShell } from '@/components/ScreenShell/ScreenShell';
-import { DB_VERSION } from '@/db/database';
-import { useThemeStore } from '@/store/themeStore';
-import { useAppStyles } from '@/ui/appStyles';
+import { OptionsSheet } from '@/components/sheets/OptionsSheet';
+import { ModelRow } from '@/model';
+import { setCaptureNotificationEnabled, useCaptureNotificationSetting, useReminderSettings } from '@/notifications';
+import { POSTPONE_OPTIONS, usePostponeSettings } from '@/taskActions';
+import { SettingsCard } from '@/ui/components/SettingsCard';
+import { getVaultConfig } from '@/vault';
 
-type SettingsRowProps = {
-  icon: keyof typeof Ionicons.glyphMap;
-  title: string;
-  subtitle?: string;
-  onPress?: () => void;
-  trailing?: string;
-};
+const hoursLabel = (h: number) => `${h} hour${h === 1 ? '' : 's'}`;
 
-function SettingsRow({ icon, title, subtitle, onPress, trailing }: SettingsRowProps) {
-  const styles = useAppStyles();
-  const { theme } = useThemeStore();
-  const { colors } = theme;
-
-  const content = (
-    <View style={[styles.row, { flexDirection: 'row', alignItems: 'center', gap: 14 }]}>
-      <Ionicons name={icon} size={20} color={colors.onSurfaceVariant} />
-      <View style={{ flex: 1 }}>
-        <Text style={styles.rowTitle}>{title}</Text>
-        {subtitle ? <Text style={styles.rowMeta}>{subtitle}</Text> : null}
-      </View>
-      {trailing ? (
-        <Text style={[styles.rowMeta, { marginTop: 0 }]}>{trailing}</Text>
-      ) : onPress ? (
-        <Ionicons name="chevron-forward" size={18} color={colors.onSurfaceVariant} />
-      ) : null}
-    </View>
-  );
-
-  if (onPress) {
-    return (
-      <Pressable onPress={onPress} accessibilityRole="button">
-        {content}
-      </Pressable>
-    );
-  }
-
-  return content;
-}
-
+/** Every setting is one card; options open a bottom sheet. */
 export function SettingsScreen() {
-  const styles = useAppStyles();
-  const { themeName, theme } = useThemeStore();
+  const router = useRouter();
+  const reminders = useReminderSettings();
+  const postpone = usePostponeSettings();
+  const captureNotification = useCaptureNotificationSetting();
+  const vault = getVaultConfig();
+  const [postponeOpen, setPostponeOpen] = useState(false);
 
   return (
     <ScreenShell title="Settings" leading="back">
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.subtitle}>LockedIn V1 · Focus-first</Text>
-
-        <Text style={styles.sectionLabel}>General</Text>
-        <SettingsRow
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 40, gap: 10 }}>
+        <SettingsCard
+          icon="shapes-outline"
+          title="Item types"
+          subtitle="Create types and choose their behaviors"
+          onPress={() => router.push('/settings/types')}
+        />
+        <ModelRow />
+        <SettingsCard
           icon="color-palette-outline"
           title="Appearance"
-          subtitle="Theme switching is not available yet — app uses a single dark theme."
-          trailing={theme.name}
+          subtitle="Companion, progress bar, tab bar"
+          onPress={() => router.push('/settings/appearance')}
         />
-
-        <Text style={styles.sectionLabel}>Data</Text>
-        <SettingsRow
-          icon="server-outline"
-          title="Storage"
-          subtitle="All items stored locally on device"
-          trailing="SQLite"
+        <SettingsCard
+          icon="notifications-outline"
+          title="Task reminders"
+          subtitle="Nudges before timed tasks, plus an 8 AM summary"
+          trailing={<Switch value={reminders.enabled} onValueChange={reminders.setEnabled} />}
         />
-        <SettingsRow
-          icon="git-branch-outline"
-          title="Database schema"
-          trailing={`v${DB_VERSION}`}
+        <SettingsCard
+          icon="create-outline"
+          title={Platform.OS === 'ios' ? 'Dynamic Island' : 'Capture notification'}
+          subtitle={
+            Platform.OS === 'ios'
+              ? 'Your current task, plus Type or Talk, in the Dynamic Island and lock screen'
+              : 'Type or Talk from the shade and lock screen'
+          }
+          trailing={
+            <Switch
+              value={captureNotification.enabled}
+              onValueChange={async v => {
+                if (!(await setCaptureNotificationEnabled(v))) {
+                  Alert.alert('Notifications are off', 'Allow notifications for Capture in system settings.');
+                }
+              }}
+            />
+          }
         />
-
-        <Text style={styles.sectionLabel}>Capture</Text>
-        <SettingsRow
-          icon="mic-outline"
-          title="Voice capture"
-          subtitle="Uses on-device speech recognition. Works best on a physical device."
+        <SettingsCard
+          icon="time-outline"
+          title="Later pushes a task by"
+          trailing={hoursLabel(postpone.hours)}
+          onPress={() => setPostponeOpen(true)}
         />
-        <SettingsRow
-          icon="sparkles-outline"
-          title="AI analysis"
-          subtitle="Optional on-device Qwen model for smarter capture parsing"
-        />
-
-        <Text style={styles.sectionLabel}>About</Text>
-        <SettingsRow icon="information-circle-outline" title="Version" trailing="0.0.1" />
-        <SettingsRow
-          icon="code-slash-outline"
-          title="Active theme key"
-          trailing={themeName}
-        />
+        {vault ? (
+          <SettingsCard
+            icon="folder-outline"
+            title="Vault"
+            subtitle={vault.location === 'files' ? 'In the Files app' : 'Private to the app'}
+            trailing={vault.name}
+          />
+        ) : null}
+        <SettingsCard icon="information-circle-outline" title="Version" trailing="0.0.1" />
       </ScrollView>
+
+      <OptionsSheet
+        visible={postponeOpen}
+        onClose={() => setPostponeOpen(false)}
+        title="Later pushes a task by"
+        value={String(postpone.hours)}
+        options={POSTPONE_OPTIONS.map((h) => ({ label: hoursLabel(h), value: String(h) }))}
+        onSelect={(v) => postpone.setHours(Number(v))}
+      />
     </ScreenShell>
   );
 }

@@ -38,7 +38,19 @@
             <category android:name="android.intent.category.BROWSABLE" />
             <data android:scheme="capture" android:host="capture" />
             <data android:scheme="capture" android:host="quick" />
+            <data android:scheme="capture" android:host="open" />
         </intent-filter>
+      </activity>
+
+      <!-- Share menu: "Save to Capture" pops up over the sharing app; the app itself isn't opened. -->
+      <activity
+        android:name=".widget.ShareCaptureActivity"
+        android:exported="true"
+        android:excludeFromRecents="true"
+        android:label="@string/share_title"
+        android:taskAffinity=""
+        android:theme="@style/WidgetCaptureTheme"
+        android:windowSoftInputMode="stateHidden|adjustResize">
         <intent-filter>
             <action android:name="android.intent.action.SEND" />
             <category android:name="android.intent.category.DEFAULT" />
@@ -46,11 +58,26 @@
         </intent-filter>
       </activity>
 
+      <!-- Own task: saving a thought never brings the app forward. showWhenLocked: usable from the lock screen tile. -->
       <activity
         android:name=".widget.WidgetCaptureActivity"
         android:exported="false"
+        android:excludeFromRecents="true"
+        android:showWhenLocked="true"
+        android:taskAffinity=""
         android:theme="@style/WidgetCaptureTheme"
         android:windowSoftInputMode="stateVisible|adjustResize" />
+
+      <service
+        android:name=".widget.CaptureTileService"
+        android:exported="true"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:label="@string/tile_label"
+        android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+        <intent-filter>
+            <action android:name="android.service.quicksettings.action.QS_TILE" />
+        </intent-filter>
+      </service>
 
       <receiver
         android:name=".widget.CaptureWidgetProvider"

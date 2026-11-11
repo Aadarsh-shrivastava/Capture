@@ -1,18 +1,21 @@
 import moment from 'moment';
 import {useState} from 'react';
-import {Platform, Text, TextInput, View} from 'react-native';
+import DateTimePicker, {DateTimePickerAndroid} from '@react-native-community/datetimepicker';
+import {Platform, Text, View} from 'react-native';
 
 import {Sheet} from '@/components/Sheet/Sheet';
 import {Pressable} from '@/ui/HapticPressable';
 import {Divider, PrimaryButton, PropertyRow} from '@/ui/components/Primitives';
-import {designTokens, radius} from '@/ui/designTokens';
+import {designTokens} from '@/ui/designTokens';
 
 type DateSheetProps = {
   visible: boolean;
   onClose: () => void;
-  /** Receives YYYY-MM-DD. */
+  /** Receives YYYY-MM-DD, or a local ISO datetime when a time was picked. */
   onSelect: (date: string) => void;
   onClear?: () => void;
+  /** Let the custom picker choose a time too. */
+  withTime?: boolean;
 };
 
 type Preset = {
@@ -34,22 +37,64 @@ function buildPresets(): Preset[] {
 }
 
 /** Date picker sheet — presets plus a custom date field. */
-export function DateSheet({visible, onClose, onSelect, onClear}: DateSheetProps) {
-  const [custom, setCustom] = useState('');
+export function DateSheet({visible, onClose, onSelect, onClear, withTime = false}: DateSheetProps) {
+  const [custom, setCustom] = useState(() => new Date());
   const [customOpen, setCustomOpen] = useState(false);
+  /** iOS with time: a preset day was tapped, the inline picker now asks for its time. */
+  const [timeFor, setTimeFor] = useState<moment.Moment | null>(null);
   const presets = buildPresets();
 
   function choose(date: moment.Moment) {
+    setTimeFor(null);
     onSelect(date.format('YYYY-MM-DD'));
     onClose();
   }
 
-  function applyCustom() {
-    const parsed = moment(custom.trim(), ['YYYY-MM-DD', 'MMM D YYYY', 'MMM D', 'D MMM YYYY', 'D MMM'], false);
-    if (!parsed.isValid()) return;
-    choose(parsed);
-    setCustom('');
+  /** With time: a preset day, then its time (cancel / "No time" = the day only). */
+  function choosePreset(day: moment.Moment) {
+    if (!withTime) return choose(day);
+    const start = day.clone().hours(Math.min(23, moment().hours() + 1)).minutes(0).toDate();
+    if (Platform.OS === 'ios') {
+      setCustomOpen(false);
+      setCustom(start);
+      return setTimeFor(day);
+    }
+    DateTimePickerAndroid.open({
+      value: start,
+      mode: 'time',
+      onChange: (event, time) => (event.type === 'set' && time ? chooseCustom(time) : choose(day)),
+    });
+  }
+
+  function chooseCustom(date: Date) {
     setCustomOpen(false);
+    setTimeFor(null);
+    if (!withTime) return choose(moment(date));
+    onSelect(moment(date).seconds(0).format());
+    onClose();
+  }
+
+  function openCustom() {
+    if (Platform.OS === 'ios') {
+      setTimeFor(null);
+      return setCustomOpen((open) => !open);
+    }
+    // Android has no combined picker: date dialog, then time dialog.
+    DateTimePickerAndroid.open({
+      value: custom,
+      mode: 'date',
+      onChange: (event, date) => {
+        if (event.type !== 'set' || !date) return;
+        if (!withTime) return chooseCustom(date);
+        DateTimePickerAndroid.open({
+          value: date,
+          mode: 'time',
+          onChange: (timeEvent, time) => {
+            if (timeEvent.type === 'set' && time) chooseCustom(time);
+          },
+        });
+      },
+    });
   }
 
   return (
@@ -62,7 +107,7 @@ export function DateSheet({visible, onClose, onSelect, onClear}: DateSheetProps)
               title={preset.label}
               value={preset.value.format('ddd, MMM D')}
               chevron={false}
-              onPress={() => choose(preset.value)}
+              onPress={() => choosePreset(preset.value)}
             />
             <Divider />
           </View>
@@ -70,29 +115,34 @@ export function DateSheet({visible, onClose, onSelect, onClear}: DateSheetProps)
 
         <PropertyRow
           icon="calendar-outline"
-          title="Custom date"
-          onPress={() => setCustomOpen((open) => !open)}
+          title={withTime ? 'Custom date & time' : 'Custom date'}
+          onPress={openCustom}
         />
 
+        {timeFor ? (
+          <View style={{gap: 12, paddingBottom: 8, alignItems: 'center'}}>
+            <DateTimePicker value={custom} mode="time" display="spinner" themeVariant="dark" onChange={(_, date) => date && setCustom(date)} />
+            <PrimaryButton label={`Set time · ${timeFor.format('ddd, MMM D')}`} onPress={() => chooseCustom(custom)} style={{alignSelf: 'stretch'}} />
+            <Pressable onPress={() => choose(timeFor)} style={{paddingVertical: 8}}>
+              <Text style={{color: designTokens.textSecondary, fontSize: 15}}>No time</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
         {customOpen ? (
-          <View style={{gap: 12, paddingBottom: 8}}>
-            <TextInput
+          <View style={{gap: 12, paddingBottom: 8, alignItems: 'center'}}>
+            <DateTimePicker
               value={custom}
-              onChangeText={setCustom}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={designTokens.textTertiary}
-              autoCapitalize="none"
-              autoFocus={Platform.OS === 'ios'}
-              style={{
-                backgroundColor: designTokens.field,
-                borderRadius: radius.md,
-                paddingHorizontal: 16,
-                paddingVertical: 14,
-                color: designTokens.textPrimary,
-                fontSize: 16,
-              }}
+              mode={withTime ? 'datetime' : 'date'}
+              display="spinner"
+              themeVariant="dark"
+              onChange={(_, date) => date && setCustom(date)}
             />
-            <PrimaryButton label="Set date" onPress={applyCustom} disabled={!custom.trim()} />
+            <PrimaryButton
+              label={withTime ? 'Set date & time' : 'Set date'}
+              onPress={() => chooseCustom(custom)}
+              style={{alignSelf: 'stretch'}}
+            />
           </View>
         ) : null}
 

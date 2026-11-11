@@ -1,6 +1,8 @@
 import {Text, View} from 'react-native';
 
+import {Grain} from '@/ui/Grain';
 import {Pressable} from '@/ui/HapticPressable';
+import {isItemMascot, ItemMascot} from '@/mascot';
 import {IconTile} from '@/ui/components/Primitives';
 import {designTokens, radius} from '@/ui/designTokens';
 import {formatRelativeDay} from '@/ui/formatDateTime';
@@ -10,19 +12,25 @@ type ItemCardProps = {
   title: string;
   typeName: string;
   createdAt: string;
+  /** Replaces the type's name in the meta line (e.g. "To do"). */
+  label?: string;
+  /** Sticker key; shown instead of the type icon when set. */
+  mascot?: string | null;
   /** Extra meta shown after the date, e.g. a due label. */
   meta?: string | null;
   onPress?: () => void;
+  onLongPress?: () => void;
 };
 
 /** Rounded card row for item lists — icon tile, title, meta line. */
-export function ItemCard({title, typeName, createdAt, meta, onPress}: ItemCardProps) {
+export function ItemCard({title, typeName, createdAt, label, mascot, meta, onPress, onLongPress}: ItemCardProps) {
   const config = getItemTypeConfig(typeName);
-  const metaLine = [config.label, meta || formatRelativeDay(createdAt)].filter(Boolean).join(' · ');
+  const metaLine = [label ?? config.label, meta || formatRelativeDay(createdAt)].filter(Boolean).join(' · ');
 
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
       accessibilityRole={onPress ? 'button' : undefined}
       style={({pressed}) => ({
         flexDirection: 'row',
@@ -32,7 +40,7 @@ export function ItemCard({title, typeName, createdAt, meta, onPress}: ItemCardPr
         borderRadius: radius.lg,
         backgroundColor: pressed ? designTokens.cardPressed : designTokens.card,
       })}>
-      <IconTile icon={config.icon} size={40} />
+      {isItemMascot(mascot) ? <ItemMascot mascot={mascot} size={40} /> : <IconTile icon={config.icon} size={40} />}
 
       <View style={{flex: 1}}>
         <Text
@@ -55,6 +63,11 @@ type TypeGridCardProps = {
 };
 
 /** Small square card for the Library grid. */
+/** "3 items" / "1 item"; empty for 0. */
+export function itemCountLabel(count: number): string {
+  return count > 0 ? `${count} ${count === 1 ? 'item' : 'items'}` : '';
+}
+
 export function TypeGridCard({typeName, count, onPress}: TypeGridCardProps) {
   const config = getItemTypeConfig(typeName);
 
@@ -65,18 +78,22 @@ export function TypeGridCard({typeName, count, onPress}: TypeGridCardProps) {
       style={({pressed}) => ({
         flex: 1,
         aspectRatio: 1,
-        padding: 14,
+        padding: 12,
         borderRadius: radius.lg,
-        justifyContent: 'space-between',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
         backgroundColor: pressed ? designTokens.cardPressed : designTokens.card,
+        experimental_backgroundImage: pressed ? undefined : designTokens.cardGradient,
+        boxShadow: designTokens.cardShadow,
       })}>
+      <Grain radius={radius.lg} />
       <IconTile icon={config.icon} size={36} />
-
-      <View>
-        <Text numberOfLines={1} style={{color: designTokens.textPrimary, fontSize: 15, fontWeight: '600'}}>
+      <View style={{alignItems: 'center', gap: 2}}>
+        <Text numberOfLines={1} style={{color: designTokens.white, fontSize: 15, fontWeight: '700'}}>
           {config.plural}
         </Text>
-        <Text style={{color: designTokens.textTertiary, fontSize: 13, marginTop: 2}}>{count}</Text>
+        <Text style={{color: designTokens.textTertiary, fontSize: 12, minHeight: 15}}>{itemCountLabel(count)}</Text>
       </View>
     </Pressable>
   );

@@ -7,6 +7,8 @@ type FocusTaskRow = {
   title: string;
   content: string | null;
   importance: number | null;
+  mascot?: string | null;
+  unsure?: number;
   urgency: number | null;
   status: string;
   created_at: string;
@@ -25,6 +27,8 @@ function mapFocusTask(row: FocusTaskRow): FocusTask {
     title: row.title,
     content: row.content,
     importance: row.importance,
+    mascot: row.mascot ?? null,
+    unsure: Boolean(row.unsure),
     urgency: row.urgency,
     status: row.status ?? 'active',
     createdAt: row.created_at,
@@ -38,7 +42,7 @@ function mapFocusTask(row: FocusTaskRow): FocusTask {
 }
 
 export const focusRepository = {
-  /** Active tasks with doable data — excludes completed/cancelled. */
+  /** Active doable items of any type (Task or custom types with Doable) — excludes completed/cancelled. */
   async findActiveTasks(): Promise<FocusTask[]> {
     const db = await getDatabase();
     const rows = await db.getAllAsync<FocusTaskRow>(
@@ -46,9 +50,8 @@ export const focusRepository = {
               d.status AS doable_status, d.due_at, d.completed_at, d.estimated_minutes
        FROM items i
        INNER JOIN item_types t ON t.id = i.type_id
-       LEFT JOIN doable_items d ON d.item_id = i.id
-       WHERE t.name = 'Task'
-         AND (d.status IS NULL OR d.status NOT IN ('completed', 'cancelled'))
+       INNER JOIN doable_items d ON d.item_id = i.id
+       WHERE d.status NOT IN ('completed', 'cancelled')
        ORDER BY i.updated_at DESC`,
     );
 

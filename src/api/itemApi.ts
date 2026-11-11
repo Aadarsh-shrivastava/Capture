@@ -1,12 +1,14 @@
 import { toAppError } from '@/lib/errors';
 import type { SaveItemPayload } from '@/models/behaviorData';
-import type { UpdateItemInput } from '@/models/item';
 import { itemService, behaviorService, itemTypeService } from '@/services/itemService';
+import { useDataVersionStore } from '@/store/dataVersionStore';
 
 export const itemApi = {
   async saveItem(payload: SaveItemPayload, itemId?: number) {
     try {
-      return await itemService.saveItem(payload, itemId);
+      const saved = await itemService.saveItem(payload, itemId);
+      useDataVersionStore.getState().bump();
+      return saved;
     } catch (error) {
       throw toAppError(error, 'Unable to save item');
     }
@@ -47,6 +49,7 @@ export const itemApi = {
   async deleteItem(id: number) {
     try {
       await itemService.deleteItem(id);
+      useDataVersionStore.getState().bump();
     } catch (error) {
       throw toAppError(error, 'Unable to delete item');
     }
@@ -74,16 +77,6 @@ export const itemApi = {
     } catch (error) {
       throw toAppError(error, 'Unable to load optional behaviors');
     }
-  },
-
-  /** @deprecated use saveItem */
-  async createItem(payload: SaveItemPayload) {
-    return this.saveItem(payload);
-  },
-
-  /** @deprecated use saveItem */
-  async updateItem(id: number, _input: UpdateItemInput) {
-    throw toAppError(new Error('Use saveItem with full payload'), 'Use saveItem instead');
   },
 };
 

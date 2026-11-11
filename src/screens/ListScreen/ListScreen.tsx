@@ -2,11 +2,29 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
+import { Ionicons } from '@expo/vector-icons';
+
 import { ScreenShell } from '@/components/ScreenShell/ScreenShell';
+import { ListOptionsSheet } from '@/components/sheets/ListOptionsSheet';
+import {
+  filterTasks,
+  sortForList,
+  TASK_FILTER_OPTIONS,
+  TASK_SORT_OPTIONS,
+  type TaskFilter,
+  type TaskSort,
+  type TaskState,
+} from '@/domain/itemListing';
+import { taskHistoryRepository } from '@/repositories/taskHistoryRepository';
+import { useDataVersionStore } from '@/store/dataVersionStore';
+import { formatDueDateLabel } from '@/ui/formatDateTime';
+import { Pressable } from '@/ui/HapticPressable';
 import { useItemsData } from '@/hooks/useItemsData';
-import { EmptyState } from '@/ui/components/EmptyState';
+import { Selectable } from '@/selection';
+import { MascotMessage } from '@/mascot';
 import { ItemCard } from '@/ui/components/ItemCard';
 import { SearchBar } from '@/ui/components/SearchBar';
+import { typeHasBehavior } from '@/domain/behaviorTypeConfig';
 import { getItemTypeConfig } from '@/ui/itemTypeConfig';
 import { designTokens } from '@/ui/designTokens';
 
@@ -15,6 +33,21 @@ export function ListScreen() {
   const params = useLocalSearchParams<{ type?: string }>();
   const { items, types, error, refresh } = useItemsData();
   const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<TaskSort>('due');
+  const [filter, setFilter] = useState<TaskFilter>('all');
+  const [sortOpen, setSortOpen] = useState(false);
+  // null until loaded, so a task list renders once in its final order instead of reshuffling mid-slide.
+  const [taskStates, setTaskStates] = useState<Map<number, TaskState> | null>(null);
+  const version = useDataVersionStore((state) => state.version);
+  const isTaskList = Boolean(params.type) && typeHasBehavior(params.type!, 'Doable');
+
+  useEffect(() => {
+    if (!isTaskList) return;
+    taskHistoryRepository
+      .findAll()
+      .then((rows) => setTaskStates(new Map(rows.map((r) => [r.id, {dueAt: r.dueAt, status: r.status}]))))
+      .catch(() => {});
+  }, [isTaskList, version]);
 
   const activeType = useMemo(() => {
     if (!params.type || types.length === 0) return null;
@@ -34,7 +67,8 @@ export function ListScreen() {
     }
   }, [types.length, params.type, activeType, router]);
 
-  const typeConfig = activeType ? getItemTypeConfig(activeType.name) : null;
+  const typeConfig = params.type ? getItemTypeConfig(params.type) : null;
+  const ready = activeType !== null && (!isTaskList || taskStates !== null);
 
   const filteredItems = useMemo(() => {
     if (!activeType) return [];
@@ -50,30 +84,47 @@ export function ListScreen() {
       );
     }
 
-    return result;
-  }, [items, activeType, search]);
+    const states = taskStates ?? new Map<number, TaskState>();
+    if (isTaskList) result = filterTasks(result, filter, states);
+    return sortForList(result, isTaskList, sort, states);
+  }, [items, activeType, search, sort, filter, taskStates, isTaskList]);
 
-  const emptyMessage = useMemo(() => {
-    if (search.trim()) return 'No matching items.';
-    if (activeType?.name === 'Journal') return 'Start writing.';
-    if (activeType?.name === 'Note') return 'No notes yet.';
-    if (activeType?.name === 'Idea') return 'No ideas yet.';
-    if (activeType?.name === 'Task') return 'No tasks yet.';
-    return 'Nothing here yet.';
-  }, [activeType?.name, search]);
+  const emptyMessage = search.trim()
+    ? 'No matching items.'
+    : `No ${(typeConfig?.plural ?? activeType?.name ?? 'items').toLowerCase()} yet.`;
 
-  if (!activeType) {
-    return null;
-  }
-
+  // Shell renders right away so the header slides in with the screen; the body fills in once data is loaded.
   return (
-    <ScreenShell title={typeConfig?.plural ?? activeType.name} leading="back">
-      <ScrollView
+    <ScreenShell title={typeConfig?.plural ?? params.type ?? ''} leading="back">
+      {ready ? <ScrollView
         contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <SearchBar value={search} onChangeText={setSearch} />
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <SearchBar value={search} onChangeText={setSearch} />
+          </View>
+          {isTaskList ? (
+            <Pressable
+              onPress={() => setSortOpen(true)}
+              accessibilityLabel="Sort and filter"
+              style={{
+                width: 46,
+                height: 46,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 14,
+                backgroundColor: designTokens.field,
+              }}>
+              <Ionicons
+                name="options-outline"
+                size={20}
+                color={filter === 'all' ? designTokens.textSecondary : designTokens.textPrimary}
+              />
+            </Pressable>
+          ) : null}
+        </View>
 
         {error ? (
           <Text style={{ color: designTokens.textSecondary, fontSize: 13, marginBottom: 12 }}>
@@ -82,21 +133,43 @@ export function ListScreen() {
         ) : null}
 
         {filteredItems.length === 0 ? (
-          <EmptyState message={emptyMessage} />
+          <MascotMessage pose="curious" message={emptyMessage} />
         ) : (
           <View style={{ gap: 10 }}>
             {filteredItems.map((item) => (
-              <ItemCard
-                key={item.id}
-                title={item.title}
-                typeName={item.typeName}
-                createdAt={item.createdAt}
-                onPress={() => router.push(`/item/${item.id}`)}
-              />
+              <Selectable key={item.id} item={item} onOpen={() => router.push(`/item/${item.id}`)}>
+                {(select) => {
+                  const task = isTaskList ? taskStates?.get(item.id) : undefined;
+                  const done = task?.status === 'completed';
+                  return (
+                    <View style={{ opacity: done ? 0.45 : 1 }}>
+                      <ItemCard
+                        title={item.title}
+                        typeName={item.typeName}
+                        createdAt={item.createdAt}
+                        mascot={item.mascot}
+                        meta={done ? 'Done' : task?.dueAt ? formatDueDateLabel(task.dueAt) : isTaskList ? 'No due date' : null}
+                        {...select}
+                      />
+                    </View>
+                  );
+                }}
+              </Selectable>
             ))}
           </View>
         )}
-      </ScrollView>
+      </ScrollView> : null}
+
+      <ListOptionsSheet
+        visible={sortOpen}
+        onClose={() => setSortOpen(false)}
+        sortOptions={TASK_SORT_OPTIONS}
+        sort={sort}
+        onSort={setSort}
+        filterOptions={TASK_FILTER_OPTIONS}
+        filter={filter}
+        onFilter={setFilter}
+      />
     </ScreenShell>
   );
 }

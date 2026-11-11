@@ -1,5 +1,6 @@
 import {useCallback, useState} from 'react';
-import {ScrollView, Text} from 'react-native';
+import {ScrollView, Text, View} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useFocusEffect, useLocalSearchParams, useRouter} from 'expo-router';
 
 import {groupApi} from '@/api/groupApi';
@@ -27,6 +28,7 @@ const EMPTY_DRAFT: CaptureItemDraft = {
 
 export function CreateItemScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{id?: string}>();
   const itemId = params.id ? Number(params.id) : null;
   const isEditing = itemId != null && !Number.isNaN(itemId);
@@ -35,6 +37,7 @@ export function CreateItemScreen() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Type when the edit opened — changing it is a correction the new type learns from. */
 
   const load = useCallback(async () => {
     try {
@@ -85,14 +88,18 @@ export function CreateItemScreen() {
         {error ? (
           <Text style={{color: designTokens.textSecondary, fontSize: 13, marginTop: 14}}>{error}</Text>
         ) : null}
-
-        <PrimaryButton
-          label={isEditing ? 'Save' : 'Create item'}
-          onPress={handleSave}
-          loading={saving}
-          style={{marginTop: 24}}
-        />
       </ScrollView>
+
+      <View
+        style={{
+          paddingHorizontal: 20,
+          paddingTop: 8,
+          paddingBottom: insets.bottom + 8,
+          borderTopWidth: 1,
+          borderTopColor: designTokens.divider,
+        }}>
+        <PrimaryButton compact label={isEditing ? 'Save' : 'Create item'} onPress={handleSave} loading={saving} />
+      </View>
     </ScreenShell>
   );
 }

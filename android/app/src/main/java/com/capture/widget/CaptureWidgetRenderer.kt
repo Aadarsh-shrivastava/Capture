@@ -3,7 +3,6 @@ package com.capture.widget
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.Context
-import android.content.Intent
 import android.os.Build
 import android.view.View
 import android.widget.RemoteViews
@@ -17,12 +16,9 @@ object CaptureWidgetRenderer {
   ) {
     val views = RemoteViews(context.packageName, R.layout.capture_widget)
 
-    val title =
-      WidgetCaptureStorage.getFocusTitle(context)
-        ?: context.getString(R.string.widget_empty_focus)
-    views.setTextViewText(R.id.widget_focus_title, title)
+    val (focusTitle, subtitle) = WidgetCaptureStorage.currentFocus(context)
+    views.setTextViewText(R.id.widget_focus_title, focusTitle ?: context.getString(R.string.widget_empty_focus))
 
-    val subtitle = WidgetCaptureStorage.getFocusSubtitle(context)
     if (subtitle != null) {
       views.setTextViewText(R.id.widget_focus_subtitle, subtitle)
       views.setViewVisibility(R.id.widget_focus_subtitle, View.VISIBLE)
@@ -30,14 +26,36 @@ object CaptureWidgetRenderer {
       views.setViewVisibility(R.id.widget_focus_subtitle, View.GONE)
     }
 
-    val intent = Intent(context, WidgetCaptureActivity::class.java)
-    val pendingIntent = PendingIntent.getActivity(
+    views.setImageViewResource(
+      R.id.widget_mascot,
+      if (WidgetCaptureStorage.getMascot(context) == "female") R.drawable.widget_mascot_female else R.drawable.widget_mascot_male,
+    )
+
+    // Tapping the widget itself opens the app.
+    context.packageManager.getLaunchIntentForPackage(context.packageName)?.let { launch ->
+      views.setOnClickPendingIntent(
+        R.id.widget_root,
+        PendingIntent.getActivity(context, appWidgetId + 20_000, launch, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE),
+      )
+    }
+
+    // Type / Talk: the capture popup, without opening the app (Talk starts dictation right away).
+    val typeIntent = PendingIntent.getActivity(
       context,
       appWidgetId,
-      intent,
+      WidgetCaptureActivity.intent(context, voice = false),
       PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
-    views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
+    views.setOnClickPendingIntent(R.id.widget_type, typeIntent)
+    views.setOnClickPendingIntent(
+      R.id.widget_talk,
+      PendingIntent.getActivity(
+        context,
+        appWidgetId + 10_000,
+        WidgetCaptureActivity.intent(context, voice = true),
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+      ),
+    )
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
       views.setViewOutlinePreferredRadius(

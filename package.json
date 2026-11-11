@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "postinstall": "node node_modules/llama.rn/install/download-native-artifacts.js && node scripts/patch-llama-android.js",
+    "postinstall": "node node_modules/llama.rn/install/download-native-artifacts.js && node scripts/patch-llama-android.js && node scripts/patch-rn-cli-simulator.js",
     "android": "react-native run-android --port 8082",
     "ios": "react-native run-ios --port 8082",
     "lint": "eslint .",
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
+    "@react-native-community/datetimepicker": "8.2.0",
     "@react-native-voice/voice": "npm:yet-another-react-native-voice@4.0.0",
     "@react-navigation/bottom-tabs": "^7.18.18",
     "@react-navigation/native": "^7.1.28",
@@ -21,7 +22,9 @@
     "expo-file-system": "~18.0.12",
     "expo-font": "~13.0.4",
     "expo-haptics": "~14.0.1",
+    "expo-image-picker": "~16.0.6",
     "expo-modules-core": "~2.2.3",
+    "expo-notifications": "~0.29.14",
     "expo-sqlite": "~15.1.4",
     "llama.rn": "^0.13.0-rc.4",
     "moment": "^2.31.0",

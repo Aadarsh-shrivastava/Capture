@@ -9,7 +9,7 @@ function toMoment(value: string): moment.Moment | null {
   if (!trimmed) return null;
 
   const parsed = trimmed.includes('T')
-    ? moment.parseZone(trimmed)
+    ? moment(trimmed)
     : moment(trimmed, ['YYYY-MM-DD', 'YYYY/MM/DD'], true);
 
   return parsed.isValid() ? parsed : null;

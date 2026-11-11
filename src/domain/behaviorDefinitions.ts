@@ -1,4 +1,5 @@
-export type FieldInput = 'text' | 'url' | 'number' | 'datetime' | 'select';
+/** `list`/`numbers`: comma-free JSON arrays stored as a string field (see src/behaviors/data.ts). */
+export type FieldInput = 'text' | 'url' | 'number' | 'datetime' | 'select' | 'list' | 'numbers';
 
 export type BehaviorFieldDef = {
   name: string;
@@ -7,10 +8,13 @@ export type BehaviorFieldDef = {
   required?: boolean;
   placeholder?: string;
   options?: { label: string; value: string }[];
+  /** Written by the app, never by the user or the model (e.g. a repeat's done days). */
+  system?: boolean;
 };
 
 export type BehaviorDefinition = {
   name: string;
+  /** Dedicated table for hot, queried behaviors. null + fields = stored as JSON in item_behavior_data. */
   tableName: string | null;
   fields: BehaviorFieldDef[];
 };
@@ -53,8 +57,14 @@ export const BEHAVIOR_DEFINITIONS: Record<string, BehaviorDefinition> = {
     name: 'Memorable',
     tableName: 'memorable_items',
     fields: [
-      { name: 'review_at', label: 'Review at', input: 'datetime', placeholder: 'e.g. Mon, Sep 29' },
-      { name: 'last_reviewed_at', label: 'Last reviewed', input: 'datetime', placeholder: 'e.g. Mon, Sep 29' },
+      // weight: '' = auto (by kind), '0' off, '1' rarely, '2' sometimes, '3' often. The rest is scheduling state (src/resurface).
+      { name: 'weight', label: 'Come back', input: 'select', options: [
+        { label: 'Auto', value: '' }, { label: 'Often', value: '3' }, { label: 'Sometimes', value: '2' }, { label: 'Rarely', value: '1' }, { label: 'Off', value: '0' },
+      ] },
+      { name: 'review_at', label: 'Review at', input: 'datetime', system: true },
+      { name: 'last_reviewed_at', label: 'Last reviewed', input: 'datetime', system: true },
+      { name: 'interval_days', label: 'Gap (days)', input: 'number', system: true },
+      { name: 'times_shown', label: 'Times shown', input: 'number', system: true },
     ],
   },
   Visitable: {
@@ -67,7 +77,7 @@ export const BEHAVIOR_DEFINITIONS: Record<string, BehaviorDefinition> = {
   },
   Repeatable: {
     name: 'Repeatable',
-    tableName: 'repeatable_items',
+    tableName: null,
     fields: [
       { name: 'interval_value', label: 'Repeat every', input: 'number', required: true, placeholder: '1' },
       {
@@ -77,10 +87,20 @@ export const BEHAVIOR_DEFINITIONS: Record<string, BehaviorDefinition> = {
         required: true,
         options: INTERVAL_UNIT_OPTIONS,
       },
-      { name: 'next_occurrence_at', label: 'Next occurrence', input: 'datetime', placeholder: 'e.g. Mon, Sep 29' },
-      { name: 'start_at', label: 'Starts', input: 'datetime', placeholder: 'e.g. Mon, Sep 29' },
-      { name: 'end_at', label: 'Ends', input: 'datetime', placeholder: 'e.g. Mon, Sep 29' },
+      { name: 'days', label: 'On days (0=Sun … 6=Sat)', input: 'numbers' },
+      // Local YYYY-MM-DD of each completed occurrence — the repeat's history (progress, streaks, heatmaps).
+      { name: 'done', label: 'Done days', input: 'list', system: true },
     ],
+  },
+  Divisible: {
+    name: 'Divisible',
+    tableName: null,
+    fields: [{ name: 'steps', label: 'Steps', input: 'list' }],
+  },
+  Remindable: {
+    name: 'Remindable',
+    tableName: null,
+    fields: [{ name: 'offsets', label: 'Minutes before due', input: 'numbers' }],
   },
   Trackable: {
     name: 'Trackable',

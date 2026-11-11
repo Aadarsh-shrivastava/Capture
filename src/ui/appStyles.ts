@@ -63,7 +63,7 @@ export function useAppStyles() {
       marginTop: spacing.stackMd,
     },
     primaryButtonText: {
-      color: '#ffffff',
+      color: '#0a0a0a',
       fontSize: typography.labelMd.fontSize,
       fontWeight: '600',
     },

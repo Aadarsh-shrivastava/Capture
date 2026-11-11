@@ -137,6 +137,63 @@ const MIGRATIONS: Record<number, string[]> = {
     `CREATE INDEX IF NOT EXISTS idx_item_tags_item_id ON item_tags(item_id);`,
     `CREATE INDEX IF NOT EXISTS idx_item_tags_tag_id ON item_tags(tag_id);`,
   ],
+  // Generic per-item behavior data as JSON. New behaviors need no migration; only hot,
+  // heavily queried behaviors (Doable) keep a dedicated table.
+  4: [
+    `CREATE TABLE IF NOT EXISTS item_behavior_data (
+      item_id INTEGER NOT NULL,
+      behavior TEXT NOT NULL,
+      data TEXT NOT NULL DEFAULT '{}',
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (item_id, behavior),
+      FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
+    );`,
+    `INSERT OR IGNORE INTO item_behavior_data (item_id, behavior, data, updated_at)
+     SELECT item_id, 'Repeatable',
+            json_object('interval_value', CAST(interval_value AS TEXT), 'interval_unit', interval_unit),
+            datetime('now')
+     FROM repeatable_items;`,
+  ],
+  // Types become user-manageable: an icon per type, and type_behaviors rows can be optional (is_default = 0).
+  5: [
+    `ALTER TABLE item_types ADD COLUMN icon TEXT;`,
+    `ALTER TABLE type_behaviors ADD COLUMN is_default INTEGER NOT NULL DEFAULT 1;`,
+    `INSERT OR IGNORE INTO type_behaviors (type_id, behavior_id, is_default)
+     SELECT t.id, b.id, 0 FROM item_types t, behaviors b
+     WHERE (t.name = 'Task' AND b.name IN ('Schedulable','Repeatable','Trackable','Visitable','Divisible','Remindable'))
+        OR (t.name = 'Note' AND b.name IN ('Visitable','Memorable'))
+        OR (t.name IN ('Journal','Idea') AND b.name = 'Visitable');`,
+  ],
+  // Words that point to a type (generated once, edited by the user, learned from corrections).
+  6: [`ALTER TABLE item_types ADD COLUMN keywords TEXT NOT NULL DEFAULT '[]';`],
+  // "Come back": Memorable gets a weight (how often), its current gap, and a count. Ideas get it by default.
+  7: [
+    `ALTER TABLE memorable_items ADD COLUMN weight INTEGER;`,
+    `ALTER TABLE memorable_items ADD COLUMN interval_days REAL;`,
+    `ALTER TABLE memorable_items ADD COLUMN times_shown INTEGER NOT NULL DEFAULT 0;`,
+    `INSERT OR IGNORE INTO type_behaviors (type_id, behavior_id, is_default)
+     SELECT t.id, b.id, 1 FROM item_types t, behaviors b WHERE t.name = 'Idea' AND b.name = 'Memorable';`,
+    `INSERT OR IGNORE INTO memorable_items (item_id)
+     SELECT i.id FROM items i JOIN item_types t ON t.id = i.type_id WHERE t.name = 'Idea';`,
+  ],
+  // Say and forget: captured thoughts wait here until the model has turned them into items.
+  8: [
+    `CREATE TABLE IF NOT EXISTS capture_queue (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      text TEXT NOT NULL,
+      group_name TEXT,
+      created_at TEXT NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0
+    );`,
+  ],
+  // Thoughts from outside the app (widget, lock screen, Siri) are stored whole; the worker splits them.
+  9: [`ALTER TABLE capture_queue ADD COLUMN needs_split INTEGER NOT NULL DEFAULT 0;`],
+  // Which sticker an item shows (src/mascot/itemMascots.ts); picked by the capture model.
+  10: [`ALTER TABLE items ADD COLUMN mascot TEXT;`],
+  // The model guessed "to do" without the user's words saying so: Focus asks before trusting it.
+  11: [`ALTER TABLE items ADD COLUMN unsure INTEGER NOT NULL DEFAULT 0;`],
+  // What the user said it is when sharing (to do / read later / remember / just keep) — the model doesn't guess it.
+  12: [`ALTER TABLE capture_queue ADD COLUMN kind TEXT;`],
 };
 
 async function getCurrentVersion(db: SQLiteDatabase): Promise<number> {

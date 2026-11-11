@@ -9,6 +9,8 @@ type ItemRow = {
   title: string;
   content: string | null;
   importance: number | null;
+  mascot?: string | null;
+  unsure?: number;
   urgency: number | null;
   status: string;
   created_at: string;
@@ -44,6 +46,8 @@ function mapItem(row: ItemRow): Item {
     title: row.title,
     content: row.content,
     importance: row.importance,
+    mascot: row.mascot ?? null,
+    unsure: Boolean(row.unsure),
     urgency: row.urgency,
     status: row.status ?? 'active',
     createdAt: row.created_at,
@@ -165,6 +169,12 @@ export const itemRepository = {
     return rows.map(mapItemWithType);
   },
 
+  /** The user answered "to do or thought?" — stop asking. */
+  async clearUnsure(id: number): Promise<void> {
+    const db = await getDatabase();
+    await db.runAsync('UPDATE items SET unsure = 0 WHERE id = ?', id);
+  },
+
   async update(id: number, input: UpdateItemInput): Promise<Item> {
     const db = await getDatabase();
     const existing = await this.findById(id);
@@ -208,7 +218,7 @@ export const itemRepository = {
       `SELECT b.*
        FROM behaviors b
        INNER JOIN type_behaviors tb ON tb.behavior_id = b.id
-       WHERE tb.type_id = ?
+       WHERE tb.type_id = ? AND tb.is_default = 1
        ORDER BY b.name ASC`,
       typeId
     );
@@ -237,7 +247,7 @@ export const itemRepository = {
        FROM behaviors b
        LEFT JOIN item_behaviors ib ON ib.behavior_id = b.id AND ib.item_id = ?
        LEFT JOIN items i ON i.id = ?
-       LEFT JOIN type_behaviors tb ON tb.behavior_id = b.id AND tb.type_id = i.type_id
+       LEFT JOIN type_behaviors tb ON tb.behavior_id = b.id AND tb.type_id = i.type_id AND tb.is_default = 1
        WHERE ib.item_id IS NOT NULL OR tb.type_id IS NOT NULL
        ORDER BY b.name ASC`,
       itemId,

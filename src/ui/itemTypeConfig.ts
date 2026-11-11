@@ -1,8 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 
+import { typeHasBehavior } from '@/domain/behaviorTypeConfig';
+import { findType, useItemTypesStore } from '@/itemTypes/store';
 import { designTokens } from '@/ui/designTokens';
 
-export type ItemTypeName = 'Task' | 'Note' | 'Journal' | 'Idea';
+export type BuiltInTypeName = 'Task' | 'Note' | 'Journal' | 'Idea';
+/** Built-in names autocomplete; custom type names are plain strings. */
+export type ItemTypeName = BuiltInTypeName | (string & {});
 
 type ItemTypeConfig = {
   label: string;
@@ -18,7 +22,7 @@ type ItemTypeConfig = {
 const monoAccent = designTokens.textPrimary;
 const monoMuted = designTokens.chip;
 
-export const ITEM_TYPE_CONFIG: Record<ItemTypeName, ItemTypeConfig> = {
+export const ITEM_TYPE_CONFIG: Record<BuiltInTypeName, ItemTypeConfig> = {
   Task: {
     label: 'Task',
     plural: 'Tasks',
@@ -54,21 +58,29 @@ export const ITEM_TYPE_CONFIG: Record<ItemTypeName, ItemTypeConfig> = {
 };
 
 export function getItemTypeConfig(typeName: string): ItemTypeConfig {
-  return ITEM_TYPE_CONFIG[typeName as ItemTypeName] ?? {
+  const custom = findType(typeName);
+  const base = ITEM_TYPE_CONFIG[typeName as BuiltInTypeName] ?? {
     label: typeName,
     plural: typeName,
-    description: '',
+    description: custom?.description ?? '',
     icon: 'ellipse-outline',
-    accent: designTokens.textSecondary,
+    accent: designTokens.textPrimary,
     accentMuted: designTokens.chip,
   };
+  return custom?.icon ? {...base, icon: custom.icon as ItemTypeConfig['icon']} : base;
 }
 
-export const ITEM_TYPE_ORDER: ItemTypeName[] = ['Task', 'Note', 'Journal', 'Idea'];
+export const ITEM_TYPE_ORDER: BuiltInTypeName[] = ['Task', 'Note', 'Journal', 'Idea'];
 
-/** Types where the main user text lives in `content`, not `title`. */
+/** Built-in types first, then custom ones in creation order. */
+export function allTypeNames(): string[] {
+  const custom = useItemTypesStore.getState().types.filter((t) => !t.isSystem).map((t) => t.name);
+  return [...ITEM_TYPE_ORDER, ...custom];
+}
+
+/** Types where the main user text lives in `content`, not `title` (they're Notable). */
 export function isTextPrimaryType(typeName: string): boolean {
-  return typeName === 'Note' || typeName === 'Journal' || typeName === 'Idea';
+  return typeHasBehavior(typeName, 'Notable');
 }
 
 export function getBodyFieldLabel(typeName: string): string {

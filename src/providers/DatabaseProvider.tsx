@@ -1,7 +1,9 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
+import { drain } from '@/capture/queue';
 import { initializeDatabase } from '@/db/database';
+import { loadItemTypes } from '@/itemTypes';
 import { useThemeStore } from '@/store/themeStore';
 
 type DatabaseContextValue = {
@@ -17,7 +19,12 @@ export function DatabaseProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     initializeDatabase()
-      .then(() => setIsReady(true))
+      .then(loadItemTypes)
+      .then(() => {
+        setIsReady(true);
+        // Thoughts left in the queue last session (app closed mid-processing) finish now.
+        void drain();
+      })
       .catch((err) => {
         setError(err instanceof Error ? err.message : 'Database initialization failed');
       });

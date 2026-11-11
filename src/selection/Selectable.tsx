@@ -2,12 +2,11 @@ import type {ReactNode} from 'react';
 import {View} from 'react-native';
 
 import {Appear, BULK_SLIDE_MS, SlideOut, STAGGER_MS} from '@/motion';
-import {radius} from '@/ui/designTokens';
+import {designTokens, radius} from '@/ui/designTokens';
 
 import {useSelectionStore, type SelectedItem} from './store';
 import {useSelectable} from './useSelectable';
 
-const SELECTED_TINT = 'rgba(255, 255, 255, 0.14)';
 
 /**
  * Paints a medium-grey tint over a selected row (no border).
@@ -20,7 +19,7 @@ export function SelectionTint({selected, bleed = 0, children}: {selected: boolea
       {selected ? (
         <Appear
           duration={160}
-          style={{position: 'absolute', top: 0, left: -bleed, right: -bleed, bottom: 0, borderRadius: bleed ? radius.md : radius.lg, backgroundColor: SELECTED_TINT, pointerEvents: 'none'}}>
+          style={{position: 'absolute', top: 0, left: -bleed, right: -bleed, bottom: 0, borderRadius: bleed ? radius.md : radius.lg, backgroundColor: designTokens.accentSoft, pointerEvents: 'none'}}>
           {null}
         </Appear>
       ) : null}

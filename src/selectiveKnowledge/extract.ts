@@ -1,6 +1,7 @@
 import moment from 'moment';
 
 import {encode} from '@/behaviors/data';
+import {fixDateTypos} from '@/capture/captureDateContext';
 import {inferRepeatUnit} from '@/recurrence/utils';
 
 import {parseRemind, parseSteps} from './behaviorSteps';
@@ -50,6 +51,7 @@ const MONTH = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*';
 /** When-words: "tomorrow at 6 pm", "by friday", "next week", "in 2 hours", "nov 12", "every monday". */
 const DATE_PHRASE = new RegExp(
   [
+    '\\b(?:the\\s+)?day after tomorrow\\b',
     `\\b(?:(?:by|on|before|until|this|next|every)\\s+)?(?:today|tonight|tomorrow|${DAY_NAMES}s?|weekends?|week|month)\\b(?:\\s+(?:morning|afternoon|evening|night))?`,
     '\\bin\\s+(?:\\d+|a|an|one|two|three)\\s+(?:minutes?|mins?|hours?|days?|weeks?|months?)\\b',
     `\\b(?:by|on|before)?\\s*${MONTH}\\s+\\d{1,2}(?:st|nd|rd|th)?\\b`,
@@ -61,7 +63,7 @@ const DATE_PHRASE = new RegExp(
 
 /** The text without its when-words (they live in the due date, not the title). */
 export function stripDates(text: string): string {
-  return text.replace(DATE_PHRASE, ' ').replace(/\s+([,.!?])/g, '$1').replace(/\s{2,}/g, ' ').replace(/^[\s,.:;-]+|[\s,:;-]+$/g, '').trim();
+  return fixDateTypos(text).replace(DATE_PHRASE, ' ').replace(/\s+([,.!?])/g, '$1').replace(/\s{2,}/g, ' ').replace(/^[\s,.:;-]+|[\s,:;-]+$/g, '').trim();
 }
 
 /** Says it repeats: every / each / daily / weekly / monthly / on weekends / on mondays. A plain "monday" is a date, not a repeat. */

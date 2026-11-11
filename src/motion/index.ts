@@ -10,3 +10,4 @@ export {ThoughtTicker} from './ThoughtTicker';
 export const STAGGER_MS = 90;
 /** Time for one row to slide out in a bulk action. */
 export const BULK_SLIDE_MS = 350;
+export {usePressScale} from './usePressScale';

@@ -24,7 +24,7 @@ type HeaderAction = {
 export function TabScreenShell({title, children, action, secondaryAction, titleNode}: TabScreenShellProps) {
   const {theme} = useThemeStore();
   const navigation = useNavigation();
-  const pushed = navigation.getState()?.type === 'stack';
+  const pushed = navigation.canGoBack();
   // Inset from the provider, not SafeAreaView: that one measures after the first frame, so pushed screens jumped down.
   const insets = useSafeAreaInsets();
 

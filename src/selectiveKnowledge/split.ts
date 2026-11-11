@@ -15,10 +15,14 @@ export function splitByLines(text: string): string[] {
 /** A short list reads as separate thoughts; long lines or many of them are one pasted note. */
 const isList = (lines: string[]) => lines.length > 1 && lines.length <= MAX_PARTS && lines.every(l => l.length <= 140);
 
-/** Where one thought may end and the next begin: sentence ends, ; , and joining words. */
-const JOIN = /[.!?;]+\s+|,\s*(?:and\s+|also\s+|btw\s+|but\s+)?|\s+(?:and also|and then|and|also|btw|by the way|plus|oh and)\s+/gi;
+/**
+ * Where one thought may end and the next begin: sentence ends, ; and words that start a new thought.
+ * A bare comma or "and" is never a cut — it joins parts of one thought far more often ("call mom and tell her…"),
+ * and cutting there left half-sentences and dropped dates.
+ */
+const JOIN = /[.!?;]+\s+|,?\s+(?:and also|also|btw|by the way|plus|oh and|another thing)\s+/gi;
 /** Words that only connect, left over at the start of a piece. */
-const LEADING = /^(?:and|also|btw|by the way|but|plus|oh and|then)\s+/i;
+const LEADING = /^(?:and|also|btw|by the way|but|plus|oh and|another thing|then)\s+/i;
 
 type Span = {start: number; end: number};
 

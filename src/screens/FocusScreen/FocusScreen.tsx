@@ -1,6 +1,7 @@
 import moment from 'moment';
-import {useCallback, useMemo, useState} from 'react';
-import {Alert, Platform, RefreshControl, ScrollView, Text, View} from 'react-native';
+import * as Haptics from 'expo-haptics';
+import {useCallback, useMemo, useRef, useState} from 'react';
+import {Alert, ScrollView, Text, View} from 'react-native';
 import {useFocusEffect, useRouter} from 'expo-router';
 
 import {DateSheet} from '@/components/sheets/DateSheet';
@@ -10,10 +11,10 @@ import {useCaptureStore} from '@/store/captureStore';
 import {useLingeringDone} from '@/hooks/useLingeringDone';
 import {Appear, SlideOut} from '@/motion';
 import {GhostRow, useRepeatPreview} from '@/recurrence';
-import {Suggestions} from '@/resurface';
+import {PullComeBack, Suggestions} from '@/resurface';
 import {UpcomingView, useCurrentView, useViewStore, ViewPicker} from '@/views';
-import {DayProgress, useDayProgress} from '@/progress';
-import {useAppearance} from '@/store/appearanceStore';
+import {useDayProgress} from '@/progress';
+import {Composer} from '@/capture/Composer';
 import {QuickCheck} from '@/capture/QuickCheck';
 import type {FocusTask} from '@/models/focusTask';
 import {
@@ -28,10 +29,21 @@ import {completeTask, rescheduleTask} from '@/taskActions';
 import {SwipeRow} from '@/ui/components/SwipeRow';
 import {CollapsibleSection} from '@/ui/components/CollapsibleSection';
 import {dueMoment, splitFocusDay, tasksForDay} from '@/domain/focusSections';
-import {designTokens} from '@/ui/designTokens';
+import {designTokens, radius} from '@/ui/designTokens';
+import {Pressable} from '@/ui/HapticPressable';
 
-/** How far past the top you pull before letting go opens capture. */
-const PULL_TO_CAPTURE = 80;
+/** How far down you pull from the top before letting go shows (or hides) the peek. */
+const PULL_TO_PEEK = 80;
+
+/** Shown on a pull when today has tasks: one at a time, a different one each pull. */
+const TIPS = [
+  'Pull the Now card down to push it 2 hours later.',
+  'Swipe the Now card right when it’s done, left to pick another day.',
+  'Long-press any empty space to speak a thought.',
+  'Say when: “tomorrow at 6”, “next friday”, “in 2 hours” become the due date.',
+  'Notes, ideas and journal entries are kept word for word.',
+  'Long-press a task to select several at once.',
+];
 
 export function FocusScreen() {
   const router = useRouter();
@@ -44,7 +56,12 @@ export function FocusScreen() {
     }, [refresh]),
   );
 
-  const openTextCapture = useCaptureStore(state => state.openTextCapture);
+  const openVoiceCapture = useCaptureStore(state => state.openVoiceCapture);
+  // Pull down from the top: a come-back when the day is empty, else a tip. Nothing refreshes (the data is live).
+  const [peek, setPeek] = useState<number | null>(null);
+  // `snoozed`: this drag dropped the Now card (+2 h), so it isn't also a page pull.
+  const pull = useRef<{startY: number; atTop: boolean; snoozed: boolean}>({startY: 0, atTop: true, snoozed: false});
+  const scrollY = useRef(0);
   // Week / Month live in src/views and replace this screen's body; Today / Tomorrow / Custom date pick the day shown here.
   const view = useCurrentView();
   const customDay = useViewStore(state => state.day);
@@ -57,7 +74,6 @@ export function FocusScreen() {
   const {linger, withLingering, isLingering} = useLingeringDone();
   const isToday = selected.isSame(moment(), 'day');
   const progress = useDayProgress(selectedDate);
-  const showProgress = useAppearance(state => state.progressBar);
   // Repeating tasks also appear as ghosts (dimmed, not tappable) on the future days they'll land on.
   const repeatPreview = useRepeatPreview(
     tasks,
@@ -99,6 +115,14 @@ export function FocusScreen() {
         err instanceof Error ? err.message : 'Try again',
       );
     }
+  }
+
+  /** Pulled down: 2 hours from now, or from its own time if that's later. */
+  function snooze(task: FocusTask) {
+    pull.current.snoozed = true;
+    const due = dueMoment(task);
+    const from = due && due.isAfter(moment()) ? due : moment();
+    runAction(() => rescheduleTask(task.id, from.clone().add(2, 'hours').seconds(0).format()));
   }
 
   function openReschedule(task: FocusTask) {
@@ -162,34 +186,46 @@ export function FocusScreen() {
           contentContainerStyle={{
             paddingHorizontal: 20,
             paddingTop: 20,
-            paddingBottom: 120, // clear of the bottom bar or input
+            paddingBottom: 120, // clear of the input bar
+            flexGrow: 1,
           }}
-          // iOS: overscroll bounce past the threshold. Android has no bounce, so its native pull gesture opens capture.
-          refreshControl={
-            Platform.OS === 'android' ? <RefreshControl refreshing={false} onRefresh={() => openTextCapture()} /> : undefined
-          }
-          onScrollEndDrag={e =>
-            e.nativeEvent.contentOffset.y < -PULL_TO_CAPTURE &&
-            openTextCapture()
-          }
+          // Raw touches, not scroll events: Android has no overscroll, and this sees the drag even when nothing scrolls.
+          scrollEventThrottle={16}
+          onScroll={e => (scrollY.current = e.nativeEvent.contentOffset.y)}
+          onTouchStart={e => {
+            pull.current = {startY: e.nativeEvent.pageY, atTop: scrollY.current <= 0, snoozed: false};
+          }}
+          onTouchEnd={e => {
+            const {startY, atTop} = pull.current;
+            if (!atTop || e.nativeEvent.pageY - startY < PULL_TO_PEEK) return;
+            // A quick pull on the Now card is a page pull too; only a slow drag-and-drop on it snoozes. The card's
+            // release runs in this same touch end, so check its flag once this event is done.
+            setTimeout(() => {
+              if (pull.current.snoozed) return;
+              void Haptics.selectionAsync();
+              setPeek(p => (p === null ? Math.floor(Math.random() * TIPS.length) : null));
+            }, 0);
+          }}
           showsVerticalScrollIndicator={false}>
-          <Text
-            style={{
-              position: 'absolute',
-              top: -40,
-              left: 0,
-              right: 0,
-              textAlign: 'center',
-              color: designTokens.textTertiary,
-              fontSize: 13,
-            }}>
-            Pull to capture
-          </Text>
-          {showProgress ? <DayProgress day={selectedDate} /> : null}
+          {/* Long-press empty space: speak a thought. Taps and presses on anything inside still go to that thing. */}
+          <Pressable haptic={false} pressScale={false} onLongPress={openVoiceCapture} delayLongPress={450} accessible={false} style={{flexGrow: 1}}>
           {isToday ? <QuickCheck items={unsureTasks} /> : null}
 
-          {!loading && isToday && now ? (
-            // The next task fades in once the done one has swiped away.
+          {peek !== null ? (
+            // Pulled down: an old idea or note, on top of the Now card — only an edge of it shows underneath.
+            <Appear from="up" style={{marginTop: 20, marginBottom: now ? 10 : 0}}>
+              {now && isToday && !loading ? (
+                <View
+                  pointerEvents="none"
+                  style={{position: 'absolute', left: 14, right: 14, bottom: -10, height: 40, borderRadius: radius.xl, backgroundColor: designTokens.cardPressed, borderWidth: 1, borderColor: designTokens.surfaceBorder}}
+                />
+              ) : null}
+              <PullComeBack onDismiss={() => setPeek(null)} fallback={<PeekTip text={TIPS[peek]} onClose={() => setPeek(null)} />} />
+            </Appear>
+          ) : null}
+
+          {!loading && isToday && now && peek === null ? (
+            // The next task fades in once the done one has swiped away (and again when the come-back is put away).
             <Appear key={now.id} style={{marginTop: 20}}>
               <Selectable item={now} onOpen={() => openTask(now)}>
                 {select => (
@@ -198,6 +234,7 @@ export function FocusScreen() {
                     {...select}
                     onComplete={() => complete(now, true)}
                     onReschedule={() => openReschedule(now)}
+                    onSnooze={() => snooze(now)}
                   />
                 )}
               </Selectable>
@@ -257,8 +294,11 @@ export function FocusScreen() {
               {later.map(renderRow)}
             </CollapsibleSection>
           ) : null}
+          </Pressable>
         </ScrollView>
       )}
+
+      <Composer floating />
 
       <DateSheet
         visible={rescheduling !== null}
@@ -270,5 +310,15 @@ export function FocusScreen() {
         }}
       />
     </TabScreenShell>
+  );
+}
+
+/** The pull-down peek when nothing is set to come back yet: one tip, tap to put it away. */
+function PeekTip({text, onClose}: {text: string; onClose: () => void}) {
+  return (
+    <Pressable onPress={onClose} accessibilityRole="button" accessibilityHint="Hides the tip" style={{padding: 16, borderRadius: radius.lg, backgroundColor: designTokens.card, borderWidth: 1, borderColor: designTokens.surfaceBorder}}>
+      <Text style={{color: designTokens.textTertiary, fontSize: 12, fontWeight: '700', letterSpacing: 0.6, marginBottom: 4}}>TIP</Text>
+      <Text style={{color: designTokens.textPrimary, fontSize: 15, lineHeight: 21}}>{text}</Text>
+    </Pressable>
   );
 }

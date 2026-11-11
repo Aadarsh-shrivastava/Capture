@@ -7,6 +7,8 @@ import {Appear} from '@/motion';
 import {CharacterPicker, Mascot} from '@/mascot';
 import {Avatar, pickProfilePhoto, useProfileStore} from '@/profile';
 import {PrimaryButton} from '@/ui/components/Primitives';
+import {ThemePicker} from '@/ui/components/ThemePicker';
+import {useThemeStore} from '@/store/themeStore';
 import {designTokens, radius} from '@/ui/designTokens';
 import {Pressable} from '@/ui/HapticPressable';
 import {createVault, VAULT_LOCATIONS, type VaultLocation} from '@/vault';
@@ -38,6 +40,8 @@ export function OnboardingFlow({onDone, preview = false}: {onDone: () => void; p
   const insets = useSafeAreaInsets();
   const profile = useProfileStore();
   const [step, setStep] = useState<Step>('welcome');
+  // Re-render on a theme pick so the colours update here; the app tree remounts, onboarding keeps its step.
+  useThemeStore(s => s.themeName);
   const [vaultName, setVaultName] = useState('My Vault');
   const [location, setLocation] = useState<VaultLocation>('files');
   const [name, setName] = useState(profile.name);
@@ -144,9 +148,12 @@ export function OnboardingFlow({onDone, preview = false}: {onDone: () => void; p
                 <Avatar size={112} />
                 <Text style={{color: designTokens.textTertiary, fontSize: 13}}>{profile.photo ? 'Change photo' : 'Add a photo (optional)'}</Text>
               </Pressable>
-              <Title title="About you" body="Pick a companion and add your name." />
-              <View style={{marginBottom: 24}}>
+              <Title title="About you" body="Pick a companion, a look, and add your name." />
+              <View style={{marginBottom: 20}}>
                 <CharacterPicker />
+              </View>
+              <View style={{marginBottom: 24}}>
+                <ThemePicker />
               </View>
               <TextInput value={name} onChangeText={setName} placeholder="Your name" placeholderTextColor={designTokens.textTertiary} style={field} />
             </>

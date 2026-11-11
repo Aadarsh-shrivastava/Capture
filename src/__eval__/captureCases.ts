@@ -88,14 +88,14 @@ export const CAPTURE_CASES: CaptureCase[] = [
 
 /** One dump → how many separate items it should become. More = items the user never asked for. */
 export const SPLIT_CASES: {text: string; parts: number}[] = [
-  {text: 'buy milk, call mom and book the dentist for tomorrow', parts: 3},
+  {text: 'buy milk, call mom and book the dentist for tomorrow', parts: 1},
   {text: 'protein shake after gym. btw what is a vector database', parts: 2},
   {text: 'remind me to pay rent on friday also need to call the plumber', parts: 2},
-  {text: 'had a long day at work, need to finish the slides tomorrow', parts: 2},
-  {text: 'buy milk call mom book dentist', parts: 3},
+  {text: 'had a long day at work, need to finish the slides tomorrow', parts: 1},
+  {text: 'buy milk call mom book dentist', parts: 1},
   {text: 'call mom tomorrow', parts: 1},
   {text: 'I need to go to the gym tomorrow at 6 pm and hit legs', parts: 1},
   {text: 'finish the quarterly report and send it to the manager by friday', parts: 1},
-  {text: 'pick up the kids from school and buy bread on the way', parts: 2},
+  {text: 'pick up the kids from school and buy bread on the way', parts: 1},
   {text: 'the meeting went well and the client liked the demo', parts: 1},
 ];

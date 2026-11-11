@@ -1,7 +1,5 @@
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { BottomTabBar } from '@/components/BottomTabBar/BottomTabBar';
 import { GroupPage, GroupsListScreen } from '@/groups';
 import { EditItemTypeScreen, ItemTypesScreen } from '@/itemTypes';
 import { AppearanceScreen } from '@/screens/AppearanceScreen/AppearanceScreen';
@@ -15,27 +13,15 @@ import { ProfileScreen } from '@/profile';
 import { SettingsScreen } from '@/screens/SettingsScreen/SettingsScreen';
 import { ThoughtsScreen } from '@/screens/ThoughtsScreen/ThoughtsScreen';
 
-const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-
-function MainTabs() {
-  return (
-    <Tab.Navigator
-      // Focus is home: what to do right now. Thoughts holds everything you've said.
-      tabBar={(props) => <BottomTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
-    >
-      <Tab.Screen name="index" component={FocusScreen} options={{ title: 'Focus' }} />
-      <Tab.Screen name="thoughts" component={ThoughtsScreen} options={{ title: 'Thoughts' }} />
-      <Tab.Screen name="library" component={ItemsScreen} options={{ title: 'Library' }} />
-    </Tab.Navigator>
-  );
-}
 
 export function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="MainTabs" component={MainTabs} />
+      {/* Focus is home: what to do right now. Thoughts and Library are pushed on top, with a back button. */}
+      <Stack.Screen name="Focus" component={FocusScreen} />
+      <Stack.Screen name="Thoughts" component={ThoughtsScreen} />
+      <Stack.Screen name="Library" component={ItemsScreen} />
       <Stack.Screen name="CreateItem" component={CreateItemScreen} />
       <Stack.Screen name="LibraryList" component={ListScreen} />
       <Stack.Screen name="Groups" component={GroupsListScreen} />

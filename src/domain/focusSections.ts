@@ -41,7 +41,12 @@ export function splitFocusDay(tasks: FocusTask[], now = Date.now()): {now: Focus
     .map(task => ({task, score: scoreFocusTask(task, now)}))
     .sort((a, b) => b.score - a.score || timeOf(a.task) - timeOf(b.task))
     .map(r => r.task);
-  const current = ranked.find(t => timeOf(t) === Infinity || timeOf(t) <= now + NOW_WINDOW_MS) ?? null;
+  const actionable = ranked.filter(t => timeOf(t) === Infinity || timeOf(t) <= now + NOW_WINDOW_MS);
+  let current = actionable[0] ?? null;
+  // Two timed tasks both about to start: the one that starts first is Now, whatever their priority (11:00 before 11:30).
+  if (current && timeOf(current) !== Infinity && timeOf(current) > now) {
+    current = actionable.filter(t => timeOf(t) > now && timeOf(t) !== Infinity).sort((a, b) => timeOf(a) - timeOf(b))[0];
+  }
   const rest = ranked.filter(t => t !== current);
   return {now: current, next: rest.slice(0, NEXT_LIMIT), later: rest.slice(NEXT_LIMIT)};
 }

@@ -47,7 +47,7 @@ export function AppDrawer() {
     <OverlayContainer>
       <View style={StyleSheet.absoluteFill} pointerEvents={isOpen ? 'auto' : 'none'}>
         <Animated.View style={[StyleSheet.absoluteFill, {opacity: progress}]}>
-          <Pressable onPress={close} style={[StyleSheet.absoluteFill, {backgroundColor: 'rgba(0, 0, 0, 0.55)'}]} />
+          <Pressable onPress={close} pressScale={false} style={[StyleSheet.absoluteFill, {backgroundColor: 'rgba(0, 0, 0, 0.55)'}]} />
         </Animated.View>
 
         <Animated.View

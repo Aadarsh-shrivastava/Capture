@@ -30,17 +30,17 @@ function parsePath(href: string): NavTarget {
   }
 
   if (path === '/' || path === '/index' || path === '/(tabs)' || path === '/(tabs)/index') {
-    return { screen: 'MainTabs', params: { screen: 'index', params } };
+    return { screen: 'Focus', params };
   }
   if (path.startsWith('/(tabs)/')) {
-    let tab = path.replace('/(tabs)/', '');
-    if (tab === 'items') tab = 'library';
-    if (tab === 'home' || tab === 'today' || tab === 'focus') tab = 'index';
+    const tab = path.replace('/(tabs)/', '');
+    if (tab === 'items' || tab === 'library') return { screen: 'Library', params };
+    if (tab === 'thoughts') return { screen: 'Thoughts', params };
     if (tab === 'groups') return { screen: 'Groups', params };
-    return { screen: 'MainTabs', params: { screen: tab, params } };
+    return { screen: 'Focus', params };
   }
-  if (path === '/library') return { screen: 'MainTabs', params: { screen: 'library', params } };
-  if (path === '/thoughts') return { screen: 'MainTabs', params: { screen: 'thoughts', params } };
+  if (path === '/library') return { screen: 'Library', params };
+  if (path === '/thoughts') return { screen: 'Thoughts', params };
   if (path === '/library/list' || path === '/list') return { screen: 'LibraryList', params };
   if (path === '/groups') return { screen: 'Groups', params };
   if (path === '/create-item') return { screen: 'CreateItem', params };
@@ -50,7 +50,7 @@ function parsePath(href: string): NavTarget {
   if (path === '/settings/appearance') return { screen: 'Appearance', params };
   if (path === '/settings/types/edit') return { screen: 'EditItemType', params };
   if (path === '/profile') return { screen: 'Profile', params };
-  if (path === '/home' || path === '/focus') return { screen: 'MainTabs', params: { screen: 'index', params } };
+  if (path === '/home' || path === '/focus') return { screen: 'Focus', params };
 
   const itemMatch = path.match(/^\/item\/([^/]+)$/);
   if (itemMatch) return { screen: 'ItemDetail', params: { id: itemMatch[1], ...params } };
@@ -99,17 +99,9 @@ function navigateToTarget(
   const { screen, params } = resolveTarget(href);
   const root = getRootNavigation(navigation);
 
-  if (screen === 'MainTabs') {
-    if (mode === 'replace') {
-      root.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'MainTabs', params: params as object }],
-        }),
-      );
-      return;
-    }
-    root.navigate('MainTabs' as never, params as never);
+  // Home: replace = start over from Focus; push = go back down to it (navigate returns to the existing route).
+  if (screen === 'Focus' && mode === 'replace') {
+    root.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Focus', params: params as object }] }));
     return;
   }
 

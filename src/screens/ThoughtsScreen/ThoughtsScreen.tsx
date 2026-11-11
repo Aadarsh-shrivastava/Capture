@@ -3,6 +3,7 @@ import {useFocusEffect, useRouter} from 'expo-router';
 import {useCallback, useMemo} from 'react';
 import {ScrollView, Text, View} from 'react-native';
 
+import {Composer} from '@/capture/Composer';
 import {usePendingCaptures} from '@/capture/usePendingCaptures';
 import {TabScreenShell} from '@/components/TabScreenShell/TabScreenShell';
 import {useItemsData} from '@/hooks/useItemsData';
@@ -83,6 +84,7 @@ export function ThoughtsScreen() {
           </View>
         ))}
       </ScrollView>
+      <Composer floating />
     </TabScreenShell>
   );
 }

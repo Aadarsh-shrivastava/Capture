@@ -1,6 +1,7 @@
 import {itemApi} from '@/api/itemApi';
 import type {CaptureItemDraft} from '@/capture/captureItemDraft';
 import {learnTypeKeywords} from '@/itemTypes';
+import {navigationRef} from '@/navigation/navigationRef';
 import {createItemFromCaptureDraft} from '@/services/captureItemService';
 import {showUndo} from '@/undo';
 
@@ -15,7 +16,13 @@ export function announceSaved(saved: SavedCapture[]): void {
     saved.length === 1
       ? `Added to ${where(saved[0])}: "${saved[0].title}"`
       : `Added ${saved.length}: ${saved.filter(s => where(s) === 'Focus').length} to Focus, ${saved.filter(s => where(s) === 'Thoughts').length} to Thoughts`;
-  showUndo(label, () => Promise.all(saved.map(s => itemApi.deleteItem(s.id))), 'happy');
+  // Tap the receipt: the item itself, or Thoughts when several were saved.
+  const open = () => {
+    if (!navigationRef.isReady()) return;
+    if (saved.length === 1) navigationRef.navigate('ItemDetail', {id: String(saved[0].id)});
+    else navigationRef.navigate('Thoughts');
+  };
+  showUndo(label, () => Promise.all(saved.map(s => itemApi.deleteItem(s.id))), 'happy', open);
 }
 
 /** Save analyzed drafts straight away (no review form). `announce: false` lets the caller batch the toast. */

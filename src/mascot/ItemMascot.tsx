@@ -1,5 +1,7 @@
 import {Image, View, type StyleProp, type ViewStyle} from 'react-native';
 
+import {designTokens} from '@/ui/designTokens';
+
 import {ITEM_MASCOT_KEYS, ITEM_SHEET, type ItemMascot as ItemMascotKey} from './itemMascots';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -20,8 +22,10 @@ export function ItemMascot({mascot, size, style}: {mascot: ItemMascotKey; size: 
     <View
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      style={[{width: size, height: size, overflow: 'hidden', borderRadius: size / 4, backgroundColor: 'rgba(255, 255, 255, 0.06)'}, style]}>
+      style={[{width: size, height: size, overflow: 'hidden', borderRadius: size / 4, backgroundColor: designTokens.chip}, style]}>
       <Image
+        // Android fades a new source in over 300ms: switching avatar flickered.
+        fadeDuration={0}
         source={SHEET}
         style={{
           position: 'absolute',

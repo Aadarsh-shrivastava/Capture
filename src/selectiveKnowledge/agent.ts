@@ -137,6 +137,21 @@ export async function runSelectiveAgent(
   const typeName: string = toDo ? 'Task' : aboutDay ? 'Journal' : 'Note';
   log(`thought: ${toDo ? 'something to do' : aboutDay ? 'about your day' : 'a thought'}${comesBack ? ', comes back' : ''}${said ? ` (your words: ${said})` : unsure ? ' (unsure — ask)' : ''}`);
 
+  // In doubt (the model only guessed "to do"): save it now, words as said, and skip the other model steps. Quick
+  // check asks the user, and their answer re-runs this with `kind` set (see capture/QuickCheck.tsx).
+  if (unsure) {
+    const draft: CaptureItemDraft = {
+      ...rawThought(text),
+      typeName: 'Task',
+      title: titleFromText(text),
+      content: text.trim(),
+      unsure: true,
+      behaviorData: {Doable: {status: 'pending', due_at: '', estimated_minutes: ''}},
+    };
+    log('unsure: saved as said, the rest waits for your answer');
+    return {draft, journey};
+  }
+
   const doable = toDo;
   const guideType = doable ? 'Task' : typeName;
 
@@ -146,12 +161,13 @@ export async function runSelectiveAgent(
   const title = titleOk ? sentenceCase(titleAnswer.replace(/[.!]+$/, '')) : titleFromText(text);
   log(`title: ${title}${titleOk ? '' : ' (from your words)'}`);
 
-  // 3. Description — the whole thought with its grammar fixed. Adds a word the user never said → their exact words instead.
-  const fixed = await ask('description', undefined, Math.min(160, text.length + 40));
+  // 3. Description — a task's whole thought with its grammar fixed (adds a word the user never said → their exact words).
+  //    Notes, journals and ideas are kept exactly as said: no rewrite.
+  const fixed = doable ? await ask('description', undefined, Math.min(160, text.length + 40)) : '';
   const fixedOk = fixed.length > 0 && !isEmpty(fixed) && inventedWords(fixed, text).length === 0;
-  const description = fixedOk ? fixed : sentenceCase(text.trim());
-  // Nothing beyond the title (e.g. "buy groceries"): no description.
-  const content = inventedWords(description, title).length === 0 ? null : description;
+  const description = fixedOk ? fixed : doable ? sentenceCase(text.trim()) : text.trim();
+  // Nothing beyond the title (e.g. "buy groceries"): no description. A note always keeps its raw words.
+  const content = doable && inventedWords(description, title).length === 0 ? null : description;
   log(`description: ${content ? content.slice(0, 60) : 'none'}${content && !fixedOk ? ' (your words)' : ''}`);
 
   // 4. Sticker — one of the 20 poses on the tasks sheet, fixed choice.

@@ -13,6 +13,8 @@ import {isItemMascot, ItemMascot, Mascot, type MascotPose} from '@/mascot';
 /** Past this (px), or flicked faster than FLICK, a release commits the swipe instead of snapping back. */
 const SWIPE_DISTANCE = 110;
 const SWIPE_FLICK = 0.6;
+/** Pull-down to snooze: drag this far (finger px) and let go slowly — a drop, not a flick. A flick is the page's pull. */
+const DROP_DISTANCE = 160;
 
 type SwipeAction = {label: string; icon: keyof typeof Ionicons.glyphMap; onSwipe: () => void};
 
@@ -33,13 +35,15 @@ type SwipeCardProps = {
   right: SwipeAction;
   /** Swiped left. `springBack`: the card returns (e.g. behind a sheet that can be cancelled). */
   left: SwipeAction & {springBack?: boolean};
+  /** Pulled down: the card springs back (e.g. pushed later, and the next task takes its place). */
+  down?: SwipeAction;
   /** Hint under the card, e.g. "← reschedule · done →". */
   hint: string;
   /** Extra controls at the bottom (e.g. a small text action). */
   footer?: ReactNode;
 };
 
-function SwipeHint({label, icon, opacity, side}: {label: string; icon: keyof typeof Ionicons.glyphMap; opacity: Animated.AnimatedInterpolation<number>; side: 'left' | 'right'}) {
+function SwipeHint({label, icon, opacity, side}: {label: string; icon: keyof typeof Ionicons.glyphMap; opacity: Animated.AnimatedInterpolation<number> | Animated.AnimatedMultiplication<number>; side: 'left' | 'right'}) {
   return (
     <Animated.View style={{position: 'absolute', top: 28, [side]: 28, opacity, flexDirection: 'row', alignItems: 'center', gap: 6}}>
       <Ionicons name={icon} size={18} color={designTokens.textPrimary} />
@@ -49,19 +53,46 @@ function SwipeHint({label, icon, opacity, side}: {label: string; icon: keyof typ
 }
 
 /** The big card: tap to open, swipe right / left for its two actions. Used for the Now task and for things coming back. */
-export function SwipeCard({eyebrow, badge, title, content, meta, mascot, fallbackPose, onPress, onLongPress, right, left, hint, footer}: SwipeCardProps) {
+export function SwipeCard({eyebrow, badge, title, content, meta, mascot, fallbackPose, onPress, onLongPress, right, left, down, hint, footer}: SwipeCardProps) {
   const x = useRef(new Animated.Value(0)).current;
+  const y = useRef(new Animated.Value(0)).current;
+  /** Which way this drag goes, decided once at the start: sideways swipe or pull down. */
+  const axis = useRef<'x' | 'y'>('x');
+  /** Past the drop point in this drag (one tick when crossing it, so you know letting go will drop). */
+  const armed = useRef(false);
   const {width} = useWindowDimensions();
-  const latest = useRef({right, left, width});
-  latest.current = {right, left, width};
+  const latest = useRef({right, left, down, width});
+  latest.current = {right, left, down, width};
 
   const pan = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 10 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
-      // Once sideways, keep the gesture — don't hand it to the vertical scroll mid-swipe.
+      onMoveShouldSetPanResponder: (_, g) => {
+        if (Math.abs(g.dx) > 10 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5) axis.current = 'x';
+        else if (latest.current.down && g.dy > 10 && g.dy > Math.abs(g.dx) * 1.5) axis.current = 'y';
+        else return false;
+        return true;
+      },
+      // Once claimed, keep the gesture — don't hand it to the vertical scroll mid-swipe.
       onPanResponderTerminationRequest: () => false,
-      onPanResponderMove: (_, g) => x.setValue(g.dx),
+      // Pulled down: follows the finger at half speed, so it feels held back.
+      onPanResponderMove: (_, g) => {
+        if (axis.current === 'x') return x.setValue(g.dx);
+        y.setValue(Math.max(0, g.dy) / 2);
+        if (g.dy >= DROP_DISTANCE !== armed.current) {
+          armed.current = !armed.current;
+          if (armed.current) void Haptics.selectionAsync();
+        }
+      },
       onPanResponderRelease: (_, g) => {
+        if (axis.current === 'y') {
+          armed.current = false;
+          if (g.dy >= DROP_DISTANCE && g.vy < SWIPE_FLICK) {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            latest.current.down?.onSwipe();
+          }
+          Animated.spring(y, {toValue: 0, friction: 6, useNativeDriver: true}).start();
+          return;
+        }
         if (Math.abs(g.dx) < SWIPE_DISTANCE && Math.abs(g.vx) < SWIPE_FLICK) {
           Animated.spring(x, {toValue: 0, friction: 6, useNativeDriver: true}).start();
           return;
@@ -74,7 +105,10 @@ export function SwipeCard({eyebrow, badge, title, content, meta, mascot, fallbac
           if (latest.current.left.springBack) Animated.spring(x, {toValue: 0, friction: 7, useNativeDriver: true}).start();
         });
       },
-      onPanResponderTerminate: () => Animated.spring(x, {toValue: 0, useNativeDriver: true}).start(),
+      onPanResponderTerminate: () => {
+        Animated.spring(x, {toValue: 0, useNativeDriver: true}).start();
+        Animated.spring(y, {toValue: 0, useNativeDriver: true}).start();
+      },
     }),
   ).current;
 
@@ -82,23 +116,27 @@ export function SwipeCard({eyebrow, badge, title, content, meta, mascot, fallbac
   const rightHint = x.interpolate({inputRange: [0, SWIPE_DISTANCE], outputRange: [0, 1], extrapolate: 'clamp'});
   const leftHint = x.interpolate({inputRange: [-SWIPE_DISTANCE, 0], outputRange: [1, 0], extrapolate: 'clamp'});
   // The corner labels make room for the swipe hints, which appear in the same spot.
-  const headerFade = x.interpolate({inputRange: [-SWIPE_DISTANCE / 2, 0, SWIPE_DISTANCE / 2], outputRange: [0, 1, 0], extrapolate: 'clamp'});
+  const downHint = y.interpolate({inputRange: [DROP_DISTANCE / 4, DROP_DISTANCE / 2], outputRange: [0, 1], extrapolate: 'clamp'});
+  const headerFade = Animated.multiply(
+    x.interpolate({inputRange: [-SWIPE_DISTANCE / 2, 0, SWIPE_DISTANCE / 2], outputRange: [0, 1, 0], extrapolate: 'clamp'}),
+    y.interpolate({inputRange: [0, DROP_DISTANCE / 4], outputRange: [1, 0], extrapolate: 'clamp'}),
+  );
 
   return (
-    <Animated.View {...pan.panHandlers} style={{transform: [{translateX: x}, {rotate}]}}>
+    <Animated.View {...pan.panHandlers} style={{transform: [{translateX: x}, {translateY: y}, {rotate}]}}>
       <Pressable
         onPress={onPress}
         onLongPress={onLongPress}
         accessibilityHint={`Swipe right to ${right.label.toLowerCase()}, left to ${left.label.toLowerCase()}`}
-        accessibilityActions={[{name: 'right', label: right.label}, {name: 'left', label: left.label}]}
-        onAccessibilityAction={e => (e.nativeEvent.actionName === 'right' ? right.onSwipe() : left.onSwipe())}
+        accessibilityActions={[{name: 'right', label: right.label}, {name: 'left', label: left.label}, ...(down ? [{name: 'down', label: down.label}] : [])]}
+        onAccessibilityAction={e => ({right, left, down}[e.nativeEvent.actionName as 'right' | 'left' | 'down']?.onSwipe())}
         style={{
           padding: 28,
           borderRadius: radius.xl,
           borderWidth: 1,
           borderColor: designTokens.surfaceBorder,
           backgroundColor: designTokens.card,
-          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
+          boxShadow: designTokens.heroShadow,
         }}>
         {/* The gradient ignores borderRadius (it paints square corners), so it lives in a clipped layer. */}
         <View style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: radius.xl, overflow: 'hidden', pointerEvents: 'none'}}>
@@ -106,7 +144,7 @@ export function SwipeCard({eyebrow, badge, title, content, meta, mascot, fallbac
             style={{
               flex: 1,
               // Native on the new architecture (RN 0.77) — no gradient dependency.
-              experimental_backgroundImage: 'linear-gradient(165deg, #262626 0%, #171717 45%, #0d0d0d 100%)',
+              experimental_backgroundImage: designTokens.cardGradient,
             }}
           />
         </View>
@@ -114,6 +152,7 @@ export function SwipeCard({eyebrow, badge, title, content, meta, mascot, fallbac
         {/* Swiping right reveals its label on the left edge, and vice versa — the side being uncovered. */}
         <SwipeHint label={right.label} icon={right.icon} opacity={rightHint} side="left" />
         <SwipeHint label={left.label} icon={left.icon} opacity={leftHint} side="right" />
+        {down ? <SwipeHint label={down.label} icon={down.icon} opacity={downHint} side="left" /> : null}
         <Animated.View style={{flexDirection: 'row', justifyContent: 'space-between', opacity: headerFade}}>
           <Text style={{color: designTokens.textTertiary, fontSize: 12, fontWeight: '600', letterSpacing: 1.5}}>{eyebrow}</Text>
           {badge ? <Text style={{color: designTokens.textTertiary, fontSize: 12, fontWeight: '600', letterSpacing: 1.5}}>{badge.toUpperCase()}</Text> : null}
@@ -149,10 +188,12 @@ type NowCardProps = {
   onComplete: () => void;
   /** Swiped left. The card springs back behind the date sheet, so cancelling shows it again. */
   onReschedule: () => void;
+  /** Pulled down: pushed 2 hours later. */
+  onSnooze?: () => void;
 };
 
-/** Card for the one task to do now: swipe right to complete, left to reschedule, tap to open. */
-export function NowCard({task, onPress, onLongPress, onComplete, onReschedule}: NowCardProps) {
+/** Card for the one task to do now: swipe right to complete, left to reschedule, pull down for +2 h, tap to open. */
+export function NowCard({task, onPress, onLongPress, onComplete, onReschedule, onSnooze}: NowCardProps) {
   const meta = [formatDueLabel(task.dueAt), task.estimatedMinutes ? `${task.estimatedMinutes} min` : null].filter(Boolean).join('  ·  ');
   return (
     <SwipeCard
@@ -167,7 +208,8 @@ export function NowCard({task, onPress, onLongPress, onComplete, onReschedule}: 
       onLongPress={onLongPress}
       right={{label: 'DONE', icon: 'checkmark', onSwipe: onComplete}}
       left={{label: 'RESCHEDULE', icon: 'calendar-outline', onSwipe: onReschedule, springBack: true}}
-      hint="← reschedule · done →"
+      down={onSnooze ? {label: '+2 HOURS', icon: 'time-outline', onSwipe: onSnooze} : undefined}
+      hint={onSnooze ? '← reschedule · done →  ·  drag down & drop: +2 h' : '← reschedule · done →'}
     />
   );
 }

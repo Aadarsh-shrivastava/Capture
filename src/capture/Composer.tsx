@@ -1,19 +1,21 @@
 import {Ionicons} from '@expo/vector-icons';
+import {useIsFocused} from '@react-navigation/native';
 import {useEffect, useMemo, useRef, useState} from 'react';
-import {Alert, Animated, Easing, LayoutAnimation, Platform, Text, TextInput, View} from 'react-native';
+import {Alert, Animated, Easing, Platform, Text, TextInput, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {useKeyboardHeight} from '@/hooks/useKeyboardHeight';
 import {useSpeechCapture} from '@/hooks/useSpeechCapture';
 import {useCaptureStore} from '@/store/captureStore';
+import {showNote} from '@/undo';
 import {designTokens} from '@/ui/designTokens';
 import {Pressable} from '@/ui/HapticPressable';
 
 import {previewHints} from './hints';
 import {enqueue} from './queue';
 
-/** This long with no new words after you've said something = done; it's sent on its own. */
-const SILENCE_MS = 1800;
+/** This long with no new words after you've said something = done listening; the words wait in the box to be sent. */
+const SILENCE_MS = 2500;
 
 type Props = {
   /** Called after a thought is sent (e.g. show the Thoughts stream, where its bubble appears). */
@@ -35,6 +37,8 @@ export function Composer({onSent, floating = false}: Props) {
   const [groupName, setGroupName] = useState<string | undefined>();
   const speech = useSpeechCapture();
   const finishing = useRef(false);
+  // Focus and Thoughts each have a Composer and both stay mounted: only the one on screen takes a request.
+  const focused = useIsFocused();
   const request = useCaptureStore(s => s.request);
   const clearRequest = useCaptureStore(s => s.clearRequest);
   // What it will become, read from your words as you type (or speak).
@@ -58,6 +62,8 @@ export function Composer({onSent, floating = false}: Props) {
     try {
       // Stored whole; the queue splits it into thoughts and sorts each one in the background.
       await enqueue([thought], groupName, true);
+      // The receipt ("Added to Focus: …") replaces this once it's sorted.
+      showNote('Sorting your thought…', 'thinking');
       onSent?.();
     } catch (e) {
       setText(thought);
@@ -72,13 +78,13 @@ export function Composer({onSent, floating = false}: Props) {
     speech.startListening();
   }
 
-  /** Stop and send what was heard. Nothing heard: just stop. */
+  /** Stop and put what was heard in the box, to fix and send yourself — voice is never sent on its own. */
   async function finishVoice() {
     if (finishing.current) return;
     finishing.current = true;
     const heard = ((await speech.stopListening()) || speech.displayText).trim();
     speech.reset();
-    await send(heard);
+    if (heard) setText(t => (t.trim() ? `${t.trim()} ${heard}` : heard));
   }
 
   function cancelVoice() {
@@ -89,14 +95,14 @@ export function Composer({onSent, floating = false}: Props) {
 
   // Asked from elsewhere (widget Type/Talk, Siri, pull-to-capture, a group's "Capture new").
   useEffect(() => {
-    if (!request) return;
+    if (!request || !focused) return;
     clearRequest();
     if (request.mode === 'voice') return startVoice();
     setText(request.text ?? '');
     setGroupName(request.groupName);
     input.current?.focus();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- act once per request
-  }, [request]);
+  }, [request, focused]);
 
   // A pause after some words sends it (iOS would keep listening forever otherwise).
   useEffect(() => {
@@ -106,9 +112,14 @@ export function Composer({onSent, floating = false}: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- restart the countdown on every new word
   }, [speech.isListening, speech.displayText]);
 
-  // Android ends recognition by itself when you stop talking: send what it heard.
+  // Android ends recognition by itself when you stop talking: put what it heard in the box. No Voice.stop() here —
+  // stopping a recognizer that already ended is what raised "Client side error".
   useEffect(() => {
-    if (speech.state === 'idle' && speech.transcript.trim() && !finishing.current) finishVoice();
+    if (speech.state !== 'idle' || !speech.transcript.trim() || finishing.current) return;
+    finishing.current = true;
+    const heard = speech.transcript.trim();
+    speech.reset();
+    setText(t => (t.trim() ? `${t.trim()} ${heard}` : heard));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- react to the recognizer finishing
   }, [speech.state, speech.transcript]);
 
@@ -148,7 +159,7 @@ export function Composer({onSent, floating = false}: Props) {
               {speech.displayText || 'Listening…'}
             </Text>
           </View>
-          <Pressable onPress={finishVoice} accessibilityRole="button" accessibilityLabel="Send what you said">
+          <Pressable onPress={finishVoice} accessibilityRole="button" accessibilityLabel="Stop recording">
             <Animated.View
               style={{
                 width: 46,
@@ -159,7 +170,7 @@ export function Composer({onSent, floating = false}: Props) {
                 backgroundColor: designTokens.accent,
                 transform: [{scale: breath.interpolate({inputRange: [0, 1], outputRange: [1, 1.12]})}],
               }}>
-              <Ionicons name={speech.displayText ? 'arrow-up' : 'mic'} size={22} color={designTokens.black} />
+              <Ionicons name={speech.displayText ? 'checkmark' : 'mic'} size={22} color={designTokens.black} />
             </Animated.View>
           </Pressable>
         </>
@@ -169,8 +180,6 @@ export function Composer({onSent, floating = false}: Props) {
             ref={input}
             value={text}
             onChangeText={setText}
-            // The bubble grows smoothly as lines are added.
-            onContentSizeChange={() => LayoutAnimation.configureNext(LayoutAnimation.create(140, 'easeInEaseOut', 'opacity'))}
             placeholder={groupName ? `Something for ${groupName}…` : "What's on your mind?"}
             placeholderTextColor={designTokens.textTertiary}
             accessibilityLabel="Capture a thought"

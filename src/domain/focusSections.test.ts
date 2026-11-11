@@ -38,3 +38,12 @@ test('an untimed task takes Now ahead of a later timed one', () => {
   expect(now?.id).toBe(2);
   expect(next.map(t => t.id)).toEqual([1]);
 });
+
+test('two tasks about to start: the earlier one is Now, even if the later one is urgent', () => {
+  const evening = new Date(2026, 9, 31, 22, 40).getTime();
+  const elevenThirty = task(1, new Date(2026, 9, 31, 23, 30).toISOString(), 5);
+  const eleven = task(2, at(23));
+  const {now, next} = splitFocusDay([elevenThirty, eleven], evening);
+  expect(now?.id).toBe(2);
+  expect(next.map(t => t.id)).toEqual([1]);
+});

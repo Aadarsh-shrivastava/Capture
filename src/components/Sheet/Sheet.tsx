@@ -55,7 +55,7 @@ export function Sheet({
                 width: 36,
                 height: 4,
                 borderRadius: 2,
-                backgroundColor: 'rgba(255,255,255,0.22)',
+                backgroundColor: designTokens.accentSoft,
               }}
             />
           </View>

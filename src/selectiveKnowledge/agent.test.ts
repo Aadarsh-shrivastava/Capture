@@ -41,7 +41,7 @@ test('a title or description with words the user never said is replaced by their
   const {draft} = await runSelectiveAgent(
     'fix the leaking tap in the kitchen',
     fakeModel({type: 'Task', title: 'Fix the leaky faucet', description: 'Fix the tap by checking for water damage.'}),
-    {now},
+    {now, kind: 'todo'},
   );
   expect(draft.title).toBe('Fix the leaking tap');
   expect(draft.content).toBe('Fix the leaking tap in the kitchen');
@@ -53,7 +53,7 @@ test('dates never stay in the title', async () => {
 });
 
 test('nothing beyond the title: no description', async () => {
-  const {draft} = await runSelectiveAgent('buy groceries', fakeModel({type: 'Task', title: 'Buy groceries', description: 'Buy groceries.'}), {now});
+  const {draft} = await runSelectiveAgent('buy groceries', fakeModel({type: 'Task', title: 'Buy groceries', description: 'Buy groceries.'}), {now, kind: 'todo'});
   expect(draft.content).toBeNull();
 });
 
@@ -75,7 +75,7 @@ test('repeat, reminder and steps come from the words the user said', async () =>
 });
 
 test('priority is a fixed choice', async () => {
-  const {draft} = await runSelectiveAgent('urgent: fix the login bug', fakeModel({type: 'Task', title: 'Fix login bug', priority: 'urgent'}), {now});
+  const {draft} = await runSelectiveAgent('urgent: fix the login bug', fakeModel({type: 'Task', title: 'Fix login bug', priority: 'urgent'}), {now, kind: 'todo'});
   expect([draft.urgency, draft.importance]).toEqual([5, null]);
 });
 
@@ -148,4 +148,11 @@ test('your pick when sharing decides, not the model', async () => {
   expect(readTomorrow.draft.typeName).toBe('Task'); // said when → a to-do
   const keep = await runSelectiveAgent('wifi is orange77', fakeModel({type: 'Task', title: 'Wifi'}), {now, kind: 'keep'});
   expect([keep.draft.typeName, keep.draft.optionalBehaviorNames]).toEqual(['Note', []]);
+});
+
+test('model only guessed "to do": saved as said, no further model steps', async () => {
+  const model = jest.fn(fakeModel({type: 'Task', title: 'Withdraw cash'}));
+  const {draft} = await runSelectiveAgent('withdraw some cash', model, {now});
+  expect(draft).toMatchObject({typeName: 'Task', unsure: true, title: 'Withdraw some cash', content: 'withdraw some cash'});
+  expect(model).toHaveBeenCalledTimes(1); // only "is this a task?"
 });

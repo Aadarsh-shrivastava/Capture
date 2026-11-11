@@ -149,9 +149,14 @@ function parseClockTime(text: string, base: Date): Date | null {
   return result;
 }
 
+/** How "tomorrow" gets typed in a hurry: tommorow, tomorow, tommorrow, tmrw, tmr, 2morrow. */
+const TOMORROW_TYPOS = /\b(?:tom+or+ow|tmrw?|2mor+ow)\b/gi;
+/** Misspelled "tomorrow" → "tomorrow", so date reading and date stripping both see it. */
+export const fixDateTypos = (text: string) => text.replace(TOMORROW_TYPOS, 'tomorrow');
+
 /** The due date the user said, read from their words ("gym tomorrow at 6 pm" → that time). No date words = no date. */
 export function inferDueAtFromText(text: string, now = new Date()): string {
-  const lower = text.toLowerCase();
+  const lower = fixDateTypos(text.toLowerCase());
   // A reminder's lead time ("remind me 2 hours before") is not when the task is due.
   const said = lower.replace(/\b(?:remind|ping|alert|notify)\s+me\b.*$/, '');
 
@@ -167,6 +172,7 @@ export function inferDueAtFromText(text: string, now = new Date()): string {
   }
 
   const baseDate =
+    (/\bday after tomorrow\b/.test(said) ? addDays(now, 2) : null) ??
     (/\btomorrow\b/.test(said) ? addDays(now, 1) : null) ??
     (/\b(today|tonight|this morning|this afternoon|this evening|eod|end of day)\b/.test(said) ? new Date(now) : null) ??
     resolveInterval(said, now) ??

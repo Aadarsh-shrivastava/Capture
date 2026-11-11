@@ -15,6 +15,8 @@ export function MascotFace({size, character}: {size: number; character?: Charact
   return (
     <View style={{width: size, height: size, borderRadius: size / 2, overflow: 'hidden'}}>
       <Image
+        // Android fades a new source in over 300ms: switching avatar flickered.
+        fadeDuration={0}
         source={sheet.sheet}
         style={{
           position: 'absolute',

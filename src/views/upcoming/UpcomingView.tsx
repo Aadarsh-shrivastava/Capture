@@ -22,7 +22,7 @@ export function UpcomingView({days}: {days: number}) {
   const empty = groups.every(g => g.tasks.every(t => ghosts.has(t)));
 
   return (
-    <ScrollView contentContainerStyle={{paddingHorizontal: 20, paddingBottom: 40}}>
+    <ScrollView contentContainerStyle={{paddingHorizontal: 20, paddingBottom: 120}}>
       {empty ? <MascotMessage pose="sleeping" message="Nothing planned yet. Enjoy the space." /> : null}
       {groups.map(group =>
         group.tasks.length === 0 ? null : (

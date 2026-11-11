@@ -40,22 +40,45 @@ function buildPresets(): Preset[] {
 export function DateSheet({visible, onClose, onSelect, onClear, withTime = false}: DateSheetProps) {
   const [custom, setCustom] = useState(() => new Date());
   const [customOpen, setCustomOpen] = useState(false);
+  /** iOS with time: a preset day was tapped, the inline picker now asks for its time. */
+  const [timeFor, setTimeFor] = useState<moment.Moment | null>(null);
   const presets = buildPresets();
 
   function choose(date: moment.Moment) {
+    setTimeFor(null);
     onSelect(date.format('YYYY-MM-DD'));
     onClose();
   }
 
+  /** With time: a preset day, then its time (cancel / "No time" = the day only). */
+  function choosePreset(day: moment.Moment) {
+    if (!withTime) return choose(day);
+    const start = day.clone().hours(Math.min(23, moment().hours() + 1)).minutes(0).toDate();
+    if (Platform.OS === 'ios') {
+      setCustomOpen(false);
+      setCustom(start);
+      return setTimeFor(day);
+    }
+    DateTimePickerAndroid.open({
+      value: start,
+      mode: 'time',
+      onChange: (event, time) => (event.type === 'set' && time ? chooseCustom(time) : choose(day)),
+    });
+  }
+
   function chooseCustom(date: Date) {
     setCustomOpen(false);
+    setTimeFor(null);
     if (!withTime) return choose(moment(date));
     onSelect(moment(date).seconds(0).format());
     onClose();
   }
 
   function openCustom() {
-    if (Platform.OS === 'ios') return setCustomOpen((open) => !open);
+    if (Platform.OS === 'ios') {
+      setTimeFor(null);
+      return setCustomOpen((open) => !open);
+    }
     // Android has no combined picker: date dialog, then time dialog.
     DateTimePickerAndroid.open({
       value: custom,
@@ -84,7 +107,7 @@ export function DateSheet({visible, onClose, onSelect, onClear, withTime = false
               title={preset.label}
               value={preset.value.format('ddd, MMM D')}
               chevron={false}
-              onPress={() => choose(preset.value)}
+              onPress={() => choosePreset(preset.value)}
             />
             <Divider />
           </View>
@@ -95,6 +118,16 @@ export function DateSheet({visible, onClose, onSelect, onClear, withTime = false
           title={withTime ? 'Custom date & time' : 'Custom date'}
           onPress={openCustom}
         />
+
+        {timeFor ? (
+          <View style={{gap: 12, paddingBottom: 8, alignItems: 'center'}}>
+            <DateTimePicker value={custom} mode="time" display="spinner" themeVariant="dark" onChange={(_, date) => date && setCustom(date)} />
+            <PrimaryButton label={`Set time · ${timeFor.format('ddd, MMM D')}`} onPress={() => chooseCustom(custom)} style={{alignSelf: 'stretch'}} />
+            <Pressable onPress={() => choose(timeFor)} style={{paddingVertical: 8}}>
+              <Text style={{color: designTokens.textSecondary, fontSize: 15}}>No time</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         {customOpen ? (
           <View style={{gap: 12, paddingBottom: 8, alignItems: 'center'}}>

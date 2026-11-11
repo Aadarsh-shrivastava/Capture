@@ -1,5 +1,7 @@
 import {Image, View, type StyleProp, type ViewStyle} from 'react-native';
 
+import {designTokens} from '@/ui/designTokens';
+
 import {CHARACTERS, frameOf, type CharacterKey, type MascotPose} from './characters';
 import {useMascotStore} from './store';
 
@@ -40,11 +42,13 @@ export function Mascot({pose, width, style, halo = true, character}: Props) {
             width: width * 0.8,
             height: width * 0.8,
             borderRadius: width,
-            backgroundColor: 'rgba(255, 255, 255, 0.06)',
+            backgroundColor: designTokens.chip,
           }}
         />
       ) : null}
       <Image
+        // Android fades a new source in over 300ms: switching avatar flickered.
+        fadeDuration={0}
         source={sheet.sheet}
         style={{
           position: 'absolute',

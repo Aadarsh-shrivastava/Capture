@@ -45,18 +45,30 @@ export function UndoToast() {
             borderColor: designTokens.surfaceBorder,
           }}>
           {current.pose ? <Mascot pose={current.pose} width={34} halo={false} /> : null}
-          <Text numberOfLines={1} style={{flex: 1, color: designTokens.textPrimary, fontSize: 15}}>
-            {current.label}
-          </Text>
           <Pressable
-            hitSlop={12}
-            accessibilityRole="button"
+            disabled={!current.onOpen}
+            haptic={false}
+            accessibilityRole={current.onOpen ? 'link' : undefined}
             onPress={() => {
               hide();
-              Promise.resolve(current.undo()).catch(() => {});
-            }}>
-            <Text style={{color: designTokens.textPrimary, fontSize: 15, fontWeight: '700'}}>Undo</Text>
+              current.onOpen?.();
+            }}
+            style={{flex: 1}}>
+            <Text numberOfLines={1} style={{color: designTokens.textPrimary, fontSize: 15}}>
+              {current.label}
+            </Text>
           </Pressable>
+          {current.undo ? (
+            <Pressable
+              hitSlop={12}
+              accessibilityRole="button"
+              onPress={() => {
+                hide();
+                Promise.resolve(current.undo?.()).catch(() => {});
+              }}>
+              <Text style={{color: designTokens.textPrimary, fontSize: 15, fontWeight: '700'}}>Undo</Text>
+            </Pressable>
+          ) : null}
         </Appear>
       </SwipeDismiss>
     </View>

@@ -17,7 +17,7 @@ object WidgetCaptureStorage {
    * `shared`: from the share sheet — kept whole, never split. `kind`: the user's pick (todo / read / remember / keep).
    */
   @Synchronized
-  fun save(context: Context, text: String, shared: Boolean = false, kind: String? = null) {
+  fun save(context: Context, text: String, shared: Boolean = false, type: String? = null) {
     val trimmed = text.trim()
     if (trimmed.isEmpty()) return
     val prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -25,7 +25,8 @@ object WidgetCaptureStorage {
     // With the capture time, so "tomorrow" means the day after it was said, not after the app next opens.
     val entry = JSONObject().put("text", trimmed).put("at", System.currentTimeMillis())
     if (shared) entry.put("shared", true)
-    if (kind != null) entry.put("kind", kind)
+    // The item type picked in the share sheet; the app then only asks the model for a title.
+    if (type != null) entry.put("type", type)
     queue.put(entry.toString())
     // commit, not apply: the popup finishes right after, and a thought must not be lost.
     prefs.edit().putString(KEY_QUEUE, queue.toString()).commit()
@@ -86,5 +87,26 @@ object WidgetCaptureStorage {
     return context.applicationContext
       .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
       .getString(KEY_MASCOT, null)
+  }
+
+  /** The app's palette (dark / light / midnight), so the share sheet matches it. */
+  fun saveTheme(context: Context, theme: String) {
+    context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString("theme", theme).apply()
+  }
+
+  fun isLightTheme(context: Context): Boolean =
+    context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("theme", null) == "light"
+
+  /** JSON [{name, label}] from the app: the share sheet lists these as baskets. */
+  fun saveShareTypes(context: Context, json: String) {
+    context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString("share_types", json).apply()
+  }
+
+  /** (name, label) pairs; empty until the app has run once. */
+  fun shareTypes(context: Context): List<Pair<String, String>> = try {
+    val array = JSONArray(context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("share_types", "[]"))
+    (0 until array.length()).map { array.getJSONObject(it) }.map { it.getString("name") to it.optString("label", it.getString("name")) }
+  } catch (e: Exception) {
+    emptyList()
   }
 }

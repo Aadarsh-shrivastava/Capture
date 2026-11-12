@@ -14,11 +14,11 @@ import {DrawerProfile} from './components/DrawerProfile';
 
 const DRAWER_WIDTH = Math.min(Dimensions.get('window').width * 0.52, 320);
 
+// No Focus: it's home, one back away from every screen. Library lives at the top of Thoughts.
 const MENU_ITEMS = [
-  {label: 'Focus', icon: 'radio-button-on-outline' as const, href: '/focus'},
   {label: 'Thoughts', icon: 'chatbubble-ellipses-outline' as const, href: '/thoughts'},
   ...(GROUPS_ENABLED ? [{label: 'Groups', icon: 'folder-outline' as const, href: '/(tabs)/groups'}] : []),
-  {label: 'Library', icon: 'layers-outline' as const, href: '/(tabs)/library'},
+  {label: 'Chat', icon: 'sparkles-outline' as const, href: '/chat'},
   {label: 'Settings', icon: 'settings-outline' as const, href: '/settings'},
 ];
 

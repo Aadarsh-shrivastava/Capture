@@ -2,7 +2,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { DB_VERSION } from './database';
 
-const MIGRATIONS: Record<number, string[]> = {
+export const MIGRATIONS: Record<number, string[]> = {
   1: [
     `CREATE TABLE IF NOT EXISTS schema_migrations (
       version INTEGER PRIMARY KEY NOT NULL,
@@ -194,6 +194,8 @@ const MIGRATIONS: Record<number, string[]> = {
   11: [`ALTER TABLE items ADD COLUMN unsure INTEGER NOT NULL DEFAULT 0;`],
   // What the user said it is when sharing (to do / read later / remember / just keep) — the model doesn't guess it.
   12: [`ALTER TABLE capture_queue ADD COLUMN kind TEXT;`],
+  // The type the user put a share into (the share sheet's list of baskets); the model then only writes the title.
+  13: [`ALTER TABLE capture_queue ADD COLUMN basket TEXT;`],
 };
 
 async function getCurrentVersion(db: SQLiteDatabase): Promise<number> {

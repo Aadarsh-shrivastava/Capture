@@ -39,7 +39,8 @@ object CaptureNotification {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(context, CHANNEL)
       else @Suppress("DEPRECATION") Notification.Builder(context)
     val notification = builder
-      .setSmallIcon(android.R.drawable.ic_menu_edit)
+      .setSmallIcon(R.drawable.ic_notification)
+      .setLargeIcon(android.graphics.drawable.Icon.createWithResource(context, if (WidgetCaptureStorage.getMascot(context) == "female") R.drawable.widget_mascot_female else R.drawable.widget_mascot_male))
       .setContentTitle(context.getString(R.string.capture_notification_title))
       .setContentText(context.getString(R.string.widget_input_hint))
       .setContentIntent(type)

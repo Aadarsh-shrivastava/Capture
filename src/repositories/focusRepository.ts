@@ -1,5 +1,6 @@
 import {getDatabase} from '@/db/database';
 import type {FocusTask} from '@/models/focusTask';
+import {rolledDueAt} from '@/recurrence/utils';
 
 type FocusTaskRow = {
   id: number;
@@ -18,6 +19,7 @@ type FocusTaskRow = {
   due_at: string | null;
   completed_at: string | null;
   estimated_minutes: number | null;
+  repeat_data: string | null;
 };
 
 function mapFocusTask(row: FocusTaskRow): FocusTask {
@@ -47,14 +49,26 @@ export const focusRepository = {
     const db = await getDatabase();
     const rows = await db.getAllAsync<FocusTaskRow>(
       `SELECT i.*, t.name AS type_name,
-              d.status AS doable_status, d.due_at, d.completed_at, d.estimated_minutes
+              d.status AS doable_status, d.due_at, d.completed_at, d.estimated_minutes, r.data AS repeat_data
        FROM items i
        INNER JOIN item_types t ON t.id = i.type_id
        INNER JOIN doable_items d ON d.item_id = i.id
+       LEFT JOIN item_behavior_data r ON r.item_id = i.id AND r.behavior = 'Repeatable'
        WHERE d.status NOT IN ('completed', 'cancelled')
        ORDER BY i.updated_at DESC`,
     );
 
+    // Missed repeats move to their next occurrence (saved), so they never carry over as overdue.
+    for (const row of rows) {
+      let data: Record<string, string> | null = null;
+      try {
+        data = row.repeat_data ? JSON.parse(row.repeat_data) : null;
+      } catch {}
+      const rolled = rolledDueAt(row.due_at, data);
+      if (!rolled) continue;
+      await db.runAsync('UPDATE doable_items SET due_at = ? WHERE item_id = ?', [rolled, row.id]);
+      row.due_at = rolled;
+    }
     return rows.map(mapFocusTask);
   },
 };

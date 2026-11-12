@@ -64,6 +64,28 @@ class HomeWidgetCapture: NSObject {
     resolve(nil)
   }
 
+  /// The app's palette, so the share sheet (another process) can match it.
+  @objc
+  func setTheme(
+    _ theme: String,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    UserDefaults(suiteName: "group.org.reactjs.native.example.Capture")?.set(theme, forKey: "theme")
+    resolve(nil)
+  }
+
+  /// JSON [{name, label}]: the item types the share sheet lists as baskets.
+  @objc
+  func setShareTypes(
+    _ types: String,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    UserDefaults(suiteName: "group.org.reactjs.native.example.Capture")?.set(types, forKey: "share_types")
+    resolve(nil)
+  }
+
   @objc
   static func requiresMainQueueSetup() -> Bool {
     false

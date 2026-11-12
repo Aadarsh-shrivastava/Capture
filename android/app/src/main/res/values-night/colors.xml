@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="share_bg">#171717</color>
+    <color name="share_field">#262626</color>
+    <color name="share_text">#F5F5F5</color>
+    <color name="share_muted">#8A8A8A</color>
+</resources>

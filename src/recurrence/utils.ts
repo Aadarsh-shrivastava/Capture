@@ -53,6 +53,15 @@ export function nextDueAt(
   return timed ? due.format() : due.format('YYYY-MM-DD');
 }
 
+/**
+ * A repeating task whose occurrence passed without being done skips to its next occurrence from today on,
+ * instead of piling up as overdue. `data` is the stored Repeatable data; null = nothing to move.
+ */
+export function rolledDueAt(dueAt: string | null, data: Record<string, string> | null, now = new Date()): string | null {
+  if (!dueAt || !data || !isRepeatUnit(data.interval_unit) || !moment(dueAt).isBefore(now, 'day')) return null;
+  return nextDueAt(dueAt, data.interval_value, data.interval_unit, moment(now).startOf('day').toDate(), parseNumbers(data.days));
+}
+
 type Draftish = Pick<CaptureItemDraft, 'optionalBehaviorNames' | 'behaviorData'>;
 
 export function repeatDaysOf(draft: Draftish): number[] {

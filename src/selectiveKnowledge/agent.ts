@@ -26,6 +26,8 @@ export type AgentOptions = {
   groups?: GroupHint[];
   /** The user said what it is (when sharing): to do / read later / remember / just keep. Overrides any judging. */
   kind?: 'todo' | 'read' | 'remember' | 'keep';
+  /** The user put it in this type when sharing: no judging, the words are kept, the model only writes the title. */
+  basket?: string;
 };
 
 const words = (s: string) => s.toLowerCase().match(/[a-z0-9]+/g) ?? [];
@@ -92,7 +94,7 @@ export function titleFromText(text: string): string {
 export async function runSelectiveAgent(
   text: string,
   complete: Complete,
-  {now = new Date(), onStep, groups = [], kind}: AgentOptions = {},
+  {now = new Date(), onStep, groups = [], kind, basket}: AgentOptions = {},
 ): Promise<{draft: CaptureItemDraft; journey: string[]}> {
   const journey: string[] = [];
   const log = (line: string) => {
@@ -115,6 +117,22 @@ export async function runSelectiveAgent(
     } catch {
       return '';
     }
+  }
+
+  // Put in a basket by the user (share sheet): their pick stands, the words stay as shared; only the title is the model's.
+  if (basket) {
+    const doable = typeHasBehavior(basket, 'Doable');
+    const answer = stripDates(await ask('title', doable ? 'Task' : basket, 16));
+    const ok = answer.length > 0 && answer.length <= 50 && answer.split(/\s+/).length <= 6;
+    const draft: CaptureItemDraft = {
+      ...rawThought(text),
+      typeName: basket as ItemTypeName,
+      title: ok ? sentenceCase(answer.replace(/[.!]+$/, '')) : titleFromText(text),
+      content: text.trim(),
+      ...(doable ? {behaviorData: {Doable: {status: 'pending', due_at: '', estimated_minutes: ''}}} : {}),
+    };
+    log(`basket: ${basket}, title: ${draft.title}`);
+    return {draft, journey};
   }
 
   // 1. What kind of thought: something to do → Task (Focus); about the user's own day → Journal; else a plain
@@ -155,9 +173,10 @@ export async function runSelectiveAgent(
   const doable = toDo;
   const guideType = doable ? 'Task' : typeName;
 
-  // 2. Title — a few of the user's words. Dates are stripped (they live in the due date); a title with new words is rejected.
+  // 2. Title — always the model's. Dates are stripped (they live in the due date). A task title must use the user's words;
+  //    a note or journal title may name the subject in new words, since its body keeps the exact words anyway.
   const titleAnswer = stripDates(await ask('title', guideType, 16));
-  const titleOk = titleAnswer.length > 0 && titleAnswer.length <= 50 && titleAnswer.split(/\s+/).length <= 6 && inventedWords(titleAnswer, text).length === 0;
+  const titleOk = titleAnswer.length > 0 && titleAnswer.length <= 50 && titleAnswer.split(/\s+/).length <= 6 && (!doable || inventedWords(titleAnswer, text).length === 0);
   const title = titleOk ? sentenceCase(titleAnswer.replace(/[.!]+$/, '')) : titleFromText(text);
   log(`title: ${title}${titleOk ? '' : ' (from your words)'}`);
 

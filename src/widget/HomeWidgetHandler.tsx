@@ -2,10 +2,12 @@ import {useEffect, useRef} from 'react';
 import {Alert, AppState, Linking} from 'react-native';
 
 import {enqueue, type QueuedThought} from '@/capture/queue';
-import {clearPendingWidgetPrompts, peekPendingWidgetPrompts, setCaptureNotification} from '@/native/homeWidgetCapture';
+import {useItemTypesStore} from '@/itemTypes/store';
+import {clearPendingWidgetPrompts, peekPendingWidgetPrompts, setCaptureNotification, setShareTypes} from '@/native/homeWidgetCapture';
 import {useCaptureNotificationSetting} from '@/notifications';
 import {useDatabaseReady} from '@/providers/DatabaseProvider';
 import {useCaptureStore} from '@/store/captureStore';
+import {getItemTypeConfig} from '@/ui/itemTypeConfig';
 
 import {extractCaptureMode, extractTextFromCaptureUrl} from './parseCaptureDeepLink';
 import {refreshHomeWidgetFocusSnapshot} from './syncHomeWidgetFocus';
@@ -42,6 +44,11 @@ async function takeNativePending() {
 
 export function HomeWidgetHandler() {
   const dbReady = useDatabaseReady();
+  // The share sheet runs outside the app: keep its list of baskets (your types) current.
+  const types = useItemTypesStore(s => s.types);
+  useEffect(() => {
+    if (types.length) setShareTypes(types.map(t => ({name: t.name, label: getItemTypeConfig(t.name).plural})));
+  }, [types]);
   const appState = useRef(AppState.currentState);
 
   useEffect(() => {

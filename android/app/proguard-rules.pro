@@ -11,3 +11,6 @@
 
 # llama.rn
 -keep class com.rnllama.** { *; }
+
+# Our native modules and share/widget activities are reached from JS and the manifest.
+-keep class com.capture.** { *; }

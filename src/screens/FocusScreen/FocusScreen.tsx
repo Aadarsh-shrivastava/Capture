@@ -226,7 +226,8 @@ export function FocusScreen() {
 
           {!loading && isToday && now && peek === null ? (
             // The next task fades in once the done one has swiped away (and again when the come-back is put away).
-            <Appear key={now.id} style={{marginTop: 20}}>
+            // zIndex: dragged down to snooze, the card passes over the Next list instead of under it.
+            <Appear key={now.id} style={{marginTop: 20, zIndex: 10}}>
               <Selectable item={now} onOpen={() => openTask(now)}>
                 {select => (
                   <NowCard

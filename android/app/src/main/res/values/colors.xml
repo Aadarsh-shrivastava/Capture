@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Share sheet colours, light; values-night has the dark set. The activity picks one from the app's theme. -->
+<resources>
+    <color name="share_bg">#FFFFFF</color>
+    <color name="share_field">#F2F2F2</color>
+    <color name="share_text">#0A0A0A</color>
+    <color name="share_muted">#6B6B6B</color>
+</resources>

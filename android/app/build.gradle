@@ -57,7 +57,7 @@ react {
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -102,7 +102,21 @@ android {
             // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
+            shrinkResources enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+    }
+    packagingOptions {
+        jniLibs {
+            // llama.rn ships one llama.cpp build per CPU feature set (~11-14 MB each); the phone loads one. Keep the
+            // generic one, v8 (every arm64 phone), v8.2+dotprod (most phones since ~2019) and +i8mm (newest). The
+            // loader in RNLlama.java falls back down that list, so a phone without one still finds a match.
+            // Must match rnllamaVariants in gradle.properties (that builds the matching JNI side).
+            excludes += [
+                "**/librnllama_v8_2.so",
+                "**/librnllama_v8_2_i8mm.so",
+                "**/librnllama_v8_2_dotprod_i8mm_hexagon_opencl.so",
+            ]
         }
     }
 }

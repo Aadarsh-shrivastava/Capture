@@ -37,4 +37,16 @@ class WidgetCaptureModule(private val reactContext: ReactApplicationContext) :
     if (enabled) CaptureNotification.show(reactContext) else CaptureNotification.hide(reactContext)
     promise.resolve(null)
   }
+
+  @ReactMethod
+  fun setTheme(theme: String, promise: Promise) {
+    WidgetCaptureStorage.saveTheme(reactContext, theme)
+    promise.resolve(null)
+  }
+
+  @ReactMethod
+  fun setShareTypes(json: String, promise: Promise) {
+    WidgetCaptureStorage.saveShareTypes(reactContext, json)
+    promise.resolve(null)
+  }
 }

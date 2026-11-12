@@ -24,8 +24,8 @@ Answer with the title only.`,
     id: 'title.subject',
     step: 'title',
     appliesTo: '*',
-    summary: 'A few of the user\'s own words naming the subject.',
-    body: `Write a short title (2 to 5 words) naming the subject, using the user's own words. No new words. No quotes.
+    summary: 'A few words naming the subject.',
+    body: `Write a short title (2 to 5 words) naming what this is about. Prefer the user's words; a better word is fine. No quotes. Don't copy the first words of the text.
 
 Examples:
 "yesterday was calm, read a book all evening" -> Calm evening reading

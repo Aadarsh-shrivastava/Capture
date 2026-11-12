@@ -1,4 +1,5 @@
-import {inferRepeatUnit, nextDueAt, repeatUnitOf, upcomingOccurrences, withRepeat} from './utils';
+import moment from 'moment';
+import {inferRepeatUnit, nextDueAt, rolledDueAt, repeatUnitOf, upcomingOccurrences, withRepeat} from './utils';
 
 const now = new Date(2026, 9, 31, 10, 0); // Sat 31 Oct 2026, 10:00 local
 
@@ -34,4 +35,14 @@ test('upcoming occurrences for display', () => {
   expect(upcomingOccurrences(due, 1, 'day', [], new Date(2026, 10, 3))).toEqual(['2026-11-01', '2026-11-02', '2026-11-03']);
   expect(upcomingOccurrences(due, 1, 'week', [1, 3], new Date(2026, 10, 8))).toEqual(['2026-11-02', '2026-11-04']);
   expect(upcomingOccurrences('2026-10-31', 1, 'week', [], new Date(2026, 10, 6))).toEqual([]);
+});
+
+test('a missed repeat skips to its next occurrence from today, not carried as overdue', () => {
+  const now = new Date(2026, 10, 12, 9);
+  const daily = {interval_value: '1', interval_unit: 'day'};
+  expect(rolledDueAt('2026-11-09', daily, now)).toBe('2026-11-12');
+  expect(rolledDueAt(new Date(2026, 10, 10, 7).toISOString(), daily, now)).toBe(moment(new Date(2026, 10, 12, 7)).format());
+  expect(rolledDueAt('2026-11-10', {interval_value: '1', interval_unit: 'week'}, now)).toBe('2026-11-17');
+  expect(rolledDueAt('2026-11-12', daily, now)).toBeNull();
+  expect(rolledDueAt('2026-11-09', null, now)).toBeNull();
 });

@@ -19,7 +19,7 @@ async function requireModel(): Promise<void> {
  * One thought → one draft, decided by the on-device model; plain function so the capture queue can run it off-screen.
  * `now`: when it was captured — relative dates ("tomorrow") resolve against it.
  */
-export async function analyzeText(text: string, onStep?: (steps: string[]) => void, now = new Date(), kind?: ShareKind): Promise<CaptureItemDraft> {
+export async function analyzeText(text: string, onStep?: (steps: string[]) => void, now = new Date(), kind?: ShareKind, basket?: string): Promise<CaptureItemDraft> {
   const trimmed = text.trim();
   if (!trimmed) {
     throw new Error('No text to analyze');
@@ -27,7 +27,7 @@ export async function analyzeText(text: string, onStep?: (steps: string[]) => vo
   await requireModel();
 
   const groups = GROUPS_ENABLED ? await groupsService.getActiveGroups().catch(() => []) : [];
-  const {draft, journey} = await runSelectiveAgent(trimmed, complete, {now, onStep, groups, kind});
+  const {draft, journey} = await runSelectiveAgent(trimmed, complete, {now, onStep, groups, kind, basket});
   if (__DEV__) console.log('[selective-knowledge]', journey.join(' → '));
   return draft;
 }

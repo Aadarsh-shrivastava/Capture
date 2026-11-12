@@ -6,22 +6,24 @@ import {ScrollView, Text, View} from 'react-native';
 import {Composer} from '@/capture/Composer';
 import {usePendingCaptures} from '@/capture/usePendingCaptures';
 import {TabScreenShell} from '@/components/TabScreenShell/TabScreenShell';
+import {GROUPS_ENABLED, LibraryGroups} from '@/groups';
 import {useItemsData} from '@/hooks/useItemsData';
 import {useLlamaStore} from '@/hooks/useLlamaModel';
 import {Mascot} from '@/mascot';
 import {useModelStore} from '@/model';
 import {useComingBackIds} from '@/resurface';
 import {Selectable} from '@/selection';
-import {ItemCard} from '@/ui/components/ItemCard';
+import {ItemCard, TypeGridCard} from '@/ui/components/ItemCard';
 import {designTokens, radius} from '@/ui/designTokens';
 import {Pressable} from '@/ui/HapticPressable';
+import {allTypeNames} from '@/ui/itemTypeConfig';
 
 import {groupByDay, thoughtLabel} from './thoughts';
 
-/** Everything you've said, newest first by day, each labelled with what it became. Focus is the main screen. */
+/** The library (one card per type) on top, then everything you've said, newest first by day. Focus is the main screen. */
 export function ThoughtsScreen() {
   const router = useRouter();
-  const {items, error, refresh} = useItemsData();
+  const {items, types, error, refresh} = useItemsData();
   const pending = usePendingCaptures();
   const comingBack = useComingBackIds();
   const loadFailed = useLlamaStore(s => s.loadFailed);
@@ -34,11 +36,28 @@ export function ThoughtsScreen() {
   );
 
   const days = useMemo(() => groupByDay(items), [items]);
+  const typeNames = useMemo(() => allTypeNames().filter(name => types.some(t => t.name === name)), [types]);
 
   return (
     <TabScreenShell title="Thoughts" secondaryAction={{icon: 'search', label: 'Search', onPress: () => router.push('/search')}}>
       <ScrollView contentContainerStyle={{paddingHorizontal: 20, paddingTop: 8, paddingBottom: 120}} showsVerticalScrollIndicator={false}>
         {error ? <Text style={{color: designTokens.textSecondary, fontSize: 13, marginBottom: 12}}>{error}</Text> : null}
+
+        {/* The library: one card per type, scrolled sideways so the thoughts stay in view. */}
+        {typeNames.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginHorizontal: -20}} contentContainerStyle={{paddingHorizontal: 20, paddingVertical: 8, gap: 10}}>
+            {typeNames.map(typeName => (
+              <View key={typeName} style={{width: 104}}>
+                <TypeGridCard
+                  typeName={typeName}
+                  count={items.filter(item => item.typeName === typeName).length}
+                  onPress={() => router.push({pathname: '/library/list', params: {type: typeName}})}
+                />
+              </View>
+            ))}
+          </ScrollView>
+        ) : null}
+        {GROUPS_ENABLED ? <LibraryGroups /> : null}
 
         {/* Said, not sorted yet. */}
         {pending.map(p => (

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import { forgeControlTheme } from '@/theme/forgeControl';
+import { setNativeTheme } from '@/native/homeWidgetCapture';
 import type { Theme } from '@/theme/types';
 import { applyPalette, designTokens, initialPalette, type PaletteName } from '@/ui/designTokens';
 
@@ -42,11 +43,15 @@ type ThemeState = {
   setTheme: (name: PaletteName) => void;
 };
 
+// The share sheet runs outside the app; it reads the palette the app last told it.
+setNativeTheme(initialPalette);
+
 export const useThemeStore = create<ThemeState>((set) => ({
   themeName: initialPalette,
   theme: themeFor(),
   setTheme: (name) => {
     applyPalette(name);
+    setNativeTheme(name);
     set({ themeName: name, theme: themeFor() });
   },
 }));

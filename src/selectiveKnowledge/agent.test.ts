@@ -156,3 +156,16 @@ test('model only guessed "to do": saved as said, no further model steps', async 
   expect(draft).toMatchObject({typeName: 'Task', unsure: true, title: 'Withdraw some cash', content: 'withdraw some cash'});
   expect(model).toHaveBeenCalledTimes(1); // only "is this a task?"
 });
+
+test('a note title is the model\'s even in new words; the body stays exactly as said', async () => {
+  const said = 'spent the whole evening on the balcony watching rain, felt calm';
+  const {draft} = await runSelectiveAgent(said, fakeModel({type: 'Journal', title: 'Peaceful rainy evening'}), {now});
+  expect(draft.title).toBe('Peaceful rainy evening');
+  expect(draft.content).toBe(said);
+});
+
+test('shared into a basket: that type, words kept, only the title from the model', async () => {
+  const shared = 'https://example.com/post A long article about sleep';
+  const {draft} = await runSelectiveAgent(shared, fakeModel({title: 'Article on sleep'}), {now, basket: 'Note'});
+  expect([draft.typeName, draft.title, draft.content]).toEqual(['Note', 'Article on sleep', shared]);
+});

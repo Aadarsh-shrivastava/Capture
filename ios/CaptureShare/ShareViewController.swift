@@ -2,17 +2,19 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
-/// "Save to Capture" from any app's share sheet: what you shared, an optional note, what it is and when — saved for
-/// the app to sort on its next open (PendingCaptures). Your picks decide; the model only fills in the rest.
+/// "Save to Capture" from any app's share sheet: what you shared and an optional note — saved for the app
+/// on its next open (PendingCaptures), into the basket (item type) you tap; the model then only writes the title.
 final class ShareViewController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
+    // The whole extension window takes the app's theme; SwiftUI's preferredColorScheme doesn't reach it from here.
+    overrideUserInterfaceStyle = appIsLight ? .light : .dark
+    view.backgroundColor = .systemBackground
     let model = ShareModel()
     let host = UIHostingController(rootView: ShareView(model: model, done: { [weak self] in self?.close() }))
     addChild(host)
     host.view.frame = view.bounds
     host.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-    host.view.backgroundColor = .clear
     view.addSubview(host.view)
     host.didMove(toParent: self)
     model.load(from: extensionContext?.inputItems as? [NSExtensionItem] ?? [])
@@ -55,133 +57,94 @@ final class ShareModel: ObservableObject {
   }
 }
 
-private enum Kind: String, CaseIterable {
-  case todo, read, remember, keep
-  var label: String {
-    switch self {
-    case .todo: "To do"
-    case .read: "Read later"
-    case .remember: "Remember"
-    case .keep: "Just keep"
-    }
-  }
-  var icon: String {
-    switch self {
-    case .todo: "checkmark.circle"
-    case .read: "book"
-    case .remember: "arrow.uturn.backward.circle"
-    case .keep: "tray"
-    }
-  }
+/// The app's palette (written by HomeWidgetCapture.setTheme): only "light" is light; dark and midnight are dark.
+private var appIsLight: Bool {
+  UserDefaults(suiteName: "group.org.reactjs.native.example.Capture")?.string(forKey: "theme") == "light"
 }
 
-/// Spoken the way you'd say it, so the app reads the date from your words like any capture.
-private let whens = [("Today", "today"), ("Tonight", "tonight"), ("Tomorrow", "tomorrow"), ("This weekend", "this weekend")]
+/// The baskets: (type name, label) the app last sent; empty until the app has run once.
+private var shareTypes: [(String, String)] {
+  guard let json = UserDefaults(suiteName: "group.org.reactjs.native.example.Capture")?.string(forKey: "share_types"),
+        let list = try? JSONSerialization.jsonObject(with: Data(json.utf8)) as? [[String: String]] else { return [] }
+  return list.compactMap { t in t["name"].map { ($0, t["label"] ?? $0) } }
+}
 
 private struct ShareView: View {
   @ObservedObject var model: ShareModel
   let done: () -> Void
   @State private var note = ""
-  @State private var kind: Kind?
-  @State private var when: String?
-  @State private var saved = false
-  @FocusState private var noteFocused: Bool
+  @State private var saved: String?
 
-  /// "read this weekend · <note>" first, then the shared text and link, so the title comes from what you said.
+  /// The note first, then the shared text and link.
   private var thought: String {
-    let said = [note.trimmingCharacters(in: .whitespacesAndNewlines), when ?? ""].filter { !$0.isEmpty }.joined(separator: " ")
     let shared = [model.text.trimmingCharacters(in: .whitespacesAndNewlines), model.url?.absoluteString ?? ""].filter { !$0.isEmpty }.joined(separator: "\n")
-    return [said, shared].filter { !$0.isEmpty }.joined(separator: "\n")
+    return [note.trimmingCharacters(in: .whitespacesAndNewlines), shared].filter { !$0.isEmpty }.joined(separator: "\n")
   }
 
   var body: some View {
-    VStack(spacing: 0) {
-      Spacer(minLength: 0)
-      VStack(alignment: .leading, spacing: 16) {
+    VStack(alignment: .leading, spacing: 16) {
+      ZStack {
+        Text("Save to Capture").font(.headline)
         HStack {
           Button("Cancel", action: done).foregroundStyle(.secondary)
           Spacer()
-          Text("Save to Capture").font(.headline)
-          Spacer()
-          Button(saved ? "Saved" : "Save") { save() }
-            .fontWeight(.semibold)
-            .disabled(thought.isEmpty || saved)
         }
-
-        // What you're sharing.
-        VStack(alignment: .leading, spacing: 6) {
-          if !model.text.isEmpty {
-            Text(model.text).font(.subheadline).lineLimit(4)
-          }
-          if let url = model.url {
-            Label(url.host() ?? url.absoluteString, systemImage: "link").font(.footnote).foregroundStyle(.secondary).lineLimit(1)
-          }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14))
-
-        TextField("Add a note (optional)", text: $note, axis: .vertical)
-          .lineLimit(1...3)
-          .focused($noteFocused)
-          .padding(12)
-          .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14))
-
-        Text("What is it?").font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
-        ChipRow(items: Kind.allCases.map { ($0.label, $0.icon, kind == $0) }) { index in
-          let picked = Kind.allCases[index]
-          kind = kind == picked ? nil : picked
-          if kind != .todo && kind != .read { when = nil }
-        }
-
-        if kind == .todo || kind == .read {
-          Text("When?").font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
-          ChipRow(items: whens.map { ($0.0, "calendar", when == $0.1) }) { index in
-            when = when == whens[index].1 ? nil : whens[index].1
-          }
-        }
-
-        Text(kind == nil ? "Capture will work out what it is." : "Capture sorts it the next time you open the app.")
-          .font(.caption)
-          .foregroundStyle(.tertiary)
       }
-      .padding(20)
-      .background(Color(white: 0.09), in: RoundedRectangle(cornerRadius: 26))
+
+      // What you're sharing.
+      VStack(alignment: .leading, spacing: 6) {
+        if !model.text.isEmpty {
+          Text(model.text).font(.subheadline).lineLimit(4)
+        }
+        if let url = model.url {
+          Label(url.host() ?? url.absoluteString, systemImage: "link").font(.footnote).foregroundStyle(.secondary).lineLimit(1)
+        }
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
       .padding(12)
-    }
-    .preferredColorScheme(.dark)
-    .animation(.easeOut(duration: 0.2), value: kind)
-  }
+      .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
 
-  private func save() {
-    PendingCaptures.add(thought, shared: true, kind: kind?.rawValue)
-    UINotificationFeedbackGenerator().notificationOccurred(.success)
-    saved = true
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: done)
-  }
-}
+      TextField("Add a note (optional)", text: $note, axis: .vertical)
+        .lineLimit(1...3)
+        .padding(12)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
 
-/// Wrapping row of pill buttons; `items`: (label, SF Symbol, selected).
-private struct ChipRow: View {
-  let items: [(String, String, Bool)]
-  let onTap: (Int) -> Void
-
-  var body: some View {
-    ScrollView(.horizontal, showsIndicators: false) {
-      HStack(spacing: 8) {
-        ForEach(items.indices, id: \.self) { index in
-          let (label, icon, selected) = items[index]
-          Button { onTap(index) } label: {
-            Label(label, systemImage: icon)
-              .font(.subheadline.weight(.medium))
-              .padding(.horizontal, 12)
-              .padding(.vertical, 8)
-              .background(selected ? Color.white : Color.white.opacity(0.08), in: Capsule())
-              .foregroundStyle(selected ? Color.black : Color.white)
-          }
-          .buttonStyle(.plain)
+      // Like saving to a playlist: tap a basket and it's saved there. The first row leaves the choice to the model.
+      Text("Save to").font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
+      ScrollView {
+        VStack(spacing: 0) {
+          basket(nil, "Let Capture sort it", icon: "sparkles")
+          ForEach(shareTypes, id: \.0) { name, label in basket(name, label, icon: "tray") }
         }
       }
     }
+    .tint(.primary)
+    .padding(20)
+    // Fills the whole share sheet (no white page around a small card).
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    .background(Color(.systemBackground))
+  }
+
+  private func basket(_ type: String?, _ label: String, icon: String) -> some View {
+    Button { save(type, label) } label: {
+      HStack(spacing: 12) {
+        Image(systemName: icon).frame(width: 24)
+        Text(label)
+        Spacer()
+        if saved == label { Image(systemName: "checkmark") }
+      }
+      .font(.body)
+      .padding(.vertical, 12)
+      .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .disabled(thought.isEmpty || saved != nil)
+  }
+
+  private func save(_ type: String?, _ label: String) {
+    PendingCaptures.add(thought, shared: true, type: type)
+    UINotificationFeedbackGenerator().notificationOccurred(.success)
+    saved = label
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: done)
   }
 }

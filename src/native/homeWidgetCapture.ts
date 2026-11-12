@@ -13,6 +13,10 @@ type HomeWidgetCaptureNative = {
   ) => Promise<void>;
   /** Android: pinned Type / Talk notification. iOS: the Dynamic Island / lock screen Live Activity. */
   setCaptureNotification?: (enabled: boolean) => Promise<void>;
+  /** The app's palette, so the share sheet matches it. */
+  setTheme?: (theme: string) => Promise<void>;
+  /** JSON [{name, label}]: the types the share sheet lists as baskets. */
+  setShareTypes?: (types: string) => Promise<void>;
 };
 
 const Native: HomeWidgetCaptureNative | undefined = NativeModules.HomeWidgetCapture;
@@ -20,7 +24,7 @@ const Native: HomeWidgetCaptureNative | undefined = NativeModules.HomeWidgetCapt
 const SHARE_KINDS = ['todo', 'read', 'remember', 'keep'] as const;
 
 /** A thought from outside the app. Shared ones stay whole (no splitting) and may carry the user's pick of what it is. */
-export type PendingCapture = {text: string; at: Date; split?: boolean; kind?: (typeof SHARE_KINDS)[number]};
+export type PendingCapture = {text: string; at: Date; split?: boolean; kind?: (typeof SHARE_KINDS)[number]; basket?: string};
 
 /**
  * Native entries are {"text","at"} JSON, plus {"shared":true,"kind"} from the share sheet; a plain string is from
@@ -28,13 +32,14 @@ export type PendingCapture = {text: string; at: Date; split?: boolean; kind?: (t
  */
 export function parsePendingEntry(raw: string): PendingCapture {
   try {
-    const {text, at, shared, kind} = JSON.parse(raw);
+    const {text, at, shared, kind, type} = JSON.parse(raw);
     if (typeof text === 'string') {
       return {
         text: text.trim(),
         at: typeof at === 'number' ? new Date(at) : new Date(),
         ...(shared ? {split: false} : {}),
         ...(SHARE_KINDS.includes(kind) ? {kind} : {}),
+        ...(typeof type === 'string' && type ? {basket: type} : {}),
       };
     }
   } catch {}
@@ -66,4 +71,14 @@ export async function setHomeWidgetFocusDisplay(timeline: WidgetEntry[], mascot:
 
 export async function setCaptureNotification(enabled: boolean): Promise<void> {
   await Native?.setCaptureNotification?.(enabled);
+}
+
+/** Tell the share sheet (runs outside the app) which palette to use. */
+export function setNativeTheme(theme: string): void {
+  Native?.setTheme?.(theme).catch(() => {});
+}
+
+/** The share sheet's baskets: your item types, by name with their display label. */
+export function setShareTypes(types: {name: string; label: string}[]): void {
+  Native?.setShareTypes?.(JSON.stringify(types)).catch(() => {});
 }

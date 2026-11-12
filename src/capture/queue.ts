@@ -6,7 +6,7 @@ import {ensureLoaded} from '@/hooks/useLlamaModel';
 import {rawThought} from '@/selectiveKnowledge/agent';
 import {announceSaved, saveCaptures, type SavedCapture} from '@/services/saveCaptures';
 
-type Row = {id: number; text: string; group_name: string | null; created_at: string; attempts: number; needs_split: number; kind: ShareKind | null};
+type Row = {id: number; text: string; group_name: string | null; created_at: string; attempts: number; needs_split: number; kind: ShareKind | null; basket: string | null};
 
 /** Thoughts still waiting for the model (drives the "Processing…" strip). */
 export const useCaptureQueue = create<{pending: number}>(() => ({pending: 0}));
@@ -25,7 +25,7 @@ export type ShareKind = 'todo' | 'read' | 'remember' | 'keep';
  * A thought, with when it was said if that was earlier than now (Siri / widget / share captures waiting in native
  * storage). `split: false` keeps it whole (a shared article isn't a dump of thoughts); `kind` is the user's own pick.
  */
-export type QueuedThought = string | {text: string; at: Date; split?: boolean; kind?: ShareKind};
+export type QueuedThought = string | {text: string; at: Date; split?: boolean; kind?: ShareKind; basket?: string};
 
 /**
  * Say and forget: store the thoughts, let the worker turn them into items. `needsSplit`: store as-is and let the
@@ -37,14 +37,15 @@ export async function enqueue(parts: QueuedThought[], groupName?: string, needsS
   const now = new Date();
   await db.withTransactionAsync(async () => {
     for (const part of parts) {
-      const {text, at, split = needsSplit, kind = null} = typeof part === 'string' ? {text: part, at: now} : part;
+      const {text, at, split = needsSplit, kind = null, basket = null} = typeof part === 'string' ? {text: part, at: now} : part;
       await db.runAsync(
-        'INSERT INTO capture_queue (text, group_name, created_at, needs_split, kind) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO capture_queue (text, group_name, created_at, needs_split, kind, basket) VALUES (?, ?, ?, ?, ?, ?)',
         text,
         groupName ?? null,
         at.toISOString(),
         split ? 1 : 0,
         kind,
+        basket,
       );
     }
   });
@@ -79,7 +80,7 @@ async function processRow(db: Awaited<ReturnType<typeof getDatabase>>, row: Row,
   await db.runAsync('UPDATE capture_queue SET attempts = attempts + 1 WHERE id = ?', row.id);
   // Relative dates resolve against when it was said, not when the worker got to it.
   const capturedAt = new Date(row.created_at);
-  const draft = row.attempts < MAX_MODEL_ATTEMPTS ? await analyzeText(row.text, undefined, capturedAt, row.kind ?? undefined) : rawThought(row.text);
+  const draft = row.attempts < MAX_MODEL_ATTEMPTS ? await analyzeText(row.text, undefined, capturedAt, row.kind ?? undefined, row.basket ?? undefined) : rawThought(row.text);
   // ponytail: app killed between save and delete re-saves this row next launch (one duplicate); fix = save + delete in one transaction.
   saved.push(...(await saveCaptures([row.group_name ? {...draft, groupNames: [row.group_name]} : draft], false)));
   await db.runAsync('DELETE FROM capture_queue WHERE id = ?', row.id);

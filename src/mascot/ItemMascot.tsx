@@ -5,7 +5,7 @@ import {designTokens} from '@/ui/designTokens';
 import {ITEM_MASCOT_KEYS, ITEM_SHEET, type ItemMascot as ItemMascotKey} from './itemMascots';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const SHEET = require('../../assets/images/mascot-tasks.png');
+const SHEET = require('../../assets/images/mascot-tasks.webp');
 /** Fraction trimmed off each side of a cell. */
 const INSET = 0.1;
 /** Rows on the sheet overlap a little; shift the frame down this fraction of a cell to clear the row above. */

@@ -1,5 +1,5 @@
 /**
- * Item stickers: assets/images/mascot-tasks.png, a 4×5 grid of 20 poses, row by row in this order.
+ * Item stickers: assets/images/mascot-tasks.webp, a 4×5 grid of 20 poses, row by row in this order.
  * The capture model picks one per item (fixed list, so it can only answer one of these). The hint is what the model reads.
  */
 export const ITEM_MASCOTS = {

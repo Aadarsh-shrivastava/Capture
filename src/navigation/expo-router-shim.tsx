@@ -34,16 +34,15 @@ function parsePath(href: string): NavTarget {
   }
   if (path.startsWith('/(tabs)/')) {
     const tab = path.replace('/(tabs)/', '');
-    if (tab === 'items' || tab === 'library') return { screen: 'Library', params };
-    if (tab === 'thoughts') return { screen: 'Thoughts', params };
+    if (tab === 'items' || tab === 'library' || tab === 'thoughts') return { screen: 'Thoughts', params };
     if (tab === 'groups') return { screen: 'Groups', params };
     return { screen: 'Focus', params };
   }
-  if (path === '/library') return { screen: 'Library', params };
-  if (path === '/thoughts') return { screen: 'Thoughts', params };
+  if (path === '/library' || path === '/thoughts') return { screen: 'Thoughts', params };
   if (path === '/library/list' || path === '/list') return { screen: 'LibraryList', params };
   if (path === '/groups') return { screen: 'Groups', params };
   if (path === '/create-item') return { screen: 'CreateItem', params };
+  if (path === '/chat') return { screen: 'Chat', params };
   if (path === '/settings') return { screen: 'Settings', params };
   if (path === '/search') return { screen: 'Search', params };
   if (path === '/settings/types') return { screen: 'ItemTypes', params };

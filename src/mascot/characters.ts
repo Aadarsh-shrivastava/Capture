@@ -34,7 +34,7 @@ export const CHARACTERS = {
   male: {
     label: 'Him',
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    sheet: require('../../assets/images/mascot-male.png'),
+    sheet: require('../../assets/images/mascot-male.webp'),
     width: 1280,
     height: 1229,
     cols: 4,
@@ -46,7 +46,7 @@ export const CHARACTERS = {
   female: {
     label: 'Her',
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    sheet: require('../../assets/images/mascot-female.png'),
+    sheet: require('../../assets/images/mascot-female.webp'),
     width: 1218,
     height: 1291,
     cols: 4,

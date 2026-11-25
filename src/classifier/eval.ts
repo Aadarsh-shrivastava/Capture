@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /**
  * Train on data/train.csv, grade on data/test.csv, print accuracy and every miss.
  * Run: npm run classifier:eval

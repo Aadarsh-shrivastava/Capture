@@ -1,8 +1,7 @@
 import {create} from 'zustand';
 
 import {getDatabase} from '@/db/database';
-import {analyzeText, ModelUnavailableError, splitCapture} from '@/hooks/useCaptureAnalysis';
-import {ensureLoaded} from '@/hooks/useLlamaModel';
+import {analyzeText, splitCapture} from '@/hooks/useCaptureAnalysis';
 import {rawThought} from '@/selectiveKnowledge/agent';
 import {announceSaved, saveCaptures, type SavedCapture} from '@/services/saveCaptures';
 
@@ -54,14 +53,8 @@ export async function enqueue(parts: QueuedThought[], groupName?: string, needsS
 
 /** Split one stored dump into its thoughts (each keeps the dump's capture time), or turn one thought into an item. */
 async function processRow(db: Awaited<ReturnType<typeof getDatabase>>, row: Row, saved: SavedCapture[]): Promise<void> {
-  // No model: leave everything queued (attempts untouched) until it's back.
-  if (!(await ensureLoaded())) throw new ModelUnavailableError('AI model not available');
-
   if (row.needs_split) {
-    const parts = await splitCapture(row.text).catch(e => {
-      if (e instanceof ModelUnavailableError) throw e;
-      return [row.text];
-    });
+    const parts = await splitCapture(row.text).catch(() => [row.text]);
     await db.withTransactionAsync(async () => {
       for (const text of parts) {
         await db.runAsync(
@@ -110,7 +103,6 @@ export async function drain(): Promise<void> {
       try {
         await processRow(db, row, saved);
       } catch (e) {
-        if (e instanceof ModelUnavailableError) break; // everything waits for the model; run again once it's loaded
         if (__DEV__) console.warn('[capture-queue] row', row.id, e);
         failed.push(row.id);
       }

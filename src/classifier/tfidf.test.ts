@@ -1,5 +1,3 @@
-import assert from 'node:assert/strict';
-
 import {classify, train} from './tfidf';
 
 const model = train([
@@ -10,14 +8,19 @@ const model = train([
 ]);
 
 test('picks the label of the most similar examples', () => {
-  assert.equal(classify(model, 'buy bread tomorrow').label, 'Task');
-  assert.equal(classify(model, 'had a lovely day').label, 'Journal');
+  expect(classify(model, 'buy bread tomorrow').label).toBe('Task');
+  expect(classify(model, 'had a lovely day').label).toBe('Journal');
 });
 
 test('no shared words → no label, zero confidence', () => {
-  assert.deepEqual(classify(model, 'xyz qwerty'), {label: null, confidence: 0, scores: {}});
+  expect(classify(model, 'xyz qwerty')).toEqual({label: null, confidence: 0, scores: {}});
 });
 
 test('one-sided match is fully confident', () => {
-  assert.equal(classify(model, 'buy eggs').confidence, 1);
+  expect(classify(model, 'buy eggs').confidence).toBe(1);
+});
+
+test('the bundled train.json matches train.csv (run `npm run classifier:build` after editing the CSV)', () => {
+  const {readCsv} = require('./csv');
+  expect(require('./data/train.json')).toEqual(readCsv('src/classifier/data/train.csv'));
 });

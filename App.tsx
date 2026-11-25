@@ -7,7 +7,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import { ModelGate } from '@/model';
 import { AppShell } from '@/navigation/AppShell';
 import { navigationRef } from '@/navigation/navigationRef';
 import { OnboardingFlow, useOnboardingPreview } from '@/onboarding';
@@ -41,14 +40,11 @@ export default function App() {
         <StatusBar barStyle={isLightTheme(themeName) ? 'dark-content' : 'light-content'} />
         <GluestackUIProvider mode={isLightTheme(themeName) ? 'light' : 'dark'}>
           {hasVault && !preview.preview ? (
-            // The model downloads into the vault, so it's asked for once the vault exists.
-            <ModelGate key={themeName}>
-              <DatabaseProvider>
-                <NavigationContainer ref={navigationRef} initialState={navState.current} onStateChange={(state) => (navState.current = state)}>
-                  <AppShell />
-                </NavigationContainer>
-              </DatabaseProvider>
-            </ModelGate>
+            <DatabaseProvider key={themeName}>
+              <NavigationContainer ref={navigationRef} initialState={navState.current} onStateChange={(state) => (navState.current = state)}>
+                <AppShell />
+              </NavigationContainer>
+            </DatabaseProvider>
           ) : (
             <OnboardingFlow
               preview={preview.preview}

@@ -3,7 +3,6 @@
  * never extra, never twice, never lost. The database is a small in-memory stand-in for capture_queue.
  */
 import {analyzeText, splitCapture} from '@/hooks/useCaptureAnalysis';
-import {ensureLoaded} from '@/hooks/useLlamaModel';
 import {saveCaptures} from '@/services/saveCaptures';
 
 import {drain, enqueue} from './queue';
@@ -37,10 +36,8 @@ const mockDb = {
 };
 
 jest.mock('@/db/database', () => ({getDatabase: async () => mockDb}));
-jest.mock('@/hooks/useLlamaModel', () => ({ensureLoaded: jest.fn()}));
 jest.mock('@/hooks/useCaptureAnalysis', () => {
-  class ModelUnavailableError extends Error {}
-  return {ModelUnavailableError, analyzeText: jest.fn(), splitCapture: jest.fn()};
+  return {analyzeText: jest.fn(), splitCapture: jest.fn()};
 });
 jest.mock('@/selectiveKnowledge/agent', () => ({
   rawThought: (text: string) => ({typeName: 'Note', title: text, content: text}),
@@ -62,7 +59,6 @@ beforeEach(() => {
   rows = [];
   nextId = 1;
   jest.clearAllMocks();
-  (ensureLoaded as jest.Mock).mockResolvedValue(true);
   (splitCapture as jest.Mock).mockImplementation(async (text: string) => [text]);
   (analyzeText as jest.Mock).mockImplementation(async (text: string) => ({typeName: 'Task', title: text}));
 });
@@ -129,14 +125,6 @@ test('after two failed tries, the thought is saved exactly as said (not lost, no
   await settle();
   expect(savedTitles()).toEqual(['weird thought']);
   expect(rows).toEqual([]);
-});
-
-test('no model: nothing is saved and nothing is lost', async () => {
-  (ensureLoaded as jest.Mock).mockResolvedValue(false);
-  await enqueue(['call mom'], undefined, true);
-  await settle();
-  expect(savedTitles()).toEqual([]);
-  expect(rows.map(r => r.text)).toEqual(['call mom']);
 });
 
 test('relative dates use the time the thought was captured, not when it is processed', async () => {

@@ -1,0 +1,2050 @@
+[
+ {
+  "text": "buy eggs and bread",
+  "label": "Task"
+ },
+ {
+  "text": "call the plumber about the sink",
+  "label": "Task"
+ },
+ {
+  "text": "I need to pay the electricity bill",
+  "label": "Task"
+ },
+ {
+  "text": "remind me to send the invoice on friday",
+  "label": "Task"
+ },
+ {
+  "text": "book a table for dinner saturday",
+  "label": "Task"
+ },
+ {
+  "text": "pick up the kids at 4",
+  "label": "Task"
+ },
+ {
+  "text": "schedule a haircut next week",
+  "label": "Task"
+ },
+ {
+  "text": "reply to the landlord email",
+  "label": "Task"
+ },
+ {
+  "text": "don't forget to charge the car",
+  "label": "Task"
+ },
+ {
+  "text": "need to write about my day",
+  "label": "Task"
+ },
+ {
+  "text": "clean the bathroom this weekend",
+  "label": "Task"
+ },
+ {
+  "text": "order a new phone charger",
+  "label": "Task"
+ },
+ {
+  "text": "return the library books by tuesday",
+  "label": "Task"
+ },
+ {
+  "text": "send the slides to the team",
+  "label": "Task"
+ },
+ {
+  "text": "get the car serviced",
+  "label": "Task"
+ },
+ {
+  "text": "the gate code for the building is 1234",
+  "label": "Note"
+ },
+ {
+  "text": "mitochondria is the powerhouse of the cell",
+  "label": "Note"
+ },
+ {
+  "text": "Ankit's birthday is on march 3",
+  "label": "Note"
+ },
+ {
+  "text": "the train to pune leaves from platform 6",
+  "label": "Note"
+ },
+ {
+  "text": "postgres indexes speed up lookups on large tables",
+  "label": "Note"
+ },
+ {
+  "text": "my blood group is B positive",
+  "label": "Note"
+ },
+ {
+  "text": "the parking spot number is 42",
+  "label": "Note"
+ },
+ {
+  "text": "python lists are mutable and tuples are not",
+  "label": "Note"
+ },
+ {
+  "text": "the doctor said to avoid sugar for a month",
+  "label": "Note"
+ },
+ {
+  "text": "good article on system design https://example.org/sd",
+  "label": "Note"
+ },
+ {
+  "text": "the office opens at 9 on weekdays",
+  "label": "Note"
+ },
+ {
+  "text": "interesting fact: honey never spoils",
+  "label": "Note"
+ },
+ {
+  "text": "what if phones could charge from body heat",
+  "label": "Idea"
+ },
+ {
+  "text": "idea for a game where you build cities on clouds",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe I should start a youtube channel",
+  "label": "Idea"
+ },
+ {
+  "text": "an app that reminds you to drink water based on weather",
+  "label": "Idea"
+ },
+ {
+  "text": "what if the fridge suggested recipes from leftovers",
+  "label": "Idea"
+ },
+ {
+  "text": "could make a short animation about a lonely robot",
+  "label": "Idea"
+ },
+ {
+  "text": "startup idea: rent out unused parking spots",
+  "label": "Idea"
+ },
+ {
+  "text": "it would be cool to build a smart mirror",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe write a blog series on learning mandarin",
+  "label": "Idea"
+ },
+ {
+  "text": "what about a plugin that summarizes long emails",
+  "label": "Idea"
+ },
+ {
+  "text": "idea: a board game about climate change",
+  "label": "Idea"
+ },
+ {
+  "text": "had a lovely walk in the park this morning",
+  "label": "Journal"
+ },
+ {
+  "text": "today was exhausting but I got a lot done",
+  "label": "Journal"
+ },
+ {
+  "text": "felt really lonely this evening",
+  "label": "Journal"
+ },
+ {
+  "text": "watched a great movie with my sister tonight",
+  "label": "Journal"
+ },
+ {
+  "text": "I was nervous at the interview but it went fine",
+  "label": "Journal"
+ },
+ {
+  "text": "spent the whole afternoon reading and it was relaxing",
+  "label": "Journal"
+ },
+ {
+  "text": "work was stressful and I argued with my manager",
+  "label": "Journal"
+ },
+ {
+  "text": "feeling grateful for my friends today",
+  "label": "Journal"
+ },
+ {
+  "text": "yesterday I finally finished the painting",
+  "label": "Journal"
+ },
+ {
+  "text": "woke up late and felt lazy all day",
+  "label": "Journal"
+ },
+ {
+  "text": "lunch with grandma was so much fun",
+  "label": "Journal"
+ },
+ {
+  "text": "I'm proud of how the presentation went",
+  "label": "Journal"
+ },
+ {
+  "text": "review the blood reports for bed 12",
+  "label": "Task"
+ },
+ {
+  "text": "refill the antibiotics prescription for mr sharma",
+  "label": "Task"
+ },
+ {
+  "text": "finish the discharge summary before rounds",
+  "label": "Task"
+ },
+ {
+  "text": "change the dressing in room 4 at noon",
+  "label": "Task"
+ },
+ {
+  "text": "restock the saline bags in the ward",
+  "label": "Task"
+ },
+ {
+  "text": "grade the math tests by thursday",
+  "label": "Task"
+ },
+ {
+  "text": "prepare the lesson plan for class 8",
+  "label": "Task"
+ },
+ {
+  "text": "call the parents of kids who missed homework",
+  "label": "Task"
+ },
+ {
+  "text": "revise chapter 5 before the exam",
+  "label": "Task"
+ },
+ {
+  "text": "submit the chemistry assignment tonight",
+  "label": "Task"
+ },
+ {
+  "text": "register for next semester courses",
+  "label": "Task"
+ },
+ {
+  "text": "deploy the hotfix to staging",
+  "label": "Task"
+ },
+ {
+  "text": "review the pull request from arjun",
+  "label": "Task"
+ },
+ {
+  "text": "update the api docs for the orders endpoint",
+  "label": "Task"
+ },
+ {
+  "text": "write unit tests for the payment module",
+  "label": "Task"
+ },
+ {
+  "text": "upgrade node on the build server",
+  "label": "Task"
+ },
+ {
+  "text": "export the logo in svg and png",
+  "label": "Task"
+ },
+ {
+  "text": "send the mockups to the client for feedback",
+  "label": "Task"
+ },
+ {
+  "text": "order 20 kg of onions for the restaurant",
+  "label": "Task"
+ },
+ {
+  "text": "prep the marinade tonight for tomorrow's lunch",
+  "label": "Task"
+ },
+ {
+  "text": "get the tyres checked before the long trip",
+  "label": "Task"
+ },
+ {
+  "text": "renew the vehicle insurance",
+  "label": "Task"
+ },
+ {
+  "text": "spray pesticide on the tomato field",
+  "label": "Task"
+ },
+ {
+  "text": "buy seeds before the monsoon",
+  "label": "Task"
+ },
+ {
+  "text": "file the petition before the court deadline",
+  "label": "Task"
+ },
+ {
+  "text": "draft the rental agreement for the client",
+  "label": "Task"
+ },
+ {
+  "text": "reconcile the bank statements for october",
+  "label": "Task"
+ },
+ {
+  "text": "file gst returns by the 20th",
+  "label": "Task"
+ },
+ {
+  "text": "follow up with the lead from the trade show",
+  "label": "Task"
+ },
+ {
+  "text": "send the quotation to the hotel client",
+  "label": "Task"
+ },
+ {
+  "text": "restock rice and dal in the shop",
+  "label": "Task"
+ },
+ {
+  "text": "collect the payment from the wholesaler",
+  "label": "Task"
+ },
+ {
+  "text": "render scene three overnight",
+  "label": "Task"
+ },
+ {
+  "text": "finish the storyboard for episode two",
+  "label": "Task"
+ },
+ {
+  "text": "interview the mayor on tuesday",
+  "label": "Task"
+ },
+ {
+  "text": "fact check the election article",
+  "label": "Task"
+ },
+ {
+  "text": "practice the guitar solo for the gig",
+  "label": "Task"
+ },
+ {
+  "text": "book the studio for recording",
+  "label": "Task"
+ },
+ {
+  "text": "plan workouts for my morning clients",
+  "label": "Task"
+ },
+ {
+  "text": "pack the kids' lunch boxes",
+  "label": "Task"
+ },
+ {
+  "text": "sign the school permission slip",
+  "label": "Task"
+ },
+ {
+  "text": "book a pediatrician visit for the baby",
+  "label": "Task"
+ },
+ {
+  "text": "rerun the experiment with the new dataset",
+  "label": "Task"
+ },
+ {
+  "text": "submit the paper to the conference",
+  "label": "Task"
+ },
+ {
+  "text": "transfer money to dad",
+  "label": "Task"
+ },
+ {
+  "text": "cancel the gym membership",
+  "label": "Task"
+ },
+ {
+  "text": "recharge my phone",
+  "label": "Task"
+ },
+ {
+  "text": "get passport photos printed",
+  "label": "Task"
+ },
+ {
+  "text": "apply for the job at infosys",
+  "label": "Task"
+ },
+ {
+  "text": "prepare for the amazon interview",
+  "label": "Task"
+ },
+ {
+  "text": "update my resume",
+  "label": "Task"
+ },
+ {
+  "text": "check in for the flight online",
+  "label": "Task"
+ },
+ {
+  "text": "refill the gas cylinder",
+  "label": "Task"
+ },
+ {
+  "text": "take out the trash",
+  "label": "Task"
+ },
+ {
+  "text": "mow the lawn",
+  "label": "Task"
+ },
+ {
+  "text": "wash the car on sunday",
+  "label": "Task"
+ },
+ {
+  "text": "buy a gift for anu's wedding",
+  "label": "Task"
+ },
+ {
+  "text": "text sneha about the trip",
+  "label": "Task"
+ },
+ {
+  "text": "uh remind me to call the electrician",
+  "label": "Task"
+ },
+ {
+  "text": "okay so I have to finish the essay",
+  "label": "Task"
+ },
+ {
+  "text": "gotta pick up medicine from the pharmacy",
+  "label": "Task"
+ },
+ {
+  "text": "must apply for leave next month",
+  "label": "Task"
+ },
+ {
+  "text": "sort old clothes for donation",
+  "label": "Task"
+ },
+ {
+  "text": "back up my laptop",
+  "label": "Task"
+ },
+ {
+  "text": "pay the school fees",
+  "label": "Task"
+ },
+ {
+  "text": "meet the CA on monday",
+  "label": "Task"
+ },
+ {
+  "text": "renew the domain name before it expires",
+  "label": "Task"
+ },
+ {
+  "text": "fill the visa application form",
+  "label": "Task"
+ },
+ {
+  "text": "need to journal about the trip later",
+  "label": "Task"
+ },
+ {
+  "text": "repair the broken chair",
+  "label": "Task"
+ },
+ {
+  "text": "patient in bed 7 is allergic to penicillin",
+  "label": "Note"
+ },
+ {
+  "text": "normal adult resting heart rate is 60 to 100",
+  "label": "Note"
+ },
+ {
+  "text": "the night shift handover is at 8 pm",
+  "label": "Note"
+ },
+ {
+  "text": "class 7b has 34 students",
+  "label": "Note"
+ },
+ {
+  "text": "the exam syllabus covers chapters 1 to 6",
+  "label": "Note"
+ },
+ {
+  "text": "the formula for kinetic energy is half m v squared",
+  "label": "Note"
+ },
+ {
+  "text": "the college library closes at 10 on weekdays",
+  "label": "Note"
+ },
+ {
+  "text": "the staging server ip is 10.0.0.12",
+  "label": "Note"
+ },
+ {
+  "text": "git rebase rewrites commit history",
+  "label": "Note"
+ },
+ {
+  "text": "react useEffect runs after the render",
+  "label": "Note"
+ },
+ {
+  "text": "the api rate limit is 100 requests per minute",
+  "label": "Note"
+ },
+ {
+  "text": "redis is an in memory key value store",
+  "label": "Note"
+ },
+ {
+  "text": "the brand colour hex is 1a73e8",
+  "label": "Note"
+ },
+ {
+  "text": "the client prefers a serif font",
+  "label": "Note"
+ },
+ {
+  "text": "biryani rice should soak for 30 minutes",
+  "label": "Note"
+ },
+ {
+  "text": "the supplier delivers fish on tuesdays",
+  "label": "Note"
+ },
+ {
+  "text": "tyre pressure for the car is 32 psi",
+  "label": "Note"
+ },
+ {
+  "text": "the toll on the expressway is 320 rupees",
+  "label": "Note"
+ },
+ {
+  "text": "wheat needs irrigation every 20 days",
+  "label": "Note"
+ },
+ {
+  "text": "the mandi price for onions is 25 a kilo",
+  "label": "Note"
+ },
+ {
+  "text": "the limitation period for this case is three years",
+  "label": "Note"
+ },
+ {
+  "text": "section 138 covers cheque bounce cases",
+  "label": "Note"
+ },
+ {
+  "text": "gst for restaurants is 5 percent",
+  "label": "Note"
+ },
+ {
+  "text": "the financial year ends on march 31",
+  "label": "Note"
+ },
+ {
+  "text": "the client's purchase manager is mr verma",
+  "label": "Note"
+ },
+ {
+  "text": "our discount cap is 15 percent",
+  "label": "Note"
+ },
+ {
+  "text": "the wholesaler is open till 7",
+  "label": "Note"
+ },
+ {
+  "text": "sugar costs 42 per kilo this week",
+  "label": "Note"
+ },
+ {
+  "text": "24 frames per second is standard for film",
+  "label": "Note"
+ },
+ {
+  "text": "in blender G is the shortcut for grab",
+  "label": "Note"
+ },
+ {
+  "text": "the mayor's office is on the third floor",
+  "label": "Note"
+ },
+ {
+  "text": "the song is in the key of e minor",
+  "label": "Note"
+ },
+ {
+  "text": "the gig fee is 15000",
+  "label": "Note"
+ },
+ {
+  "text": "the dataset has 12000 labelled samples",
+  "label": "Note"
+ },
+ {
+  "text": "a p value below 0.05 is considered significant",
+  "label": "Note"
+ },
+ {
+  "text": "my passport is in the blue folder",
+  "label": "Note"
+ },
+ {
+  "text": "the plumber's name is raju",
+  "label": "Note"
+ },
+ {
+  "text": "the car insurance expires in june",
+  "label": "Note"
+ },
+ {
+  "text": "my shoe size is 9",
+  "label": "Note"
+ },
+ {
+  "text": "mom's favourite flower is jasmine",
+  "label": "Note"
+ },
+ {
+  "text": "the nearest atm is next to the bakery",
+  "label": "Note"
+ },
+ {
+  "text": "the sim puk code is on the card box",
+  "label": "Note"
+ },
+ {
+  "text": "the hotel check in time is 2 pm",
+  "label": "Note"
+ },
+ {
+  "text": "the aadhaar helpline number is 1947",
+  "label": "Note"
+ },
+ {
+  "text": "a group of crows is called a murder",
+  "label": "Note"
+ },
+ {
+  "text": "light takes 8 minutes to reach earth",
+  "label": "Note"
+ },
+ {
+  "text": "the capital of australia is canberra",
+  "label": "Note"
+ },
+ {
+  "text": "sourdough video worth keeping https://youtu.be/abc123",
+  "label": "Note"
+ },
+ {
+  "text": "idempotent means the same result even if repeated",
+  "label": "Note"
+ },
+ {
+  "text": "the vaccination record is in the top drawer",
+  "label": "Note"
+ },
+ {
+  "text": "the budget for the project is 2 lakh",
+  "label": "Note"
+ },
+ {
+  "text": "the home wifi network is called jiofiber 5g",
+  "label": "Note"
+ },
+ {
+  "text": "dad's blood pressure was 130 over 85",
+  "label": "Note"
+ },
+ {
+  "text": "the fridge warranty lasts 2 years",
+  "label": "Note"
+ },
+ {
+  "text": "the definition of opportunity cost is the value of the next best option",
+  "label": "Note"
+ },
+ {
+  "text": "what if patients could book follow ups on whatsapp",
+  "label": "Idea"
+ },
+ {
+  "text": "a clinic app that tracks medicine stock",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe gamify homework with points",
+  "label": "Idea"
+ },
+ {
+  "text": "idea: a quiz app for class revision",
+  "label": "Idea"
+ },
+ {
+  "text": "what if I made flashcards from lecture recordings",
+  "label": "Idea"
+ },
+ {
+  "text": "could start a coding club at college",
+  "label": "Idea"
+ },
+ {
+  "text": "what if we cached search results at the edge",
+  "label": "Idea"
+ },
+ {
+  "text": "a cli tool that cleans up old git branches",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe rewrite the backend in go someday",
+  "label": "Idea"
+ },
+ {
+  "text": "idea: auto generate release notes from commits",
+  "label": "Idea"
+ },
+ {
+  "text": "an extension that blocks distracting sites during work hours",
+  "label": "Idea"
+ },
+ {
+  "text": "what if the onboarding used illustrations instead of text",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe a pastel theme for my portfolio",
+  "label": "Idea"
+ },
+ {
+  "text": "a fusion dish with paneer tacos",
+  "label": "Idea"
+ },
+ {
+  "text": "what if we offered a weekly tasting menu",
+  "label": "Idea"
+ },
+ {
+  "text": "idea for a cloud kitchen serving only breakfast",
+  "label": "Idea"
+ },
+ {
+  "text": "an app that shows fuel prices along the highway",
+  "label": "Idea"
+ },
+ {
+  "text": "what if drones checked the crops for disease",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe try growing strawberries next season",
+  "label": "Idea"
+ },
+ {
+  "text": "a tool that summarizes long court judgments",
+  "label": "Idea"
+ },
+ {
+  "text": "could start a legal advice podcast",
+  "label": "Idea"
+ },
+ {
+  "text": "what if invoices were scanned straight into tally",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe run a referral program for old customers",
+  "label": "Idea"
+ },
+ {
+  "text": "idea: home delivery for orders on whatsapp",
+  "label": "Idea"
+ },
+ {
+  "text": "what if I added a loyalty card for the shop",
+  "label": "Idea"
+ },
+ {
+  "text": "a short film about a cat who wants to fly",
+  "label": "Idea"
+ },
+ {
+  "text": "what if the villain was a lonely cloud",
+  "label": "Idea"
+ },
+ {
+  "text": "idea for a comic about office life",
+  "label": "Idea"
+ },
+ {
+  "text": "a series on forgotten heritage buildings",
+  "label": "Idea"
+ },
+ {
+  "text": "what if we did a podcast with local farmers",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe make a lofi album of rain sounds",
+  "label": "Idea"
+ },
+ {
+  "text": "what if I mixed classical sitar with electronic beats",
+  "label": "Idea"
+ },
+ {
+  "text": "idea: a 30 day home workout challenge on instagram",
+  "label": "Idea"
+ },
+ {
+  "text": "what if we used satellite images to predict crop yield",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe try a transformer model on this data",
+  "label": "Idea"
+ },
+ {
+  "text": "a chore chart app for kids with rewards",
+  "label": "Idea"
+ },
+ {
+  "text": "what if we had a family movie night every friday",
+  "label": "Idea"
+ },
+ {
+  "text": "an app that nudges you to call old friends",
+  "label": "Idea"
+ },
+ {
+  "text": "what if bus stops showed live arrival times",
+  "label": "Idea"
+ },
+ {
+  "text": "idea: a marketplace for used textbooks",
+  "label": "Idea"
+ },
+ {
+  "text": "could write a novel set in old delhi",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe learn pottery and sell it online",
+  "label": "Idea"
+ },
+ {
+  "text": "what if shoes could track your posture",
+  "label": "Idea"
+ },
+ {
+  "text": "a plant pot that texts you when it needs water",
+  "label": "Idea"
+ },
+ {
+  "text": "idea: a subscription box for indian snacks",
+  "label": "Idea"
+ },
+ {
+  "text": "it might be fun to build a telescope",
+  "label": "Idea"
+ },
+ {
+  "text": "a website that ranks street food stalls",
+  "label": "Idea"
+ },
+ {
+  "text": "what if notes organized themselves",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe open a cafe with board games",
+  "label": "Idea"
+ },
+ {
+  "text": "thinking of a travel vlog on my bike",
+  "label": "Idea"
+ },
+ {
+  "text": "what if the city planted fruit trees on every street",
+  "label": "Idea"
+ },
+ {
+  "text": "a tshirt brand with regional slang",
+  "label": "Idea"
+ },
+ {
+  "text": "an ai that turns doodles into animations",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe host a hackathon for school kids",
+  "label": "Idea"
+ },
+ {
+  "text": "what if the app had a focus mode with rain sounds",
+  "label": "Idea"
+ },
+ {
+  "text": "could turn my grandmother's recipes into a cookbook",
+  "label": "Idea"
+ },
+ {
+  "text": "long night shift and I lost a patient and feel numb",
+  "label": "Journal"
+ },
+ {
+  "text": "the surgery went well and I felt so relieved",
+  "label": "Journal"
+ },
+ {
+  "text": "patients were kind today and it made my shift easier",
+  "label": "Journal"
+ },
+ {
+  "text": "my students made me a card today and I almost cried",
+  "label": "Journal"
+ },
+ {
+  "text": "class was chaotic and I lost my patience",
+  "label": "Journal"
+ },
+ {
+  "text": "bombed the physics exam and feel terrible",
+  "label": "Journal"
+ },
+ {
+  "text": "finally understood recursion today and it felt amazing",
+  "label": "Journal"
+ },
+ {
+  "text": "stayed up all night studying and I'm wrecked",
+  "label": "Journal"
+ },
+ {
+  "text": "spent six hours debugging a typo and felt stupid",
+  "label": "Journal"
+ },
+ {
+  "text": "the release went smoothly and the team celebrated",
+  "label": "Journal"
+ },
+ {
+  "text": "I'm burned out from all the meetings this week",
+  "label": "Journal"
+ },
+ {
+  "text": "the client loved my designs and I'm so happy",
+  "label": "Journal"
+ },
+ {
+  "text": "felt uninspired all day staring at a blank canvas",
+  "label": "Journal"
+ },
+ {
+  "text": "the kitchen was crazy busy tonight but we nailed every order",
+  "label": "Journal"
+ },
+ {
+  "text": "a customer complained and it ruined my mood",
+  "label": "Journal"
+ },
+ {
+  "text": "drove 600 km today and my back hurts",
+  "label": "Journal"
+ },
+ {
+  "text": "got stuck in traffic for three hours and felt so frustrated",
+  "label": "Journal"
+ },
+ {
+  "text": "the rain finally came and the fields look green",
+  "label": "Journal"
+ },
+ {
+  "text": "lost half the crop to pests and I'm worried",
+  "label": "Journal"
+ },
+ {
+  "text": "won the case today after two years",
+  "label": "Journal"
+ },
+ {
+  "text": "the hearing got adjourned again and I feel drained",
+  "label": "Journal"
+ },
+ {
+  "text": "closing week was brutal but we finished on time",
+  "label": "Journal"
+ },
+ {
+  "text": "closed the biggest deal of my career today",
+  "label": "Journal"
+ },
+ {
+  "text": "got rejected by five clients and feel low",
+  "label": "Journal"
+ },
+ {
+  "text": "sales were slow today and I kept worrying about rent",
+  "label": "Journal"
+ },
+ {
+  "text": "the festival rush was tiring but fun",
+  "label": "Journal"
+ },
+ {
+  "text": "finished rendering the short and watching it made me proud",
+  "label": "Journal"
+ },
+ {
+  "text": "my story made the front page today",
+  "label": "Journal"
+ },
+ {
+  "text": "felt unsafe covering the protest",
+  "label": "Journal"
+ },
+ {
+  "text": "the crowd sang along at the gig tonight",
+  "label": "Journal"
+ },
+ {
+  "text": "my voice cracked on stage and I was embarrassed",
+  "label": "Journal"
+ },
+ {
+  "text": "my client hit a deadlift record and I felt proud of them",
+  "label": "Journal"
+ },
+ {
+  "text": "the experiment failed again and I'm frustrated",
+  "label": "Journal"
+ },
+ {
+  "text": "the reviewer comments were harsh and it stung",
+  "label": "Journal"
+ },
+ {
+  "text": "my son took his first steps today",
+  "label": "Journal"
+ },
+ {
+  "text": "the kids fought all evening and I'm exhausted",
+  "label": "Journal"
+ },
+ {
+  "text": "went for a long drive and cleared my head",
+  "label": "Journal"
+ },
+ {
+  "text": "I miss my college friends a lot lately",
+  "label": "Journal"
+ },
+ {
+  "text": "slept for ten hours and feel refreshed",
+  "label": "Journal"
+ },
+ {
+  "text": "had a fight with my brother and I regret it",
+  "label": "Journal"
+ },
+ {
+  "text": "cooked dinner for my parents and they loved it",
+  "label": "Journal"
+ },
+ {
+  "text": "meditated this morning and felt calm",
+  "label": "Journal"
+ },
+ {
+  "text": "rainy evening with chai and old songs was perfect",
+  "label": "Journal"
+ },
+ {
+  "text": "felt anxious all day for no reason",
+  "label": "Journal"
+ },
+ {
+  "text": "my dog was sick and I couldn't focus",
+  "label": "Journal"
+ },
+ {
+  "text": "got my first salary today",
+  "label": "Journal"
+ },
+ {
+  "text": "ran 5k without stopping for the first time",
+  "label": "Journal"
+ },
+ {
+  "text": "spent sunday doing nothing and loved it",
+  "label": "Journal"
+ },
+ {
+  "text": "met my old teacher at the market and we talked for an hour",
+  "label": "Journal"
+ },
+ {
+  "text": "today I felt like nobody listened to me",
+  "label": "Journal"
+ },
+ {
+  "text": "the wedding was beautiful and I danced all night",
+  "label": "Journal"
+ },
+ {
+  "text": "i'm so tired of this week honestly",
+  "label": "Journal"
+ },
+ {
+  "text": "uh today was okay nothing special",
+  "label": "Journal"
+ },
+ {
+  "text": "visited my hometown after years and felt nostalgic",
+  "label": "Journal"
+ },
+ {
+  "text": "feed the cat in an hour",
+  "label": "Task"
+ },
+ {
+  "text": "check the oven in 20 minutes",
+  "label": "Task"
+ },
+ {
+  "text": "urgent: call the client back about the outage",
+  "label": "Task"
+ },
+ {
+  "text": "asap fix the broken checkout page",
+  "label": "Task"
+ },
+ {
+  "text": "important to renew the trade license this month",
+  "label": "Task"
+ },
+ {
+  "text": "remind me 15 minutes before the call",
+  "label": "Task"
+ },
+ {
+  "text": "weekly sync with the design team on monday at 10",
+  "label": "Task"
+ },
+ {
+  "text": "clean the fish tank every two weeks",
+  "label": "Task"
+ },
+ {
+  "text": "mail the signed contract to the lawyer",
+  "label": "Task"
+ },
+ {
+  "text": "book an mri scan for the patient",
+  "label": "Task"
+ },
+ {
+  "text": "print worksheets for tomorrow's class",
+  "label": "Task"
+ },
+ {
+  "text": "call the courier about the missing parcel",
+  "label": "Task"
+ },
+ {
+  "text": "elasticsearch builds an inverted index of terms",
+  "label": "Note"
+ },
+ {
+  "text": "docker containers share the host kernel",
+  "label": "Note"
+ },
+ {
+  "text": "tcp guarantees ordered delivery of packets",
+  "label": "Note"
+ },
+ {
+  "text": "a hash map gives constant time lookups on average",
+  "label": "Note"
+ },
+ {
+  "text": "the clinic's opening hours are 9 to 1 and 5 to 8",
+  "label": "Note"
+ },
+ {
+  "text": "vitamin d comes mostly from sunlight",
+  "label": "Note"
+ },
+ {
+  "text": "what if the school had a rooftop garden",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe build a bot that answers customer faqs",
+  "label": "Idea"
+ },
+ {
+  "text": "an app that turns receipts into a budget",
+  "label": "Idea"
+ },
+ {
+  "text": "felt overwhelmed at work but my team helped",
+  "label": "Journal"
+ },
+ {
+  "text": "the morning run felt great today",
+  "label": "Journal"
+ },
+ {
+  "text": "I couldn't sleep and kept overthinking",
+  "label": "Journal"
+ },
+ {
+  "text": "my parents visited and the house felt warm",
+  "label": "Journal"
+ },
+ {
+  "text": "the carpenter quoted 3000 for the cupboard",
+  "label": "Note"
+ },
+ {
+  "text": "the rent goes up by 5 percent every year",
+  "label": "Note"
+ },
+ {
+  "text": "the meeting room on floor 2 has a projector",
+  "label": "Note"
+ },
+ {
+  "text": "the client's office is in whitefield",
+  "label": "Note"
+ },
+ {
+  "text": "our manager's name is deepa",
+  "label": "Note"
+ },
+ {
+  "text": "the restaurant near the station closes at 11",
+  "label": "Note"
+ },
+ {
+  "text": "the bakery's chocolate cake costs 450",
+  "label": "Note"
+ },
+ {
+  "text": "the bus to the airport leaves every 30 minutes",
+  "label": "Note"
+ },
+ {
+  "text": "the travel card balance is 230",
+  "label": "Note"
+ },
+ {
+  "text": "the vet clinic is open on sundays",
+  "label": "Note"
+ },
+ {
+  "text": "the dog weighs 18 kilos",
+  "label": "Note"
+ },
+ {
+  "text": "my sister's flight number is 6E 204",
+  "label": "Note"
+ },
+ {
+  "text": "the school bus comes at 7:15",
+  "label": "Note"
+ },
+ {
+  "text": "the maths teacher's name is mrs iyer",
+  "label": "Note"
+ },
+ {
+  "text": "the phone warranty ends in august",
+  "label": "Note"
+ },
+ {
+  "text": "the laptop charger is 65 watts",
+  "label": "Note"
+ },
+ {
+  "text": "the water purifier filter lasts six months",
+  "label": "Note"
+ },
+ {
+  "text": "the gas agency number is on the fridge",
+  "label": "Note"
+ },
+ {
+  "text": "the car's last service was at 42000 km",
+  "label": "Note"
+ },
+ {
+  "text": "the plumber said the pipe is rusted inside",
+  "label": "Note"
+ },
+ {
+  "text": "the repair shop charges 200 for a screen guard",
+  "label": "Note"
+ },
+ {
+  "text": "the house tax is paid every april",
+  "label": "Note"
+ },
+ {
+  "text": "my salary gets credited on the last working day",
+  "label": "Note"
+ },
+ {
+  "text": "the credit card limit is 1.5 lakh",
+  "label": "Note"
+ },
+ {
+  "text": "the electricity bill was 2300 last month",
+  "label": "Note"
+ },
+ {
+  "text": "the shop gives 10 percent off on wednesdays",
+  "label": "Note"
+ },
+ {
+  "text": "hospital visiting hours are 4 to 7",
+  "label": "Note"
+ },
+ {
+  "text": "my thyroid test result was normal",
+  "label": "Note"
+ },
+ {
+  "text": "the dentist said I have one cavity",
+  "label": "Note"
+ },
+ {
+  "text": "the pharmacy on 3rd cross is open 24 hours",
+  "label": "Note"
+ },
+ {
+  "text": "mango season is april to june",
+  "label": "Note"
+ },
+ {
+  "text": "tomatoes are cheaper at the sunday market",
+  "label": "Note"
+ },
+ {
+  "text": "the recipe needs two cups of flour",
+  "label": "Note"
+ },
+ {
+  "text": "the office canteen serves dosa on fridays",
+  "label": "Note"
+ },
+ {
+  "text": "the conference is at the taj hotel",
+  "label": "Note"
+ },
+ {
+  "text": "the new joiner's laptop is a macbook air",
+  "label": "Note"
+ },
+ {
+  "text": "the server backup runs at midnight",
+  "label": "Note"
+ },
+ {
+  "text": "the printer on floor 3 is out of toner",
+  "label": "Note"
+ },
+ {
+  "text": "the hr policy allows 3 work from home days",
+  "label": "Note"
+ },
+ {
+  "text": "the team lunch budget is 500 per head",
+  "label": "Note"
+ },
+ {
+  "text": "the train from delhi to agra takes two hours",
+  "label": "Note"
+ },
+ {
+  "text": "the hotel in goa has free breakfast",
+  "label": "Note"
+ },
+ {
+  "text": "the toll tag is linked to my savings account",
+  "label": "Note"
+ },
+ {
+  "text": "the flight baggage limit is 15 kg",
+  "label": "Note"
+ },
+ {
+  "text": "it usually rains here in the afternoon",
+  "label": "Note"
+ },
+ {
+  "text": "the temperature tomorrow will be 34 degrees",
+  "label": "Note"
+ },
+ {
+  "text": "the umbrella is in the car boot",
+  "label": "Note"
+ },
+ {
+  "text": "the kids' school uniform size is 28",
+  "label": "Note"
+ },
+ {
+  "text": "the tuition teacher charges 2000 a month",
+  "label": "Note"
+ },
+ {
+  "text": "the parent teacher meeting happens every quarter",
+  "label": "Note"
+ },
+ {
+  "text": "the movie is three hours long",
+  "label": "Note"
+ },
+ {
+  "text": "the series has five seasons",
+  "label": "Note"
+ },
+ {
+  "text": "the gym trainer is called vikram",
+  "label": "Note"
+ },
+ {
+  "text": "a marathon is 42.2 km",
+  "label": "Note"
+ },
+ {
+  "text": "the badminton club fee is 1500 a month",
+  "label": "Note"
+ },
+ {
+  "text": "the cat eats twice a day",
+  "label": "Note"
+ },
+ {
+  "text": "the fish tank holds 40 litres",
+  "label": "Note"
+ },
+ {
+  "text": "the neighbour's dog is named simba",
+  "label": "Note"
+ },
+ {
+  "text": "python was created by guido van rossum",
+  "label": "Note"
+ },
+ {
+  "text": "the moon has no atmosphere",
+  "label": "Note"
+ },
+ {
+  "text": "honeybees can see ultraviolet light",
+  "label": "Note"
+ },
+ {
+  "text": "the speed of sound is about 343 metres per second",
+  "label": "Note"
+ },
+ {
+  "text": "the carpenter finally fixed the cupboard and I'm relieved",
+  "label": "Journal"
+ },
+ {
+  "text": "paid the rent today and my account is almost empty",
+  "label": "Journal"
+ },
+ {
+  "text": "the meeting ran for three hours and I was so drained",
+  "label": "Journal"
+ },
+ {
+  "text": "my manager praised my work in front of everyone",
+  "label": "Journal"
+ },
+ {
+  "text": "the dinner at the new place was amazing",
+  "label": "Journal"
+ },
+ {
+  "text": "the bus was so crowded I had to stand the whole way",
+  "label": "Journal"
+ },
+ {
+  "text": "the train was late and I reached home at midnight",
+  "label": "Journal"
+ },
+ {
+  "text": "took the dog to the beach and he was so happy",
+  "label": "Journal"
+ },
+ {
+  "text": "the cat slept on my lap all evening and it was cozy",
+  "label": "Journal"
+ },
+ {
+  "text": "my sister and I watched old family videos",
+  "label": "Journal"
+ },
+ {
+  "text": "dad called and we talked for an hour",
+  "label": "Journal"
+ },
+ {
+  "text": "my kid did well in school and I'm proud",
+  "label": "Journal"
+ },
+ {
+  "text": "the school play was so sweet",
+  "label": "Journal"
+ },
+ {
+  "text": "my phone fell in water and I was devastated",
+  "label": "Journal"
+ },
+ {
+  "text": "spent the whole day fighting with the printer",
+  "label": "Journal"
+ },
+ {
+  "text": "the laptop crashed and I lost my work and cried",
+  "label": "Journal"
+ },
+ {
+  "text": "the electricity was out all evening and it was so hot",
+  "label": "Journal"
+ },
+ {
+  "text": "the market was packed and I got irritated",
+  "label": "Journal"
+ },
+ {
+  "text": "bought a new dress and I love it",
+  "label": "Journal"
+ },
+ {
+  "text": "the doctor's visit made me nervous",
+  "label": "Journal"
+ },
+ {
+  "text": "my back pain was bad today",
+  "label": "Journal"
+ },
+ {
+  "text": "got my blood test results and felt relieved",
+  "label": "Journal"
+ },
+ {
+  "text": "cooked biryani for the first time and it turned out great",
+  "label": "Journal"
+ },
+ {
+  "text": "burnt the rice again and laughed at myself",
+  "label": "Journal"
+ },
+ {
+  "text": "the cake I baked collapsed and I was disappointed",
+  "label": "Journal"
+ },
+ {
+  "text": "the office lunch was boring and I missed home food",
+  "label": "Journal"
+ },
+ {
+  "text": "the client was happy with the demo and I felt proud",
+  "label": "Journal"
+ },
+ {
+  "text": "the pitch flopped and I felt embarrassed",
+  "label": "Journal"
+ },
+ {
+  "text": "my colleague took credit for my work and I'm angry",
+  "label": "Journal"
+ },
+ {
+  "text": "had a long chat with my roommate tonight",
+  "label": "Journal"
+ },
+ {
+  "text": "the road trip to coorg was so much fun",
+  "label": "Journal"
+ },
+ {
+  "text": "the hotel room was dirty and it ruined the trip",
+  "label": "Journal"
+ },
+ {
+  "text": "the flight was smooth and I slept the whole way",
+  "label": "Journal"
+ },
+ {
+  "text": "it rained all day and I felt gloomy",
+  "label": "Journal"
+ },
+ {
+  "text": "the weather was perfect for a walk this evening",
+  "label": "Journal"
+ },
+ {
+  "text": "the heat today made me so cranky",
+  "label": "Journal"
+ },
+ {
+  "text": "watched a sad movie and cried",
+  "label": "Journal"
+ },
+ {
+  "text": "binged a series all night and regret it",
+  "label": "Journal"
+ },
+ {
+  "text": "the gym session today wrecked me",
+  "label": "Journal"
+ },
+ {
+  "text": "played football after years and my legs hurt",
+  "label": "Journal"
+ },
+ {
+  "text": "I lost the badminton match but had fun",
+  "label": "Journal"
+ },
+ {
+  "text": "my neighbour helped me carry the groceries and I felt grateful",
+  "label": "Journal"
+ },
+ {
+  "text": "fought with my partner over small things",
+  "label": "Journal"
+ },
+ {
+  "text": "we laughed so hard at the family dinner",
+  "label": "Journal"
+ },
+ {
+  "text": "I felt really happy looking at old photos",
+  "label": "Journal"
+ },
+ {
+  "text": "I was jealous of my friend's new job",
+  "label": "Journal"
+ },
+ {
+  "text": "today felt like a waste",
+  "label": "Journal"
+ },
+ {
+  "text": "this week flew by and I feel good about it",
+  "label": "Journal"
+ },
+ {
+  "text": "I'm nervous about tomorrow's exam",
+  "label": "Journal"
+ },
+ {
+  "text": "I can't believe I passed the driving test",
+  "label": "Journal"
+ },
+ {
+  "text": "my interview went better than I expected",
+  "label": "Journal"
+ },
+ {
+  "text": "I felt homesick at the hostel tonight",
+  "label": "Journal"
+ },
+ {
+  "text": "the hospital waiting room was depressing",
+  "label": "Journal"
+ },
+ {
+  "text": "grandma remembered my name today and I was so happy",
+  "label": "Journal"
+ },
+ {
+  "text": "I snapped at the delivery guy and then felt bad",
+  "label": "Journal"
+ },
+ {
+  "text": "the festival lights on our street made me smile",
+  "label": "Journal"
+ },
+ {
+  "text": "I sat by the lake and felt peaceful",
+  "label": "Journal"
+ },
+ {
+  "text": "lost my wallet today and felt stupid",
+  "label": "Journal"
+ },
+ {
+  "text": "found 500 rupees in an old jeans pocket and it made my day",
+  "label": "Journal"
+ },
+ {
+  "text": "I miss how simple school life was",
+  "label": "Journal"
+ },
+ {
+  "text": "ask the carpenter for a quote on the cupboard",
+  "label": "Task"
+ },
+ {
+  "text": "pay the rent to the landlord by the 5th",
+  "label": "Task"
+ },
+ {
+  "text": "book the meeting room for thursday",
+  "label": "Task"
+ },
+ {
+  "text": "email the client the revised estimate",
+  "label": "Task"
+ },
+ {
+  "text": "reserve a table at the new thai place",
+  "label": "Task"
+ },
+ {
+  "text": "check the bus timings for tomorrow",
+  "label": "Task"
+ },
+ {
+  "text": "book train tickets to jaipur",
+  "label": "Task"
+ },
+ {
+  "text": "take the dog for a walk at 6",
+  "label": "Task"
+ },
+ {
+  "text": "buy cat litter",
+  "label": "Task"
+ },
+ {
+  "text": "call dad on his birthday",
+  "label": "Task"
+ },
+ {
+  "text": "attend the parent teacher meeting",
+  "label": "Task"
+ },
+ {
+  "text": "fix the phone screen",
+  "label": "Task"
+ },
+ {
+  "text": "install the printer driver",
+  "label": "Task"
+ },
+ {
+  "text": "pay the electricity bill online",
+  "label": "Task"
+ },
+ {
+  "text": "buy vegetables from the sunday market",
+  "label": "Task"
+ },
+ {
+  "text": "book a blood test",
+  "label": "Task"
+ },
+ {
+  "text": "get my eyes tested",
+  "label": "Task"
+ },
+ {
+  "text": "pick up the medicine refill",
+  "label": "Task"
+ },
+ {
+  "text": "bake a cake for mom's birthday",
+  "label": "Task"
+ },
+ {
+  "text": "order lunch for the team",
+  "label": "Task"
+ },
+ {
+  "text": "prepare slides for the client demo",
+  "label": "Task"
+ },
+ {
+  "text": "book the hotel in goa",
+  "label": "Task"
+ },
+ {
+  "text": "recharge the toll tag",
+  "label": "Task"
+ },
+ {
+  "text": "pack an umbrella for the trip",
+  "label": "Task"
+ },
+ {
+  "text": "buy the school uniform in size 28",
+  "label": "Task"
+ },
+ {
+  "text": "pay the tuition fees",
+  "label": "Task"
+ },
+ {
+  "text": "download a movie for the flight",
+  "label": "Task"
+ },
+ {
+  "text": "sign up for the marathon",
+  "label": "Task"
+ },
+ {
+  "text": "pay the badminton club fee",
+  "label": "Task"
+ },
+ {
+  "text": "change the fish tank water",
+  "label": "Task"
+ },
+ {
+  "text": "ask the neighbour to feed the cat while I'm away",
+  "label": "Task"
+ },
+ {
+  "text": "learn python basics this month",
+  "label": "Task"
+ },
+ {
+  "text": "read the chapter on the moon landing for the quiz",
+  "label": "Task"
+ },
+ {
+  "text": "check the weather before the drive",
+  "label": "Task"
+ },
+ {
+  "text": "call the gas agency for a refill",
+  "label": "Task"
+ },
+ {
+  "text": "get the cupboard hinge replaced",
+  "label": "Task"
+ },
+ {
+  "text": "send the photos to the family group",
+  "label": "Task"
+ },
+ {
+  "text": "clear the browser cache on the office laptop",
+  "label": "Task"
+ },
+ {
+  "text": "schedule a one on one with my manager",
+  "label": "Task"
+ },
+ {
+  "text": "apply for a credit card limit increase",
+  "label": "Task"
+ },
+ {
+  "text": "what if cupboards came with built in lights",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe start a carpentry hobby on weekends",
+  "label": "Idea"
+ },
+ {
+  "text": "an app that tracks rent payments for tenants",
+  "label": "Idea"
+ },
+ {
+  "text": "what if meetings had a hard 15 minute limit",
+  "label": "Idea"
+ },
+ {
+  "text": "a restaurant where you cook your own food",
+  "label": "Idea"
+ },
+ {
+  "text": "what if buses had a quiet coach",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe take a train trip across india someday",
+  "label": "Idea"
+ },
+ {
+  "text": "a dog walking service run by students",
+  "label": "Idea"
+ },
+ {
+  "text": "what if cat collars showed the cat's mood",
+  "label": "Idea"
+ },
+ {
+  "text": "a family podcast with my dad's old stories",
+  "label": "Idea"
+ },
+ {
+  "text": "what if schools taught money management",
+  "label": "Idea"
+ },
+ {
+  "text": "a phone case that doubles as a wallet",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe build my own printer stand",
+  "label": "Idea"
+ },
+ {
+  "text": "what if electricity bills showed which appliance used most",
+  "label": "Idea"
+ },
+ {
+  "text": "a weekend market only for home bakers",
+  "label": "Idea"
+ },
+ {
+  "text": "an app that suggests meals based on the weather",
+  "label": "Idea"
+ },
+ {
+  "text": "what if hospitals had a play area for kids",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe start a youtube channel on home cooking",
+  "label": "Idea"
+ },
+ {
+  "text": "a lunch box that keeps food hot for hours",
+  "label": "Idea"
+ },
+ {
+  "text": "what if offices had a quiet day every week",
+  "label": "Idea"
+ },
+ {
+  "text": "a travel app that plans trips around festivals",
+  "label": "Idea"
+ },
+ {
+  "text": "what if hotels let you pay by the hour",
+  "label": "Idea"
+ },
+ {
+  "text": "an umbrella that warns you before it rains",
+  "label": "Idea"
+ },
+ {
+  "text": "what if school uniforms were made from recycled bottles",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe offer online tuition for village kids",
+  "label": "Idea"
+ },
+ {
+  "text": "a series about a family running a dhaba",
+  "label": "Idea"
+ },
+ {
+  "text": "what if gyms had a kids' corner",
+  "label": "Idea"
+ },
+ {
+  "text": "an app for finding badminton partners nearby",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe build an aquarium wall in the living room",
+  "label": "Idea"
+ },
+ {
+  "text": "a cat cafe in our neighbourhood",
+  "label": "Idea"
+ },
+ {
+  "text": "what if python had a hindi version",
+  "label": "Idea"
+ },
+ {
+  "text": "a quiz night about space at the office",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe start a weekly walking group",
+  "label": "Idea"
+ },
+ {
+  "text": "what if the society had a common kitchen garden",
+  "label": "Idea"
+ },
+ {
+  "text": "a comic about a dog who runs a bakery",
+  "label": "Idea"
+ },
+ {
+  "text": "what if delivery apps had a slow mode for cheaper prices",
+  "label": "Idea"
+ },
+ {
+  "text": "maybe write songs in my mother tongue",
+  "label": "Idea"
+ },
+ {
+  "text": "a game where you manage a small kirana store",
+  "label": "Idea"
+ },
+ {
+  "text": "what if the office had a pet day",
+  "label": "Idea"
+ },
+ {
+  "text": "could make short videos explaining tax basics",
+  "label": "Idea"
+ }
+]

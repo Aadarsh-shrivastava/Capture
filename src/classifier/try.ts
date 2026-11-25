@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /**
  * Classify one sentence and show why. Run: npm run classifier:try -- "buy milk tomorrow"
  */

@@ -13,7 +13,7 @@ export function splitByLines(text: string): string[] {
 }
 
 /** A short list reads as separate thoughts; long lines or many of them are one pasted note. */
-const isList = (lines: string[]) => lines.length > 1 && lines.length <= MAX_PARTS && lines.every(l => l.length <= 140);
+export const isList = (lines: string[]) => lines.length > 1 && lines.length <= MAX_PARTS && lines.every(l => l.length <= 140);
 
 /**
  * Where one thought may end and the next begin: sentence ends, ; and words that start a new thought.

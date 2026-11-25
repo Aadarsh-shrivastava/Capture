@@ -169,6 +169,20 @@ export const itemRepository = {
     return rows.map(mapItemWithType);
   },
 
+  /** Captures the classifier wasn't sure about, oldest first: the user sorts them (QuickCheck). */
+  async findUnsure(): Promise<ItemWithType[]> {
+    const db = await getDatabase();
+    const rows = await db.getAllAsync<ItemWithTypeRow>(
+      `SELECT i.*, t.name AS type_name
+       FROM items i
+       INNER JOIN item_types t ON t.id = i.type_id
+       WHERE i.unsure = 1
+       ORDER BY i.created_at ASC`
+    );
+
+    return rows.map(mapItemWithType);
+  },
+
   /** The user answered "to do or thought?" — stop asking. */
   async clearUnsure(id: number): Promise<void> {
     const db = await getDatabase();

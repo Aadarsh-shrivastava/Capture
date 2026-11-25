@@ -8,7 +8,7 @@ import {useLlamaModel} from '@/hooks/useLlamaModel';
 import {rawThought, titleFromText} from '@/selectiveKnowledge/agent';
 import {isList, splitByLines} from '@/selectiveKnowledge/split';
 
-/** Below this, a guessed to-do is saved as unsure and asked about (QuickCheck) before it can take over Focus. */
+/** Below this, the guess is saved as unsure and the user sorts it (QuickCheck cards); an unsure Task stays out of Focus. */
 const SURE = 0.2;
 
 /**
@@ -24,9 +24,9 @@ export async function analyzeText(text: string, _onStep?: (steps: string[]) => v
 
   const result = kind ? null : await classifyText(trimmed);
   const typeName = kind === 'todo' ? 'Task' : kind ? 'Note' : result?.label ?? 'Note';
-  let draft: CaptureItemDraft = {...rawThought(trimmed), typeName, title: titleFromText(trimmed)};
+  let draft: CaptureItemDraft = {...rawThought(trimmed), typeName, title: titleFromText(trimmed), unsure: !!result && result.confidence < SURE};
   if (typeName === 'Task') {
-    draft = {...draft, unsure: !!result && result.confidence < SURE, behaviorData: {Doable: {status: 'pending', due_at: '', estimated_minutes: ''}}};
+    draft = {...draft, behaviorData: {Doable: {status: 'pending', due_at: '', estimated_minutes: ''}}};
   }
   // "Read later" / "remember": comes back on the come-back card.
   if (kind === 'read' || kind === 'remember') {

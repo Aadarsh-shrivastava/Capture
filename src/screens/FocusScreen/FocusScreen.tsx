@@ -85,8 +85,7 @@ export function FocusScreen() {
     [isToday, repeatPreview, selected],
   );
   // Real tasks only — ghosts never hide the empty state (and its mascot).
-  // Guessed to-dos wait in "Is this something to do?" until answered — they never take over Now.
-  const unsureTasks = useMemo(() => tasks.filter(t => t.unsure), [tasks]);
+  // Guessed to-dos wait in Quick check until sorted — they never take over Now.
   const dayTasks = useMemo(
     () => tasksForDay(withLingering(tasks.filter(t => !t.unsure)), selected),
     [tasks, selected, withLingering],
@@ -209,7 +208,7 @@ export function FocusScreen() {
           showsVerticalScrollIndicator={false}>
           {/* Long-press empty space: speak a thought. Taps and presses on anything inside still go to that thing. */}
           <Pressable haptic={false} pressScale={false} onLongPress={openVoiceCapture} delayLongPress={450} accessible={false} style={{flexGrow: 1}}>
-          {isToday ? <QuickCheck items={unsureTasks} /> : null}
+          {isToday ? <QuickCheck /> : null}
 
           {peek !== null ? (
             // Pulled down: an old idea or note, on top of the Now card — only an edge of it shows underneath.

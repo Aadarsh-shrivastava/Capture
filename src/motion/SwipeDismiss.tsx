@@ -5,8 +5,8 @@ import {Animated, PanResponder, useWindowDimensions} from 'react-native';
 const DISTANCE = 80;
 const FLICK = 0.5;
 
-/** Swipe sideways to dismiss (toasts, strips). Taps inside still work — only a horizontal drag is taken. */
-export function SwipeDismiss({children, onDismiss}: {children: ReactNode; onDismiss: () => void}) {
+/** Swipe sideways to dismiss (toasts, strips, cards); `side` says which way (1 = right). Taps inside still work — only a horizontal drag is taken. */
+export function SwipeDismiss({children, onDismiss}: {children: ReactNode; onDismiss: (side: number) => void}) {
   const x = useRef(new Animated.Value(0)).current;
   const {width} = useWindowDimensions();
   const latest = useRef({onDismiss, width});
@@ -20,7 +20,7 @@ export function SwipeDismiss({children, onDismiss}: {children: ReactNode; onDism
         if (Math.abs(g.dx) > DISTANCE || Math.abs(g.vx) > FLICK) {
           const side = Math.sign(g.dx || g.vx);
           Animated.timing(x, {toValue: side * latest.current.width, duration: 160, useNativeDriver: true}).start(() =>
-            latest.current.onDismiss(),
+            latest.current.onDismiss(side),
           );
         } else {
           Animated.spring(x, {toValue: 0, useNativeDriver: true}).start();

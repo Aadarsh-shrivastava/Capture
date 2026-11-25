@@ -1,0 +1,513 @@
+text,label
+buy eggs and bread,Task
+call the plumber about the sink,Task
+I need to pay the electricity bill,Task
+remind me to send the invoice on friday,Task
+book a table for dinner saturday,Task
+pick up the kids at 4,Task
+schedule a haircut next week,Task
+reply to the landlord email,Task
+don't forget to charge the car,Task
+need to write about my day,Task
+clean the bathroom this weekend,Task
+order a new phone charger,Task
+return the library books by tuesday,Task
+send the slides to the team,Task
+get the car serviced,Task
+the gate code for the building is 1234,Note
+mitochondria is the powerhouse of the cell,Note
+Ankit's birthday is on march 3,Note
+the train to pune leaves from platform 6,Note
+postgres indexes speed up lookups on large tables,Note
+my blood group is B positive,Note
+the parking spot number is 42,Note
+python lists are mutable and tuples are not,Note
+the doctor said to avoid sugar for a month,Note
+good article on system design https://example.org/sd,Note
+the office opens at 9 on weekdays,Note
+interesting fact: honey never spoils,Note
+what if phones could charge from body heat,Idea
+idea for a game where you build cities on clouds,Idea
+maybe I should start a youtube channel,Idea
+an app that reminds you to drink water based on weather,Idea
+what if the fridge suggested recipes from leftovers,Idea
+could make a short animation about a lonely robot,Idea
+startup idea: rent out unused parking spots,Idea
+it would be cool to build a smart mirror,Idea
+maybe write a blog series on learning mandarin,Idea
+what about a plugin that summarizes long emails,Idea
+idea: a board game about climate change,Idea
+had a lovely walk in the park this morning,Journal
+today was exhausting but I got a lot done,Journal
+felt really lonely this evening,Journal
+watched a great movie with my sister tonight,Journal
+I was nervous at the interview but it went fine,Journal
+spent the whole afternoon reading and it was relaxing,Journal
+work was stressful and I argued with my manager,Journal
+feeling grateful for my friends today,Journal
+yesterday I finally finished the painting,Journal
+woke up late and felt lazy all day,Journal
+lunch with grandma was so much fun,Journal
+I'm proud of how the presentation went,Journal
+review the blood reports for bed 12,Task
+refill the antibiotics prescription for mr sharma,Task
+finish the discharge summary before rounds,Task
+change the dressing in room 4 at noon,Task
+restock the saline bags in the ward,Task
+grade the math tests by thursday,Task
+prepare the lesson plan for class 8,Task
+call the parents of kids who missed homework,Task
+revise chapter 5 before the exam,Task
+submit the chemistry assignment tonight,Task
+register for next semester courses,Task
+deploy the hotfix to staging,Task
+review the pull request from arjun,Task
+update the api docs for the orders endpoint,Task
+write unit tests for the payment module,Task
+upgrade node on the build server,Task
+export the logo in svg and png,Task
+send the mockups to the client for feedback,Task
+order 20 kg of onions for the restaurant,Task
+prep the marinade tonight for tomorrow's lunch,Task
+get the tyres checked before the long trip,Task
+renew the vehicle insurance,Task
+spray pesticide on the tomato field,Task
+buy seeds before the monsoon,Task
+file the petition before the court deadline,Task
+draft the rental agreement for the client,Task
+reconcile the bank statements for october,Task
+file gst returns by the 20th,Task
+follow up with the lead from the trade show,Task
+send the quotation to the hotel client,Task
+restock rice and dal in the shop,Task
+collect the payment from the wholesaler,Task
+render scene three overnight,Task
+finish the storyboard for episode two,Task
+interview the mayor on tuesday,Task
+fact check the election article,Task
+practice the guitar solo for the gig,Task
+book the studio for recording,Task
+plan workouts for my morning clients,Task
+pack the kids' lunch boxes,Task
+sign the school permission slip,Task
+book a pediatrician visit for the baby,Task
+rerun the experiment with the new dataset,Task
+submit the paper to the conference,Task
+transfer money to dad,Task
+cancel the gym membership,Task
+recharge my phone,Task
+get passport photos printed,Task
+apply for the job at infosys,Task
+prepare for the amazon interview,Task
+update my resume,Task
+check in for the flight online,Task
+refill the gas cylinder,Task
+take out the trash,Task
+mow the lawn,Task
+wash the car on sunday,Task
+buy a gift for anu's wedding,Task
+text sneha about the trip,Task
+uh remind me to call the electrician,Task
+okay so I have to finish the essay,Task
+gotta pick up medicine from the pharmacy,Task
+must apply for leave next month,Task
+sort old clothes for donation,Task
+back up my laptop,Task
+pay the school fees,Task
+meet the CA on monday,Task
+renew the domain name before it expires,Task
+fill the visa application form,Task
+need to journal about the trip later,Task
+repair the broken chair,Task
+patient in bed 7 is allergic to penicillin,Note
+normal adult resting heart rate is 60 to 100,Note
+the night shift handover is at 8 pm,Note
+class 7b has 34 students,Note
+the exam syllabus covers chapters 1 to 6,Note
+the formula for kinetic energy is half m v squared,Note
+the college library closes at 10 on weekdays,Note
+the staging server ip is 10.0.0.12,Note
+git rebase rewrites commit history,Note
+react useEffect runs after the render,Note
+the api rate limit is 100 requests per minute,Note
+redis is an in memory key value store,Note
+the brand colour hex is 1a73e8,Note
+the client prefers a serif font,Note
+biryani rice should soak for 30 minutes,Note
+the supplier delivers fish on tuesdays,Note
+tyre pressure for the car is 32 psi,Note
+the toll on the expressway is 320 rupees,Note
+wheat needs irrigation every 20 days,Note
+the mandi price for onions is 25 a kilo,Note
+the limitation period for this case is three years,Note
+section 138 covers cheque bounce cases,Note
+gst for restaurants is 5 percent,Note
+the financial year ends on march 31,Note
+the client's purchase manager is mr verma,Note
+our discount cap is 15 percent,Note
+the wholesaler is open till 7,Note
+sugar costs 42 per kilo this week,Note
+24 frames per second is standard for film,Note
+in blender G is the shortcut for grab,Note
+the mayor's office is on the third floor,Note
+the song is in the key of e minor,Note
+the gig fee is 15000,Note
+the dataset has 12000 labelled samples,Note
+a p value below 0.05 is considered significant,Note
+my passport is in the blue folder,Note
+the plumber's name is raju,Note
+the car insurance expires in june,Note
+my shoe size is 9,Note
+mom's favourite flower is jasmine,Note
+the nearest atm is next to the bakery,Note
+the sim puk code is on the card box,Note
+the hotel check in time is 2 pm,Note
+the aadhaar helpline number is 1947,Note
+a group of crows is called a murder,Note
+light takes 8 minutes to reach earth,Note
+the capital of australia is canberra,Note
+sourdough video worth keeping https://youtu.be/abc123,Note
+idempotent means the same result even if repeated,Note
+the vaccination record is in the top drawer,Note
+the budget for the project is 2 lakh,Note
+the home wifi network is called jiofiber 5g,Note
+dad's blood pressure was 130 over 85,Note
+the fridge warranty lasts 2 years,Note
+the definition of opportunity cost is the value of the next best option,Note
+what if patients could book follow ups on whatsapp,Idea
+a clinic app that tracks medicine stock,Idea
+maybe gamify homework with points,Idea
+idea: a quiz app for class revision,Idea
+what if I made flashcards from lecture recordings,Idea
+could start a coding club at college,Idea
+what if we cached search results at the edge,Idea
+a cli tool that cleans up old git branches,Idea
+maybe rewrite the backend in go someday,Idea
+idea: auto generate release notes from commits,Idea
+an extension that blocks distracting sites during work hours,Idea
+what if the onboarding used illustrations instead of text,Idea
+maybe a pastel theme for my portfolio,Idea
+a fusion dish with paneer tacos,Idea
+what if we offered a weekly tasting menu,Idea
+idea for a cloud kitchen serving only breakfast,Idea
+an app that shows fuel prices along the highway,Idea
+what if drones checked the crops for disease,Idea
+maybe try growing strawberries next season,Idea
+a tool that summarizes long court judgments,Idea
+could start a legal advice podcast,Idea
+what if invoices were scanned straight into tally,Idea
+maybe run a referral program for old customers,Idea
+idea: home delivery for orders on whatsapp,Idea
+what if I added a loyalty card for the shop,Idea
+a short film about a cat who wants to fly,Idea
+what if the villain was a lonely cloud,Idea
+idea for a comic about office life,Idea
+a series on forgotten heritage buildings,Idea
+what if we did a podcast with local farmers,Idea
+maybe make a lofi album of rain sounds,Idea
+what if I mixed classical sitar with electronic beats,Idea
+idea: a 30 day home workout challenge on instagram,Idea
+what if we used satellite images to predict crop yield,Idea
+maybe try a transformer model on this data,Idea
+a chore chart app for kids with rewards,Idea
+what if we had a family movie night every friday,Idea
+an app that nudges you to call old friends,Idea
+what if bus stops showed live arrival times,Idea
+idea: a marketplace for used textbooks,Idea
+could write a novel set in old delhi,Idea
+maybe learn pottery and sell it online,Idea
+what if shoes could track your posture,Idea
+a plant pot that texts you when it needs water,Idea
+idea: a subscription box for indian snacks,Idea
+it might be fun to build a telescope,Idea
+a website that ranks street food stalls,Idea
+what if notes organized themselves,Idea
+maybe open a cafe with board games,Idea
+thinking of a travel vlog on my bike,Idea
+what if the city planted fruit trees on every street,Idea
+a tshirt brand with regional slang,Idea
+an ai that turns doodles into animations,Idea
+maybe host a hackathon for school kids,Idea
+what if the app had a focus mode with rain sounds,Idea
+could turn my grandmother's recipes into a cookbook,Idea
+long night shift and I lost a patient and feel numb,Journal
+the surgery went well and I felt so relieved,Journal
+patients were kind today and it made my shift easier,Journal
+my students made me a card today and I almost cried,Journal
+class was chaotic and I lost my patience,Journal
+bombed the physics exam and feel terrible,Journal
+finally understood recursion today and it felt amazing,Journal
+stayed up all night studying and I'm wrecked,Journal
+spent six hours debugging a typo and felt stupid,Journal
+the release went smoothly and the team celebrated,Journal
+I'm burned out from all the meetings this week,Journal
+the client loved my designs and I'm so happy,Journal
+felt uninspired all day staring at a blank canvas,Journal
+the kitchen was crazy busy tonight but we nailed every order,Journal
+a customer complained and it ruined my mood,Journal
+drove 600 km today and my back hurts,Journal
+got stuck in traffic for three hours and felt so frustrated,Journal
+the rain finally came and the fields look green,Journal
+lost half the crop to pests and I'm worried,Journal
+won the case today after two years,Journal
+the hearing got adjourned again and I feel drained,Journal
+closing week was brutal but we finished on time,Journal
+closed the biggest deal of my career today,Journal
+got rejected by five clients and feel low,Journal
+sales were slow today and I kept worrying about rent,Journal
+the festival rush was tiring but fun,Journal
+finished rendering the short and watching it made me proud,Journal
+my story made the front page today,Journal
+felt unsafe covering the protest,Journal
+the crowd sang along at the gig tonight,Journal
+my voice cracked on stage and I was embarrassed,Journal
+my client hit a deadlift record and I felt proud of them,Journal
+the experiment failed again and I'm frustrated,Journal
+the reviewer comments were harsh and it stung,Journal
+my son took his first steps today,Journal
+the kids fought all evening and I'm exhausted,Journal
+went for a long drive and cleared my head,Journal
+I miss my college friends a lot lately,Journal
+slept for ten hours and feel refreshed,Journal
+had a fight with my brother and I regret it,Journal
+cooked dinner for my parents and they loved it,Journal
+meditated this morning and felt calm,Journal
+rainy evening with chai and old songs was perfect,Journal
+felt anxious all day for no reason,Journal
+my dog was sick and I couldn't focus,Journal
+got my first salary today,Journal
+ran 5k without stopping for the first time,Journal
+spent sunday doing nothing and loved it,Journal
+met my old teacher at the market and we talked for an hour,Journal
+today I felt like nobody listened to me,Journal
+the wedding was beautiful and I danced all night,Journal
+i'm so tired of this week honestly,Journal
+uh today was okay nothing special,Journal
+visited my hometown after years and felt nostalgic,Journal
+feed the cat in an hour,Task
+check the oven in 20 minutes,Task
+urgent: call the client back about the outage,Task
+asap fix the broken checkout page,Task
+important to renew the trade license this month,Task
+remind me 15 minutes before the call,Task
+weekly sync with the design team on monday at 10,Task
+clean the fish tank every two weeks,Task
+mail the signed contract to the lawyer,Task
+book an mri scan for the patient,Task
+print worksheets for tomorrow's class,Task
+call the courier about the missing parcel,Task
+elasticsearch builds an inverted index of terms,Note
+docker containers share the host kernel,Note
+tcp guarantees ordered delivery of packets,Note
+a hash map gives constant time lookups on average,Note
+the clinic's opening hours are 9 to 1 and 5 to 8,Note
+vitamin d comes mostly from sunlight,Note
+what if the school had a rooftop garden,Idea
+maybe build a bot that answers customer faqs,Idea
+an app that turns receipts into a budget,Idea
+felt overwhelmed at work but my team helped,Journal
+the morning run felt great today,Journal
+I couldn't sleep and kept overthinking,Journal
+my parents visited and the house felt warm,Journal
+the carpenter quoted 3000 for the cupboard,Note
+the rent goes up by 5 percent every year,Note
+the meeting room on floor 2 has a projector,Note
+the client's office is in whitefield,Note
+our manager's name is deepa,Note
+the restaurant near the station closes at 11,Note
+the bakery's chocolate cake costs 450,Note
+the bus to the airport leaves every 30 minutes,Note
+the travel card balance is 230,Note
+the vet clinic is open on sundays,Note
+the dog weighs 18 kilos,Note
+my sister's flight number is 6E 204,Note
+the school bus comes at 7:15,Note
+the maths teacher's name is mrs iyer,Note
+the phone warranty ends in august,Note
+the laptop charger is 65 watts,Note
+the water purifier filter lasts six months,Note
+the gas agency number is on the fridge,Note
+the car's last service was at 42000 km,Note
+the plumber said the pipe is rusted inside,Note
+the repair shop charges 200 for a screen guard,Note
+the house tax is paid every april,Note
+my salary gets credited on the last working day,Note
+the credit card limit is 1.5 lakh,Note
+the electricity bill was 2300 last month,Note
+the shop gives 10 percent off on wednesdays,Note
+hospital visiting hours are 4 to 7,Note
+my thyroid test result was normal,Note
+the dentist said I have one cavity,Note
+the pharmacy on 3rd cross is open 24 hours,Note
+mango season is april to june,Note
+tomatoes are cheaper at the sunday market,Note
+the recipe needs two cups of flour,Note
+the office canteen serves dosa on fridays,Note
+the conference is at the taj hotel,Note
+the new joiner's laptop is a macbook air,Note
+the server backup runs at midnight,Note
+the printer on floor 3 is out of toner,Note
+the hr policy allows 3 work from home days,Note
+the team lunch budget is 500 per head,Note
+the train from delhi to agra takes two hours,Note
+the hotel in goa has free breakfast,Note
+the toll tag is linked to my savings account,Note
+the flight baggage limit is 15 kg,Note
+it usually rains here in the afternoon,Note
+the temperature tomorrow will be 34 degrees,Note
+the umbrella is in the car boot,Note
+the kids' school uniform size is 28,Note
+the tuition teacher charges 2000 a month,Note
+the parent teacher meeting happens every quarter,Note
+the movie is three hours long,Note
+the series has five seasons,Note
+the gym trainer is called vikram,Note
+a marathon is 42.2 km,Note
+the badminton club fee is 1500 a month,Note
+the cat eats twice a day,Note
+the fish tank holds 40 litres,Note
+the neighbour's dog is named simba,Note
+python was created by guido van rossum,Note
+the moon has no atmosphere,Note
+honeybees can see ultraviolet light,Note
+the speed of sound is about 343 metres per second,Note
+the carpenter finally fixed the cupboard and I'm relieved,Journal
+paid the rent today and my account is almost empty,Journal
+the meeting ran for three hours and I was so drained,Journal
+my manager praised my work in front of everyone,Journal
+the dinner at the new place was amazing,Journal
+the bus was so crowded I had to stand the whole way,Journal
+the train was late and I reached home at midnight,Journal
+took the dog to the beach and he was so happy,Journal
+the cat slept on my lap all evening and it was cozy,Journal
+my sister and I watched old family videos,Journal
+dad called and we talked for an hour,Journal
+my kid did well in school and I'm proud,Journal
+the school play was so sweet,Journal
+my phone fell in water and I was devastated,Journal
+spent the whole day fighting with the printer,Journal
+the laptop crashed and I lost my work and cried,Journal
+the electricity was out all evening and it was so hot,Journal
+the market was packed and I got irritated,Journal
+bought a new dress and I love it,Journal
+the doctor's visit made me nervous,Journal
+my back pain was bad today,Journal
+got my blood test results and felt relieved,Journal
+cooked biryani for the first time and it turned out great,Journal
+burnt the rice again and laughed at myself,Journal
+the cake I baked collapsed and I was disappointed,Journal
+the office lunch was boring and I missed home food,Journal
+the client was happy with the demo and I felt proud,Journal
+the pitch flopped and I felt embarrassed,Journal
+my colleague took credit for my work and I'm angry,Journal
+had a long chat with my roommate tonight,Journal
+the road trip to coorg was so much fun,Journal
+the hotel room was dirty and it ruined the trip,Journal
+the flight was smooth and I slept the whole way,Journal
+it rained all day and I felt gloomy,Journal
+the weather was perfect for a walk this evening,Journal
+the heat today made me so cranky,Journal
+watched a sad movie and cried,Journal
+binged a series all night and regret it,Journal
+the gym session today wrecked me,Journal
+played football after years and my legs hurt,Journal
+I lost the badminton match but had fun,Journal
+my neighbour helped me carry the groceries and I felt grateful,Journal
+fought with my partner over small things,Journal
+we laughed so hard at the family dinner,Journal
+I felt really happy looking at old photos,Journal
+I was jealous of my friend's new job,Journal
+today felt like a waste,Journal
+this week flew by and I feel good about it,Journal
+I'm nervous about tomorrow's exam,Journal
+I can't believe I passed the driving test,Journal
+my interview went better than I expected,Journal
+I felt homesick at the hostel tonight,Journal
+the hospital waiting room was depressing,Journal
+grandma remembered my name today and I was so happy,Journal
+I snapped at the delivery guy and then felt bad,Journal
+the festival lights on our street made me smile,Journal
+I sat by the lake and felt peaceful,Journal
+lost my wallet today and felt stupid,Journal
+found 500 rupees in an old jeans pocket and it made my day,Journal
+I miss how simple school life was,Journal
+ask the carpenter for a quote on the cupboard,Task
+pay the rent to the landlord by the 5th,Task
+book the meeting room for thursday,Task
+email the client the revised estimate,Task
+reserve a table at the new thai place,Task
+check the bus timings for tomorrow,Task
+book train tickets to jaipur,Task
+take the dog for a walk at 6,Task
+buy cat litter,Task
+call dad on his birthday,Task
+attend the parent teacher meeting,Task
+fix the phone screen,Task
+install the printer driver,Task
+pay the electricity bill online,Task
+buy vegetables from the sunday market,Task
+book a blood test,Task
+get my eyes tested,Task
+pick up the medicine refill,Task
+bake a cake for mom's birthday,Task
+order lunch for the team,Task
+prepare slides for the client demo,Task
+book the hotel in goa,Task
+recharge the toll tag,Task
+pack an umbrella for the trip,Task
+buy the school uniform in size 28,Task
+pay the tuition fees,Task
+download a movie for the flight,Task
+sign up for the marathon,Task
+pay the badminton club fee,Task
+change the fish tank water,Task
+ask the neighbour to feed the cat while I'm away,Task
+learn python basics this month,Task
+read the chapter on the moon landing for the quiz,Task
+check the weather before the drive,Task
+call the gas agency for a refill,Task
+get the cupboard hinge replaced,Task
+send the photos to the family group,Task
+clear the browser cache on the office laptop,Task
+schedule a one on one with my manager,Task
+apply for a credit card limit increase,Task
+what if cupboards came with built in lights,Idea
+maybe start a carpentry hobby on weekends,Idea
+an app that tracks rent payments for tenants,Idea
+what if meetings had a hard 15 minute limit,Idea
+a restaurant where you cook your own food,Idea
+what if buses had a quiet coach,Idea
+maybe take a train trip across india someday,Idea
+a dog walking service run by students,Idea
+what if cat collars showed the cat's mood,Idea
+a family podcast with my dad's old stories,Idea
+what if schools taught money management,Idea
+a phone case that doubles as a wallet,Idea
+maybe build my own printer stand,Idea
+what if electricity bills showed which appliance used most,Idea
+a weekend market only for home bakers,Idea
+an app that suggests meals based on the weather,Idea
+what if hospitals had a play area for kids,Idea
+maybe start a youtube channel on home cooking,Idea
+a lunch box that keeps food hot for hours,Idea
+what if offices had a quiet day every week,Idea
+a travel app that plans trips around festivals,Idea
+what if hotels let you pay by the hour,Idea
+an umbrella that warns you before it rains,Idea
+what if school uniforms were made from recycled bottles,Idea
+maybe offer online tuition for village kids,Idea
+a series about a family running a dhaba,Idea
+what if gyms had a kids' corner,Idea
+an app for finding badminton partners nearby,Idea
+maybe build an aquarium wall in the living room,Idea
+a cat cafe in our neighbourhood,Idea
+what if python had a hindi version,Idea
+a quiz night about space at the office,Idea
+maybe start a weekly walking group,Idea
+what if the society had a common kitchen garden,Idea
+a comic about a dog who runs a bakery,Idea
+what if delivery apps had a slow mode for cheaper prices,Idea
+maybe write songs in my mother tongue,Idea
+a game where you manage a small kirana store,Idea
+what if the office had a pet day,Idea
+could make short videos explaining tax basics,Idea

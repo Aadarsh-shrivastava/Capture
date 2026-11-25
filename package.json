@@ -8,7 +8,9 @@
     "ios": "react-native run-ios --port 8082",
     "lint": "eslint .",
     "start": "react-native start --port 8082",
-    "test": "jest"
+    "test": "jest",
+    "classifier:eval": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/classifier/eval.ts",
+    "classifier:try": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/classifier/try.ts"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",

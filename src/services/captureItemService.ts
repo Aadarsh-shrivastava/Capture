@@ -1,6 +1,7 @@
 import {behaviorApi, itemApi, typeApi} from '@/api/itemApi';
 import {groupApi} from '@/api/groupApi';
 import type {CaptureItemDraft} from '@/capture/captureItemDraft';
+import {learn} from '@/classifier';
 import {extractShortSubject} from '@/capture/captureTitle';
 import {isTextPrimaryType, type ItemTypeName} from '@/ui/itemTypeConfig';
 import {
@@ -11,6 +12,7 @@ import {
 import {getDefaultFieldValues} from '@/domain/behaviorDefinitions';
 import type {ItemFull, SaveItemPayload} from '@/models/behaviorData';
 import type {Group} from '@/models/group';
+import {itemRepository} from '@/repositories/itemRepository';
 
 export async function resolveCaptureDraft(draft: CaptureItemDraft): Promise<SaveItemPayload> {
   const [types, behaviors, groups] = await Promise.all([
@@ -114,6 +116,12 @@ export function draftFromItemFull(full: ItemFull, groups: Group[]): CaptureItemD
 
 /** Save a draft, creating a new item or updating `itemId`. */
 export async function saveItemDraft(draft: CaptureItemDraft, itemId?: number) {
+  const before = itemId != null ? await itemRepository.findByIdWithType(itemId) : null;
   const payload = await resolveCaptureDraft(draft);
-  return itemApi.saveItem(payload, itemId);
+  const saved = await itemApi.saveItem(payload, itemId);
+  // You changed its type, or answered "to do or thought?": the classifier learns your words → your type.
+  if (before && (before.typeName !== draft.typeName || before.unsure)) {
+    await learn(before.content?.trim() || before.title, draft.typeName).catch(() => {});
+  }
+  return saved;
 }

@@ -1,6 +1,7 @@
 import {analyzeText} from './useCaptureAnalysis';
 
 jest.mock('@/hooks/useLlamaModel', () => ({useLlamaModel: jest.fn()}));
+jest.mock('@/db/database', () => ({getDatabase: async () => ({getAllAsync: async () => []})}));
 
 test('the classifier picks the type', async () => {
   expect((await analyzeText('buy milk on the way home')).typeName).toBe('Task');

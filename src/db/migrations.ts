@@ -194,6 +194,15 @@ const MIGRATIONS: Record<number, string[]> = {
   11: [`ALTER TABLE items ADD COLUMN unsure INTEGER NOT NULL DEFAULT 0;`],
   // What the user said it is when sharing (to do / read later / remember / just keep) — the model doesn't guess it.
   12: [`ALTER TABLE capture_queue ADD COLUMN kind TEXT;`],
+  // The user's own type corrections: the classifier learns from them on top of its bundled examples.
+  13: [
+    `CREATE TABLE IF NOT EXISTS training_examples (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      text TEXT NOT NULL UNIQUE,
+      label TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );`,
+  ],
 };
 
 async function getCurrentVersion(db: SQLiteDatabase): Promise<number> {

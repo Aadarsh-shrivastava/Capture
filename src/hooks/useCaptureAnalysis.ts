@@ -22,7 +22,7 @@ export async function analyzeText(text: string, _onStep?: (steps: string[]) => v
     throw new Error('No text to analyze');
   }
 
-  const result = kind ? null : classifyText(trimmed);
+  const result = kind ? null : await classifyText(trimmed);
   const typeName = kind === 'todo' ? 'Task' : kind ? 'Note' : result?.label ?? 'Note';
   let draft: CaptureItemDraft = {...rawThought(trimmed), typeName, title: titleFromText(trimmed)};
   if (typeName === 'Task') {

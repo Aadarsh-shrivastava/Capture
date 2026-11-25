@@ -1,0 +1,161 @@
+text,label
+gym tomorrow at 7am,Task
+call mom tonight at 8,Task
+I need to submit the tax form by monday,Task
+dentist appointment on friday at 3pm,Task
+pay rent by nov 12,Task
+submit the report next week,Task
+buy milk in 2 hours,Task
+book flight tickets this weekend,Task
+meeting with Rahul at 4:30 pm today,Task
+finish the slides before wednesday,Task
+call the bank at 5,Task
+water the plants in 3 days,Task
+next friday team dinner at 8pm,Task
+buy groceries,Task
+fix the leaking tap in the kitchen,Task
+renew my passport,Task
+email Priya about the contract,Task
+pick up the laundry,Task
+urgent: fix the login bug in production,Task
+really important that I send the visa documents,Task
+go to the gym every monday and thursday at 7am,Task
+take vitamins every day,Task
+pay the credit card bill monthly,Task
+weekly review every sunday evening,Task
+call grandma on weekends,Task
+"doctor appointment tomorrow at 11am, remind me 1 hour before",Task
+"flight at 6pm today, remind me 2 hours before",Task
+"standup at 9:30 tomorrow, remind me 10 minutes before",Task
+"plan the party: book the venue, order the cake, send invites",Task
+set up the new laptop then install vscode then copy my dotfiles,Task
+the wifi password at the office is bluefox42,Note
+vector databases store embeddings for similarity search,Note
+https://example.com/react-tips great article on react performance,Note
+Rahul's shoe size is 10,Note
+idea: an app that turns voice notes into tasks,Idea
+what if we added dark mode to the landing page,Idea
+maybe start a podcast about productivity,Idea
+"today was rough, slept badly and skipped the gym",Journal
+"had a great dinner with friends, felt really happy",Journal
+I felt anxious before the presentation but it went well,Journal
+order spare brake pads for the scooter,Task
+schedule the vet visit for bruno's vaccination,Task
+get the property papers notarised,Task
+replace the bulb in the hallway,Task
+confirm the caterer for the engagement,Task
+ask hr about my pending reimbursement,Task
+upload the photos from the shoot to the drive,Task
+measure the living room for the new sofa,Task
+call the insurance agent about the claim,Task
+pay the maid's salary on the first,Task
+buy cement and sand for the wall repair,Task
+send the tenant a rent receipt,Task
+renew the pharmacy license before january,Task
+reserve a badminton court for saturday morning,Task
+take grandpa for his eye surgery checkup,Task
+print the boarding pass,Task
+lodge a complaint about the broken street light,Task
+iron the shirts for the week,Task
+make a dentist booking for my son,Task
+collect the sofa from the upholstery shop,Task
+pay the property tax online,Task
+need to finalize the floor plan for the client,Task
+fill fuel before the highway drive,Task
+get the ac serviced before summer,Task
+bring snacks for the team meeting,Task
+pack sunscreen for the match,Task
+prepare the onboarding kit for new hires,Task
+process the overdue book returns,Task
+transfer the files to the new hard disk,Task
+write a thank you note to the hosts,Task
+the landlord's upi id is ramesh@okaxis,Note
+the gym locker number is 118,Note
+the boiling point of water at sea level is 100 degrees,Note
+the max paracetamol dose for adults is 4 grams a day,Note
+the train ticket pnr is 4821937650,Note
+basil grows best in full sun,Note
+copper is a good conductor of electricity,Note
+our wedding anniversary is on 14 february,Note
+the electrician charges 500 per visit,Note
+the company leave policy allows 18 paid days,Note
+mount everest is 8849 metres tall,Note
+the project deadline in the contract is 30 june,Note
+the dog food brand bruno likes is drools,Note
+grandpa takes his blood thinner after dinner,Note
+kotlin coroutines are lightweight threads,Note
+the photography studio rent is 8000 a month,Note
+the pin code of the new office is 560034,Note
+a cricket pitch is 22 yards long,Note
+the society secretary lives in flat c-402,Note
+visa processing takes about 15 working days,Note
+our home loan interest rate is 8.4 percent,Note
+the first world war began in 1914,Note
+sodium chloride is common salt,Note
+the ac remote needs two aaa batteries,Note
+the warehouse is behind the petrol pump,Note
+my laptop's serial number is on the bottom sticker,Note
+the cat's microchip id is in the vet file,Note
+good podcast episode on negotiation https://pod.example/ep42,Note
+the piano tuner comes every six months,Note
+my pan card is in the brown wallet,Note
+what if parking meters accepted upi,Idea
+an app that matches stray dogs with adopters,Idea
+maybe paint a mural on the garage wall,Idea
+what if libraries lent out tools too,Idea
+idea: a spice rack that tells you when one runs out,Idea
+a podcast where retirees share career advice,Idea
+what if traffic lights adjusted for ambulances,Idea
+maybe build a weather station on the terrace,Idea
+a board game set in mughal times,Idea
+could launch a newsletter for local events,Idea
+what if gyms paid you for the electricity you generate,Idea
+a vr tour of old temples,Idea
+maybe learn to make furniture from pallets,Idea
+an alarm clock that only stops when you solve a puzzle,Idea
+what if exams were replaced by projects,Idea
+idea: a dating app for book lovers,Idea
+a smart bin that sorts recycling,Idea
+maybe sell my photographs as prints,Idea
+what if every office had a nap room,Idea
+a map app for durga puja pandals,Idea
+could teach kids coding through dance,Idea
+what if buses had charging ports and wifi,Idea
+a youtube series reviewing train journeys,Idea
+maybe design my own font,Idea
+an app for splitting groceries with roommates,Idea
+what if hospitals shared bed availability live,Idea
+idea: a bakery that only sells millet bread,Idea
+a song about the mumbai monsoon,Idea
+what if my comic hero was a retired auto driver,Idea
+maybe a website comparing coaching institutes,Idea
+the flight got delayed and I spent five hours at the airport,Journal
+my daughter's recital was adorable,Journal
+couldn't stop laughing at dinner with my cousins,Journal
+felt left out at the office party,Journal
+the new medicine is making me drowsy all day,Journal
+I finally said no to extra work and it felt good,Journal
+got soaked in the rain on the way home,Journal
+grandma told me stories about partition tonight,Journal
+my car broke down on the flyover and I panicked,Journal
+the interview panel was rude and I feel discouraged,Journal
+watched the sunrise from the hill and it was magical,Journal
+my team won the society cricket match,Journal
+spent the evening missing my dad,Journal
+today I cleaned the whole house and feel accomplished,Journal
+the plumber never showed up and I wasted my day,Journal
+I was so bored at the seminar,Journal
+my best friend got engaged and I'm thrilled,Journal
+had a panic attack in the metro,Journal
+my puppy chewed my headphones and I couldn't even be angry,Journal
+the patient's family thanked me and I teared up,Journal
+I overslept and missed the bus again,Journal
+got a promotion today,Journal
+the trek was hard but the view was worth it,Journal
+my mom and I had a long heart to heart,Journal
+I felt invisible in the group chat today,Journal
+tried yoga for the first time and loved it,Journal
+the client meeting was a disaster,Journal
+I'm lonely since moving to bangalore,Journal
+the food at the new restaurant was disappointing,Journal
+I finally finished reading that 800 page book,Journal
